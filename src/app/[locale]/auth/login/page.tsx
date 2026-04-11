@@ -41,7 +41,8 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        if (data.role === 'SUPER_ADMIN' || data.role === 'ARTIST') {
+        const role = data.data?.role || data.role;
+        if (role === 'SUPER_ADMIN' || role === 'ARTIST') {
           window.location.href = '/admin';
         } else {
           window.location.href = '/account';
@@ -91,7 +92,8 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        if (data.role === 'SUPER_ADMIN' || data.role === 'ARTIST') {
+        const role = data.data?.role || data.role;
+        if (role === 'SUPER_ADMIN' || role === 'ARTIST') {
           window.location.href = '/admin';
         } else {
           window.location.href = '/account';

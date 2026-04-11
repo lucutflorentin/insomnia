@@ -28,7 +28,7 @@ export default function Header() {
     fetch('/api/auth/me')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data?.success) setUser(data.user);
+        if (data?.success) setUser(data.data);
       })
       .catch(() => {});
   }, [pathname]);
