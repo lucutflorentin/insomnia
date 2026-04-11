@@ -9,6 +9,7 @@ import Analytics from '@/components/seo/Analytics';
 import CookieConsent from '@/components/ui/CookieConsent';
 import CursorGlow from '@/components/effects/CursorGlow';
 import WhatsAppButton from '@/components/ui/WhatsAppButton';
+import PublicOnlyComponents from '@/components/layout/PublicOnlyComponents';
 import '@/app/globals.css';
 
 const playfair = Playfair_Display({
@@ -102,10 +103,14 @@ export default async function LocaleLayout({
         <Analytics />
         <NextIntlClientProvider messages={messages}>
           <ToastProvider>
-            <CursorGlow />
+            <PublicOnlyComponents>
+              <CursorGlow />
+            </PublicOnlyComponents>
             {children}
-            <WhatsAppButton />
-            <CookieConsent />
+            <PublicOnlyComponents>
+              <WhatsAppButton />
+              <CookieConsent />
+            </PublicOnlyComponents>
           </ToastProvider>
         </NextIntlClientProvider>
       </body>
