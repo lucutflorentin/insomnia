@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// INSOMNIA TATTOO DATABASE SCHEMA v2.0
+// ============================================
+
+// --- Enums ---
+
+enum UserRole {
+  SUPER_ADMIN
+  ARTIST
+  CLIENT
+}
+
+// --- Auth & Identity ---
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique @db.VarChar(255)
+  passwordHash String?   @map("password_hash") @db.VarChar(255)
+  role         UserRole  @default(CLIENT)
+  name         String    @db.VarChar(200)
+  phone        String?   @db.VarChar(50)
+  googleId     String?   @unique @map("google_id") @db.VarChar(255)
+  avatarUrl    String?   @map("avatar_url") @db.VarChar(500)
+  isActive        Boolean   @default(true) @map("is_active")
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  lastLoginAt     DateTime? @map("last_login_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  artist              Artist?
+  bookings            Booking[]            @relation("ClientBookings")
+  loyaltyTransactions LoyaltyTransaction[]
+  reviews             Review[]             @relation("ClientReviews")
+  sessions            Session[]
+  passwordResets      PasswordResetToken[]
+  emailVerifications  EmailVerificationToken[]
+
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    Int       @map("user_id")
+  token     String    @unique @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    Int       @map("user_id")
+  token     String    @unique @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       Int      @map("user_id")
+  refreshToken String   @unique @map("refresh_token") @db.VarChar(500)
+  expiresAt    DateTime @map("expires_at")
+  userAgent    String?  @map("user_agent") @db.VarChar(500)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+// --- Artist Profile ---
+
+model Artist {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique @map("user_id")
+  name         String   @db.VarChar(100)
+  slug         String   @unique @db.VarChar(100)
+  bioRo        String?  @map("bio_ro") @db.Text
+  bioEn        String?  @map("bio_en") @db.Text
+  specialtyRo  String?  @map("specialty_ro") @db.VarChar(200)
+  specialtyEn  String?  @map("specialty_en") @db.VarChar(200)
+  specialties  Json?
+  profileImage String?  @map("profile_image") @db.VarChar(500)
+  instagramUrl String?  @map("instagram_url") @db.VarChar(500)
+  tiktokUrl    String?  @map("tiktok_url") @db.VarChar(500)
+  sortOrder    Int      @default(0) @map("sort_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user                  User                   @relation(fields: [userId], references: [id])
+  availability          Availability[]
+  availabilityTemplates AvailabilityTemplate[]
+  bookings              Booking[]
+  gallery               GalleryItem[]
+  reviews               Review[]
+
+  @@map("artists")
+}
+
+// --- Scheduling ---
+
+model Availability {
+  id                  Int      @id @default(autoincrement())
+  artistId            Int      @map("artist_id")
+  date                DateTime @db.Date
+  startTime           String   @map("start_time") @db.VarChar(5)
+  endTime             String   @map("end_time") @db.VarChar(5)
+  slotDurationMinutes Int      @default(60) @map("slot_duration_minutes")
+  isAvailable         Boolean  @default(true) @map("is_available")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  artist Artist @relation(fields: [artistId], references: [id])
+
+  @@unique([artistId, date], name: "unique_artist_date")
+  @@map("availability")
+}
+
+model AvailabilityTemplate {
+  id        Int     @id @default(autoincrement())
+  artistId  Int     @map("artist_id")
+  dayOfWeek Int     @map("day_of_week") @db.TinyInt
+  startTime String  @map("start_time") @db.VarChar(5)
+  endTime   String  @map("end_time") @db.VarChar(5)
+  isActive  Boolean @default(true) @map("is_active")
+
+  artist Artist @relation(fields: [artistId], references: [id])
+
+  @@unique([artistId, dayOfWeek], name: "unique_artist_day")
+  @@map("availability_templates")
+}
+
+// --- Bookings ---
+
+model Booking {
+  id            Int      @id @default(autoincrement())
+  referenceCode String   @unique @map("reference_code") @db.VarChar(20)
+  artistId      Int      @map("artist_id")
+  clientId      Int?     @map("client_id")
+
+  // Client data (snapshot — kept even if user exists for guest bookings)
+  clientName  String @map("client_name") @db.VarChar(200)
+  clientPhone String @map("client_phone") @db.VarChar(50)
+  clientEmail String @map("client_email") @db.VarChar(255)
+
+  // Tattoo details
+  bodyArea        String? @map("body_area") @db.VarChar(100)
+  sizeCategory    String  @default("medium") @map("size_category") @db.VarChar(20)
+  stylePreference String? @map("style_preference") @db.VarChar(200)
+  description     String? @db.Text
+  referenceImages Json?   @map("reference_images")
+
+  // Consultation scheduling
+  consultationDate DateTime @map("consultation_date") @db.Date
+  consultationTime String   @map("consultation_time") @db.VarChar(5)
+
+  // Tracking
+  source     String  @default("other") @db.VarChar(20)
+  status     String  @default("new") @db.VarChar(20)
+  adminNotes String? @map("admin_notes") @db.Text
+
+  // GDPR
+  gdprConsent Boolean @default(false) @map("gdpr_consent")
+  language    String  @default("ro") @db.VarChar(2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  artist              Artist               @relation(fields: [artistId], references: [id])
+  client              User?                @relation("ClientBookings", fields: [clientId], references: [id])
+  reviews             Review[]
+  loyaltyTransactions LoyaltyTransaction[]
+
+  @@index([status])
+  @@index([consultationDate])
+  @@index([artistId, consultationDate])
+  @@index([clientId])
+  @@map("bookings")
+}
+
+// --- Gallery ---
+
+model GalleryItem {
+  id            Int      @id @default(autoincrement())
+  artistId      Int      @map("artist_id")
+  imagePath     String   @map("image_path") @db.VarChar(500)
+  thumbnailPath String?  @map("thumbnail_path") @db.VarChar(500)
+
+  // Metadata
+  titleRo  String? @map("title_ro") @db.VarChar(200)
+  titleEn  String? @map("title_en") @db.VarChar(200)
+  style    String? @db.VarChar(50)
+  bodyArea String? @map("body_area") @db.VarChar(100)
+
+  // Display
+  isFeatured Boolean @default(false) @map("is_featured")
+  isVisible  Boolean @default(true) @map("is_visible")
+  sortOrder  Int     @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  artist Artist @relation(fields: [artistId], references: [id])
+
+  @@index([artistId])
+  @@index([isFeatured])
+  @@index([style])
+  @@map("gallery")
+}
+
+// --- Reviews & Ratings ---
+
+model Review {
+  id           Int      @id @default(autoincrement())
+  userId       Int?     @map("user_id")
+  clientName   String   @map("client_name") @db.VarChar(200)
+  artistId     Int?     @map("artist_id")
+  bookingId    Int?     @map("booking_id")
+  rating       Int      @db.TinyInt
+  reviewTextRo String?  @map("review_text_ro") @db.Text
+  reviewTextEn String?  @map("review_text_en") @db.Text
+  source       String   @default("website") @db.VarChar(20)
+  isApproved   Boolean  @default(false) @map("is_approved")
+  isVisible    Boolean  @default(true) @map("is_visible")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user    User?    @relation("ClientReviews", fields: [userId], references: [id])
+  artist  Artist?  @relation(fields: [artistId], references: [id])
+  booking Booking? @relation(fields: [bookingId], references: [id])
+
+  @@unique([userId, bookingId], name: "unique_user_booking_review")
+  @@map("reviews")
+}
+
+// --- Loyalty System ---
+
+model LoyaltyTransaction {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  bookingId   Int?     @map("booking_id")
+  type        String   @db.VarChar(20) // 'earn', 'redeem', 'bonus', 'adjust'
+  points      Int // positive = earn, negative = redeem
+  valueRon    Decimal  @default(0) @map("value_ron") @db.Decimal(10, 2)
+  description String?  @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by") // user id of admin/artist who processed
+
+  user    User     @relation(fields: [userId], references: [id])
+  booking Booking? @relation(fields: [bookingId], references: [id])
+
+  @@index([userId])
+  @@map("loyalty_transactions")
+}
+
+// --- Settings ---
+
+model Setting {
+  settingKey   String   @id @map("setting_key") @db.VarChar(100)
+  settingValue String?  @map("setting_value") @db.Text
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}

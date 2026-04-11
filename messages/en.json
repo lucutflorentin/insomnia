@@ -1,0 +1,799 @@
+{
+  "common": {
+    "nav": {
+      "artists": "Artists",
+      "inkSpace": "Ink Space",
+      "booking": "Booking",
+      "goodToKnow": "Good to Know",
+      "aftercare": "Aftercare",
+      "account": "My Account",
+      "login": "Sign In",
+      "logout": "Sign Out"
+    },
+    "cta": {
+      "booking": "Booking",
+      "bookingLong": "Book a consultation",
+      "inkSpace": "Ink Space",
+      "portfolio": "View portfolio"
+    },
+    "footer": {
+      "rights": "All rights reserved",
+      "privacy": "Privacy Policy",
+      "cookies": "Cookie Policy",
+      "terms": "Terms & Conditions",
+      "quickLinks": "Quick Links",
+      "followUs": "Follow Us",
+      "contactInfo": "Contact Info"
+    },
+    "language": {
+      "ro": "Romana",
+      "en": "English"
+    },
+    "cookies": {
+      "message": "We use cookies to improve your experience on our site.",
+      "accept": "Accept",
+      "decline": "Decline",
+      "learnMore": "Learn more"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "Sorry, the page you are looking for does not exist or has been moved.",
+      "backHome": "Back to home",
+      "bookConsultation": "Book a consultation"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Access your Insomnia Tattoo account",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "Your password",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "googleButton": "Continue with Google",
+      "googleLoading": "Signing in...",
+      "googleError": "Google sign-in is not configured.",
+      "or": "or",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create an account",
+      "error": "Invalid email or password.",
+      "connectionError": "Connection error. Please try again."
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join the Insomnia Tattoo community",
+      "name": "Full name",
+      "namePlaceholder": "Your name",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "Minimum 8 characters",
+      "submit": "Create account",
+      "submitting": "Creating...",
+      "googleButton": "Continue with Google",
+      "googleLoading": "Signing in...",
+      "or": "or",
+      "hasAccount": "Already have an account?",
+      "login": "Sign in",
+      "gdpr": "I accept the privacy policy and agree to the processing of my personal data under GDPR.",
+      "gdprRequired": "You must accept the privacy policy.",
+      "privacyPolicy": "privacy policy",
+      "error": "Registration failed. Please try again.",
+      "connectionError": "Connection error. Please try again.",
+      "benefits": {
+        "tracking": "Track all your appointments in one place",
+        "loyalty": "Earn loyalty points: each session = 50 RON credit",
+        "rebooking": "Quick rebooking — your data is saved"
+      }
+    }
+  },
+  "account": {
+    "nav": {
+      "dashboard": "My Account",
+      "bookings": "My Bookings",
+      "loyalty": "Loyalty Card",
+      "reviews": "My Reviews",
+      "settings": "Settings"
+    },
+    "dashboard": {
+      "title": "My Account",
+      "welcome": "Welcome, {name}!",
+      "upcomingBookings": "Upcoming bookings",
+      "noUpcoming": "No upcoming bookings.",
+      "bookNow": "Book now",
+      "loyaltyBalance": "Loyalty points",
+      "points": "points",
+      "value": "value",
+      "quickActions": "Quick actions",
+      "newBooking": "New booking",
+      "viewLoyalty": "View loyalty card"
+    },
+    "bookings": {
+      "title": "My Bookings",
+      "noBookings": "You don't have any bookings yet.",
+      "bookNow": "Book your first session",
+      "status": {
+        "new": "New",
+        "contacted": "Contacted",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "no_show": "No show"
+      },
+      "leaveReview": "Leave a review",
+      "reviewSubmitted": "Review submitted",
+      "artist": "Artist",
+      "date": "Date",
+      "details": "Booking details",
+      "referenceCode": "Reference code",
+      "placement": "Placement",
+      "size": "Size",
+      "description": "Description",
+      "submittedAt": "Submitted on",
+      "cancelBooking": "Cancel booking",
+      "cancelling": "Cancelling...",
+      "cancelConfirm": "Are you sure you want to cancel this booking?",
+      "cancelError": "Cancellation failed. Please try again.",
+      "cancelNote": "Cancellation is only possible at least 24 hours before the scheduled date."
+    },
+    "loyalty": {
+      "title": "Loyalty Card",
+      "subtitle": "Earn points with every completed session",
+      "currentBalance": "Current balance",
+      "points": "points",
+      "totalEarned": "Total earned",
+      "totalSpent": "Total spent",
+      "valueRon": "Value",
+      "stamp": "Session {number}",
+      "surprise": "Surprise!",
+      "surpriseEligible": "You have a surprise from the salon! Contact us for details.",
+      "history": "Transaction history",
+      "noTransactions": "No transactions yet.",
+      "types": {
+        "earn": "Earned",
+        "redeem": "Redeemed",
+        "bonus": "Bonus",
+        "adjust": "Adjustment"
+      }
+    },
+    "reviews": {
+      "title": "My Reviews",
+      "noReviews": "You haven't left any reviews yet.",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "hidden": "Hidden"
+      }
+    },
+    "settings": {
+      "title": "Account Settings",
+      "profile": "Profile",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "saved": "Changes saved!",
+      "changePassword": "Change password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "updatePassword": "Update password",
+      "googleConnected": "Google account connected",
+      "connectGoogle": "Connect Google account",
+      "danger": "Danger zone",
+      "deleteAccount": "Delete account",
+      "deleteWarning": "This action is irreversible."
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Where Art Meets Skin",
+      "subtitle": "Premium Tattoo Studio | Mamaia Nord",
+      "ctaBooking": "Book a consultation",
+      "ctaGallery": "View portfolio"
+    },
+    "artists": {
+      "title": "Our Artists",
+      "subtitle": "Two artists, two visions, one passion",
+      "viewPortfolio": "View portfolio",
+      "madalina": {
+        "specialty": "Realism & Portraits",
+        "description": "Specialized in realism, portraits and color work with exceptional detail."
+      },
+      "florentin": {
+        "specialty": "Graphic & Line Work",
+        "description": "Passionate about graphic design, line work, geometric and minimalism."
+      }
+    },
+    "gallery": {
+      "title": "Our Work",
+      "subtitle": "Every tattoo tells a story",
+      "viewAll": "Explore the Ink Space",
+      "filters": {
+        "all": "All",
+        "realism": "Realism",
+        "graphic": "Graphic"
+      }
+    },
+    "whyUs": {
+      "title": "Why Insomnia Tattoo",
+      "experience": "6+ years experience",
+      "experienceDesc": "Over 6 years of experience in tattoo art, with thousands of completed works.",
+      "location": "Premium location",
+      "locationDesc": "Modern studio in Mamaia Nord, in a relaxing and professional environment.",
+      "consultation": "Personalized consultation",
+      "consultationDesc": "Every project starts with a free consultation to create the perfect design.",
+      "rating": "4.9 on Google",
+      "reviews": "reviews"
+    },
+    "location": {
+      "title": "Find Us",
+      "address": "Mamaia Nord, Constanta, Romania",
+      "schedule": "Hours",
+      "weekdays": "Monday - Friday: 10:00 AM - 6:00 PM",
+      "saturday": "Saturday: 10:00 AM - 4:00 PM",
+      "sunday": "Sunday: Closed"
+    },
+    "cta": {
+      "title": "Ready for your next tattoo?",
+      "subtitle": "Book a free consultation and let's create something unique together.",
+      "button": "Book now"
+    }
+  },
+  "artistModal": {
+    "bookWith": "Book with {name}",
+    "viewFullPortfolio": "View full portfolio",
+    "specialties": "Specialties",
+    "bestWorks": "Best works"
+  },
+  "bookingModal": {
+    "title": "Let's start your project",
+    "chooseArtist": "Choose your artist",
+    "whatsOnYourMind": "What's on your mind?",
+    "descriptionPlaceholder": "Briefly describe your tattoo idea...",
+    "contactInfo": "How can we reach you?",
+    "name": "Name",
+    "phone": "Phone (WhatsApp)",
+    "email": "Email",
+    "gdpr": "I agree to the processing of my personal data.",
+    "submit": "Send request",
+    "submitting": "Sending...",
+    "success": "Your request has been sent! We'll contact you within 24h.",
+    "wantMore": "Want to pick a date too?",
+    "fullForm": "Go to full booking form"
+  },
+  "artists": {
+    "title": "Artists",
+    "subtitle": "Two artists, two visions, one passion",
+    "bookWith": "Book with {name}",
+    "viewPortfolio": "View full portfolio",
+    "specialties": "Specialties",
+    "ctaTitle": "Like {name}'s style?",
+    "ctaSubtitle": "Book a free consultation and let's discuss your project.",
+    "styles": {
+      "realism": "Realism",
+      "portraits": "Portraits",
+      "color": "Color",
+      "black_grey": "Black & Grey",
+      "nature": "Nature",
+      "graphic": "Graphic",
+      "linework": "Line Work",
+      "geometric": "Geometric",
+      "minimalist": "Minimalist",
+      "blackwork": "Blackwork",
+      "blackgrey": "Black & Grey"
+    },
+    "portfolio": "Portfolio",
+    "reviews": "Reviews"
+  },
+  "inkSpace": {
+    "title": "Ink Space",
+    "subtitle": "Every line tells a story",
+    "viewMore": "Load more",
+    "bookWith": "Book with {name}"
+  },
+  "gallery": {
+    "title": "Ink Space",
+    "subtitle": "Every line tells a story",
+    "filters": {
+      "all": "All",
+      "realism": "Realism",
+      "graphic": "Graphic & Line Work",
+      "color": "Color",
+      "blackgrey": "Black & Grey",
+      "geometric": "Geometric",
+      "minimalist": "Minimalist",
+      "blackwork": "Blackwork"
+    },
+    "byArtist": "By artist",
+    "noResults": "No works found with these filters.",
+    "loadMore": "Load more"
+  },
+  "booking": {
+    "title": "Book a Consultation",
+    "subtitle": "Fill out the form and we'll contact you within 24 hours.",
+    "step1": {
+      "title": "Choose your artist",
+      "notSure": "Not sure — help me choose"
+    },
+    "step2": {
+      "title": "Describe your tattoo",
+      "bodyArea": "Body area",
+      "bodyAreas": {
+        "arm": "Arm",
+        "forearm": "Forearm",
+        "shoulder": "Shoulder",
+        "back": "Back",
+        "chest": "Chest",
+        "ribs": "Ribs",
+        "leg": "Leg",
+        "calf": "Calf",
+        "thigh": "Thigh",
+        "hand": "Hand",
+        "neck": "Neck",
+        "other": "Other area"
+      },
+      "size": "Approximate size",
+      "sizes": {
+        "small": "Small (under 10cm)",
+        "medium": "Medium (10-20cm)",
+        "large": "Large (over 20cm)",
+        "sleeve": "Sleeve / Large project"
+      },
+      "style": "Preferred style",
+      "description": "Describe your idea",
+      "descriptionPlaceholder": "Describe your tattoo idea... What do you want, what does it mean to you, what elements should it include.",
+      "references": "Reference images (optional)",
+      "referencesHelp": "Maximum 3 images, JPG/PNG format, max 5MB each"
+    },
+    "step3": {
+      "title": "Choose consultation date",
+      "selectDate": "Select an available day",
+      "selectTime": "Choose a time",
+      "noSlots": "No available slots on this day."
+    },
+    "step4": {
+      "title": "Your contact information",
+      "name": "Full name",
+      "phone": "Phone (WhatsApp)",
+      "email": "Email",
+      "gdpr": "I agree to the processing of my personal data according to the privacy policy.",
+      "source": "How did you hear about us?",
+      "sources": {
+        "instagram": "Instagram",
+        "tiktok": "TikTok",
+        "google": "Google",
+        "referral": "Referral",
+        "other": "Other"
+      }
+    },
+    "step5": {
+      "title": "Confirmation",
+      "summary": "Your request summary",
+      "artist": "Artist",
+      "date": "Date",
+      "time": "Time",
+      "submit": "Submit request",
+      "submitting": "Submitting..."
+    },
+    "success": {
+      "title": "Your request has been sent!",
+      "message": "We'll contact you within 24 hours to confirm.",
+      "reference": "Your reference code",
+      "backHome": "Back to home"
+    },
+    "navigation": {
+      "next": "Continue",
+      "back": "Back",
+      "step": "Step {current} of {total}"
+    },
+    "validation": {
+      "artistRequired": "Please choose an artist.",
+      "bodyAreaRequired": "Please select a body area.",
+      "sizeRequired": "Please select a size.",
+      "descriptionRequired": "Please describe your idea.",
+      "dateRequired": "Please choose a date.",
+      "timeRequired": "Please choose a time.",
+      "nameRequired": "Name is required.",
+      "phoneRequired": "Phone number is required.",
+      "emailRequired": "Email address is required.",
+      "emailInvalid": "Email address is not valid.",
+      "gdprRequired": "You must agree to data processing."
+    }
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "The Insomnia Tattoo Story",
+    "storyTitle": "How it all began",
+    "story": "Insomnia Tattoo was born from the shared passion of two artists who chose to turn skin into canvas. With over 6 years of experience, Madalina and Florentin have created a space where art and professionalism meet.",
+    "valuesTitle": "Our Values",
+    "values": {
+      "quality": {
+        "title": "Quality",
+        "description": "We use only premium equipment and the highest quality inks."
+      },
+      "authenticity": {
+        "title": "Authenticity",
+        "description": "Every tattoo is unique, created especially for you."
+      },
+      "experience": {
+        "title": "Experience",
+        "description": "A pleasant experience from the first consultation to the final result."
+      }
+    },
+    "timelineTitle": "Our Journey",
+    "cta": "Let's meet — book a consultation"
+  },
+  "aftercare": {
+    "title": "Tattoo Aftercare Guide",
+    "subtitle": "How to care for your fresh tattoo for perfect results",
+    "intro": "Proper tattoo care in the first weeks is essential for a perfect result. Follow this step-by-step guide.",
+    "first24h": {
+      "title": "First 24 hours",
+      "steps": [
+        "Keep the bandage applied by the artist for 2-4 hours.",
+        "Wash the tattoo with lukewarm water and fragrance-free antibacterial soap.",
+        "Gently pat dry with a clean towel (don't rub).",
+        "Apply a thin layer of recommended healing cream.",
+        "Don't cover the tattoo with a bandage after the first wash."
+      ]
+    },
+    "firstWeek": {
+      "title": "First week",
+      "steps": [
+        "Wash the tattoo 2-3 times a day with antibacterial soap.",
+        "Apply healing cream after each wash.",
+        "Don't scratch or pick at the scabs that form.",
+        "Wear loose clothing over the tattooed area.",
+        "Avoid water from pools, the sea, or bathtubs."
+      ]
+    },
+    "firstMonth": {
+      "title": "First month",
+      "steps": [
+        "Continue moisturizing the area with fragrance-free cream.",
+        "Protect the tattoo from direct sun exposure.",
+        "Avoid intense activities that cause excessive sweating.",
+        "Don't expose the tattoo to natural or artificial tanning.",
+        "If you notice signs of infection, contact a doctor."
+      ]
+    },
+    "dos": {
+      "title": "Do's",
+      "items": [
+        "Wash your hands before touching the tattoo.",
+        "Use fragrance-free and alcohol-free products.",
+        "Let the tattoo breathe.",
+        "Protect it from the sun with SPF 50+ after healing.",
+        "Drink plenty of water for hydration."
+      ]
+    },
+    "donts": {
+      "title": "Don'ts",
+      "items": [
+        "Don't scratch or pick at scabs.",
+        "Don't soak the tattoo in water (bathtub, pool, sea).",
+        "Don't apply alcohol, peroxide, or betadine.",
+        "Don't expose the tattoo to direct sunlight.",
+        "Don't wear tight clothing over the tattoo."
+      ]
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Find answers to the most common questions about tattoos",
+    "items": [
+      {
+        "question": "How long does a tattoo session last?",
+        "answer": "Duration varies depending on the complexity and size of the tattoo. A session can last from 1 hour for a small tattoo, up to 6-8 hours for larger projects. During the consultation, the artist will give you a more accurate estimate."
+      },
+      {
+        "question": "How much does a tattoo cost?",
+        "answer": "The price varies depending on size, complexity, details, and time required. Book a free consultation and let's discuss your project — we'll give you a personalized estimate."
+      },
+      {
+        "question": "Does getting a tattoo hurt?",
+        "answer": "The level of discomfort varies depending on the body area and individual pain tolerance. The most sensitive areas are the ribs, spine, and inner arm. Your artist will guide you to make the experience as comfortable as possible."
+      },
+      {
+        "question": "What should I do before my session?",
+        "answer": "Make sure you're well-rested, hydrated, and have eaten before your session. Avoid alcohol and aspirin 24 hours before. Wear comfortable clothes that allow access to the area being tattooed."
+      },
+      {
+        "question": "Can I come without an appointment?",
+        "answer": "We work by appointment only to give each client the attention they deserve. Book a consultation online, and we'll contact you within 24 hours."
+      },
+      {
+        "question": "What tattoo styles do you do?",
+        "answer": "Madalina specializes in realism, portraits, color, and black & grey. Florentin specializes in graphic design, line work, geometric, and minimalism. Between us, we cover a wide range of styles."
+      },
+      {
+        "question": "Do you accept custom projects?",
+        "answer": "Absolutely! Every tattoo we create is unique and personalized. During the consultation, we discuss your idea and create a custom design that matches your vision."
+      },
+      {
+        "question": "How do I care for my tattoo after the session?",
+        "answer": "We have a complete aftercare guide on our website. Additionally, at the end of your session, your artist will give you detailed and personalized instructions for caring for your tattoo."
+      }
+    ],
+    "aftercareCard": {
+      "title": "Aftercare — Tattoo Care",
+      "description": "Complete guide on how to care for your fresh tattoo.",
+      "cta": "Read the Aftercare guide"
+    },
+    "noAnswer": "Didn't find your answer? Contact us directly."
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "We're here for you",
+    "form": {
+      "name": "Your name",
+      "email": "Email",
+      "phone": "Phone (optional)",
+      "message": "Your message",
+      "messagePlaceholder": "Write your message here...",
+      "send": "Send message",
+      "sending": "Sending...",
+      "success": "Your message has been sent successfully! We'll get back to you soon.",
+      "error": "An error occurred. Please try again."
+    },
+    "info": {
+      "address": "Address",
+      "addressValue": "Mamaia Nord, Constanta, Romania",
+      "phone": "Phone",
+      "email": "Email",
+      "emailValue": "contact@insomniatattoo.ro",
+      "schedule": "Hours",
+      "weekdays": "Monday - Friday: 10:00 AM - 6:00 PM",
+      "saturday": "Saturday: 10:00 AM - 4:00 PM",
+      "sunday": "Sunday: Closed"
+    }
+  },
+  "admin": {
+    "login": {
+      "title": "Admin Login",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "error": "Invalid email or password."
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "bookings": "Bookings",
+      "availability": "Availability",
+      "gallery": "Gallery",
+      "artists": "Artists",
+      "reviews": "Reviews",
+      "loyalty": "Loyalty",
+      "settings": "Settings",
+      "logout": "Sign out"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "newBookings": "New bookings",
+      "thisMonth": "This month",
+      "confirmed": "Confirmed",
+      "recentBookings": "Recent bookings",
+      "code": "Code",
+      "client": "Client",
+      "artist": "Artist",
+      "status": "Status",
+      "date": "Date"
+    },
+    "bookings": {
+      "title": "Manage bookings",
+      "loading": "Loading...",
+      "all": "All",
+      "status": {
+        "new": "New",
+        "contacted": "Contacted",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "no_show": "No show"
+      },
+      "actions": {
+        "confirm": "Confirm",
+        "reject": "Reject",
+        "contact": "Contact",
+        "complete": "Complete"
+      },
+      "table": {
+        "code": "Code",
+        "client": "Client",
+        "artist": "Artist",
+        "date": "Date",
+        "status": "Status"
+      },
+      "details": {
+        "client": "Client",
+        "phone": "Phone",
+        "email": "Email",
+        "artist": "Artist",
+        "bodyArea": "Body area",
+        "size": "Size",
+        "description": "Description",
+        "consultationDate": "Consultation date",
+        "source": "Source"
+      },
+      "adminNotes": "Admin notes",
+      "noBookings": "No bookings found.",
+      "exportBookings": "Export bookings",
+      "exportClients": "Export clients"
+    },
+    "availability": {
+      "title": "Manage availability",
+      "setHours": "Set hours",
+      "available": "Available",
+      "unavailable": "Unavailable",
+      "allDay": "All day",
+      "customHours": "Custom hours",
+      "template": "Default schedule",
+      "override": "Override",
+      "noOverrides": "No overrides",
+      "days": {
+        "sunday": "Sunday",
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday"
+      }
+    },
+    "gallery": {
+      "title": "Manage gallery",
+      "upload": "Upload images",
+      "uploading": "Uploading...",
+      "uploadFailed": "Upload failed",
+      "featured": "Featured",
+      "visible": "Visible",
+      "delete": "Delete",
+      "edit": "Edit",
+      "confirmDelete": "Are you sure you want to delete this image?",
+      "titleRo": "Title (RO)",
+      "titleEn": "Title (EN)",
+      "style": "Style",
+      "sortOrder": "Sort order",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "artists": {
+      "title": "Manage artists",
+      "addArtist": "Add artist",
+      "editArtist": "Edit artist",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "bioRo": "Bio (RO)",
+      "bioEn": "Bio (EN)",
+      "specialtyRo": "Specialty (RO)",
+      "specialtyEn": "Specialty (EN)",
+      "specialties": "Styles",
+      "profileImage": "Profile photo",
+      "instagram": "Instagram URL",
+      "tiktok": "TikTok URL",
+      "sortOrder": "Sort order",
+      "active": "Active",
+      "inactive": "Inactive",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "save": "Save",
+      "cancel": "Cancel",
+      "generatedPassword": "Generated password",
+      "noArtists": "No artists."
+    },
+    "reviews": {
+      "title": "Moderate reviews",
+      "pending": "Pending",
+      "approved": "Approved",
+      "all": "All",
+      "approve": "Approve",
+      "hide": "Hide",
+      "delete": "Delete",
+      "confirmDelete": "Are you sure you want to delete this review?",
+      "client": "Client",
+      "artist": "Artist",
+      "rating": "Rating",
+      "date": "Date",
+      "status": "Status",
+      "noReviews": "No reviews."
+    },
+    "loyalty": {
+      "title": "Manage loyalty",
+      "searchClients": "Search clients...",
+      "searchMinChars": "Minimum 2 characters",
+      "balance": "Balance",
+      "transactions": "Transactions",
+      "award": "Award points",
+      "redeem": "Redeem points",
+      "adjust": "Adjust",
+      "awardSurprise": "Award P10 surprise",
+      "surpriseTypes": {
+        "tattoo": "Free small tattoo",
+        "merch": "Free merch",
+        "discount": "Custom discount",
+        "other": "Other"
+      },
+      "points": "Points",
+      "description": "Description",
+      "submit": "Confirm",
+      "noClients": "No clients found."
+    },
+    "settings": {
+      "title": "Settings",
+      "studioInfo": "Studio information",
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address",
+      "googleMaps": "Google Maps URL",
+      "socialMedia": "Social media",
+      "instagram": "Instagram Studio",
+      "instagramMadalina": "Instagram Madalina",
+      "instagramFlorentin": "Instagram Florentin",
+      "bookingConfig": "Booking configuration",
+      "advanceDays": "Advance days",
+      "consultationMinutes": "Consultation duration (min)",
+      "maxReferenceImages": "Max reference images",
+      "smtpTest": "SMTP email test",
+      "smtpDescription": "Send a test email to verify your SMTP configuration.",
+      "smtpSendTest": "Send test",
+      "smtpTesting": "Sending...",
+      "smtpError": "SMTP test failed.",
+      "save": "Save settings",
+      "saving": "Saving...",
+      "saved": "Settings saved successfully.",
+      "saveError": "Failed to save. Please try again."
+    }
+  },
+  "metadata": {
+    "home": {
+      "title": "Insomnia Tattoo | Premium Tattoo Studio Mamaia Nord",
+      "description": "Premium tattoo studio in Mamaia Nord, Constanta. Specialized in realism, graphic design and line work. Book a free consultation."
+    },
+    "artists": {
+      "title": "Our Artists | Insomnia Tattoo Mamaia Nord",
+      "description": "Meet Madalina and Florentin, the artists behind Insomnia Tattoo. Specialized in realism, portraits, graphic and line work."
+    },
+    "gallery": {
+      "title": "Tattoo Portfolio Realism & Graphic | Insomnia Tattoo",
+      "description": "Explore our tattoo gallery: realism, portraits, graphic, line work, geometric and minimalist. Insomnia Tattoo Studio Mamaia Nord."
+    },
+    "booking": {
+      "title": "Book Tattoo Consultation | Insomnia Tattoo Mamaia Nord",
+      "description": "Book a free consultation at Insomnia Tattoo. Choose your artist, describe your tattoo and select a convenient date."
+    },
+    "about": {
+      "title": "About Insomnia Tattoo | The Story of Mamaia Nord Studio",
+      "description": "Discover the story of Insomnia Tattoo, a premium tattoo studio in Mamaia Nord. Two artists, 6+ years of experience, a passion for art."
+    },
+    "aftercare": {
+      "title": "Tattoo Aftercare Guide — How to Care for Your Tattoo | Insomnia Tattoo",
+      "description": "Complete guide for fresh tattoo care. Learn what to do and what to avoid in the first days, week and month after your session."
+    },
+    "faq": {
+      "title": "Tattoo FAQ | Insomnia Tattoo Mamaia Nord",
+      "description": "Answers to the most common questions about tattoos: price, pain, duration, aftercare and booking at Insomnia Tattoo."
+    },
+    "contact": {
+      "title": "Contact Insomnia Tattoo | Tattoo Studio Mamaia Nord",
+      "description": "Contact Insomnia Tattoo. Address, hours, phone and contact form. Tattoo studio in Mamaia Nord, Constanta."
+    },
+    "privacy": {
+      "title": "Privacy Policy | Insomnia Tattoo",
+      "description": "Insomnia Tattoo privacy policy. Learn how we collect, use and protect your personal data."
+    },
+    "terms": {
+      "title": "Terms and Conditions | Insomnia Tattoo",
+      "description": "Terms and conditions for using the Insomnia Tattoo website. Rules regarding bookings, payments and our services."
+    },
+    "cookies": {
+      "title": "Cookie Policy | Insomnia Tattoo",
+      "description": "Insomnia Tattoo cookie policy. Learn what cookies we use and how to manage your preferences."
+    }
+  }
+}

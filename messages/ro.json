@@ -1,0 +1,799 @@
+{
+  "common": {
+    "nav": {
+      "artists": "Artisti",
+      "inkSpace": "Spatiul Ink",
+      "booking": "Booking",
+      "goodToKnow": "Bun de stiut",
+      "aftercare": "Aftercare",
+      "account": "Contul meu",
+      "login": "Autentificare",
+      "logout": "Deconectare"
+    },
+    "cta": {
+      "booking": "Booking",
+      "bookingLong": "Programeaza o consultatie",
+      "inkSpace": "Spatiul Ink",
+      "portfolio": "Vezi portofoliul"
+    },
+    "footer": {
+      "rights": "Toate drepturile rezervate",
+      "privacy": "Politica de confidentialitate",
+      "cookies": "Politica cookies",
+      "terms": "Termeni si conditii",
+      "quickLinks": "Linkuri rapide",
+      "followUs": "Urmareste-ne",
+      "contactInfo": "Informatii contact"
+    },
+    "language": {
+      "ro": "Romana",
+      "en": "English"
+    },
+    "cookies": {
+      "message": "Folosim cookie-uri pentru a imbunatati experienta ta pe site.",
+      "accept": "Accept",
+      "decline": "Refuz",
+      "learnMore": "Afla mai mult"
+    },
+    "notFound": {
+      "title": "Pagina nu a fost gasita",
+      "description": "Ne pare rau, dar pagina pe care o cauti nu exista sau a fost mutata.",
+      "backHome": "Inapoi acasa",
+      "bookConsultation": "Programeaza o consultatie"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Autentificare",
+      "subtitle": "Intra in contul tau Insomnia Tattoo",
+      "email": "Email",
+      "emailPlaceholder": "adresa@email.com",
+      "password": "Parola",
+      "passwordPlaceholder": "Parola ta",
+      "submit": "Conecteaza-te",
+      "submitting": "Se conecteaza...",
+      "googleButton": "Continua cu Google",
+      "googleLoading": "Se conecteaza...",
+      "googleError": "Google sign-in nu este configurat.",
+      "or": "sau",
+      "forgotPassword": "Ai uitat parola?",
+      "noAccount": "Nu ai cont?",
+      "createAccount": "Creeaza un cont",
+      "error": "Email sau parola incorecta.",
+      "connectionError": "Eroare de conexiune. Incearca din nou."
+    },
+    "register": {
+      "title": "Creeaza cont",
+      "subtitle": "Alatura-te comunitatii Insomnia Tattoo",
+      "name": "Nume complet",
+      "namePlaceholder": "Numele tau",
+      "email": "Email",
+      "emailPlaceholder": "adresa@email.com",
+      "password": "Parola",
+      "passwordPlaceholder": "Minim 8 caractere",
+      "submit": "Creeaza cont",
+      "submitting": "Se creeaza...",
+      "googleButton": "Continua cu Google",
+      "googleLoading": "Se conecteaza...",
+      "or": "sau",
+      "hasAccount": "Ai deja cont?",
+      "login": "Conecteaza-te",
+      "gdpr": "Accept politica de confidentialitate si sunt de acord cu prelucrarea datelor mele personale conform GDPR.",
+      "gdprRequired": "Trebuie sa accepti politica de confidentialitate.",
+      "privacyPolicy": "politica de confidentialitate",
+      "error": "Inregistrarea a esuat. Incearca din nou.",
+      "connectionError": "Eroare de conexiune. Incearca din nou.",
+      "benefits": {
+        "tracking": "Urmareste toate programarile intr-un singur loc",
+        "loyalty": "Castiga puncte de fidelitate: fiecare sedinta = 50 RON credit",
+        "rebooking": "Rebooking rapid — datele tale sunt salvate"
+      }
+    }
+  },
+  "account": {
+    "nav": {
+      "dashboard": "Contul meu",
+      "bookings": "Programarile mele",
+      "loyalty": "Card fidelitate",
+      "reviews": "Recenziile mele",
+      "settings": "Setari"
+    },
+    "dashboard": {
+      "title": "Contul meu",
+      "welcome": "Bine ai venit, {name}!",
+      "upcomingBookings": "Programari viitoare",
+      "noUpcoming": "Nu ai programari viitoare.",
+      "bookNow": "Programeaza acum",
+      "loyaltyBalance": "Puncte fidelitate",
+      "points": "puncte",
+      "value": "valoare",
+      "quickActions": "Actiuni rapide",
+      "newBooking": "Programare noua",
+      "viewLoyalty": "Vezi cardul de fidelitate"
+    },
+    "bookings": {
+      "title": "Programarile mele",
+      "noBookings": "Nu ai nicio programare inca.",
+      "bookNow": "Programeaza prima ta sedinta",
+      "status": {
+        "new": "Noua",
+        "contacted": "Contactat",
+        "confirmed": "Confirmata",
+        "completed": "Finalizata",
+        "cancelled": "Anulata",
+        "no_show": "Neprezentare"
+      },
+      "leaveReview": "Lasa o recenzie",
+      "reviewSubmitted": "Recenzie trimisa",
+      "artist": "Artist",
+      "date": "Data",
+      "details": "Detalii programare",
+      "referenceCode": "Cod referinta",
+      "placement": "Plasament",
+      "size": "Dimensiune",
+      "description": "Descriere",
+      "submittedAt": "Data trimitere",
+      "cancelBooking": "Anuleaza programarea",
+      "cancelling": "Se anuleaza...",
+      "cancelConfirm": "Esti sigur ca vrei sa anulezi aceasta programare?",
+      "cancelError": "Eroare la anulare. Incearca din nou.",
+      "cancelNote": "Anularea este posibila doar cu minimum 24h inainte de data programata."
+    },
+    "loyalty": {
+      "title": "Card de fidelitate",
+      "subtitle": "Castiga puncte la fiecare sedinta completata",
+      "currentBalance": "Balanta curenta",
+      "points": "puncte",
+      "totalEarned": "Total castigat",
+      "totalSpent": "Total utilizat",
+      "valueRon": "Valoare",
+      "stamp": "Sedinta {number}",
+      "surprise": "Surpriza!",
+      "surpriseEligible": "Ai o surpriza de la salon! Contacteaza-ne pentru detalii.",
+      "history": "Istoric tranzactii",
+      "noTransactions": "Nicio tranzactie inca.",
+      "types": {
+        "earn": "Castigat",
+        "redeem": "Utilizat",
+        "bonus": "Bonus",
+        "adjust": "Ajustare"
+      }
+    },
+    "reviews": {
+      "title": "Recenziile mele",
+      "noReviews": "Nu ai lasat nicio recenzie inca.",
+      "status": {
+        "pending": "In asteptare",
+        "approved": "Aprobata",
+        "hidden": "Ascunsa"
+      }
+    },
+    "settings": {
+      "title": "Setari cont",
+      "profile": "Profil",
+      "name": "Nume",
+      "email": "Email",
+      "phone": "Telefon",
+      "save": "Salveaza modificarile",
+      "saving": "Se salveaza...",
+      "saved": "Modificarile au fost salvate!",
+      "changePassword": "Schimba parola",
+      "currentPassword": "Parola curenta",
+      "newPassword": "Parola noua",
+      "confirmPassword": "Confirma parola noua",
+      "updatePassword": "Actualizeaza parola",
+      "googleConnected": "Cont Google conectat",
+      "connectGoogle": "Conecteaza cont Google",
+      "danger": "Zona periculoasa",
+      "deleteAccount": "Sterge contul",
+      "deleteWarning": "Aceasta actiune este ireversibila."
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Unde arta intalneste pielea",
+      "subtitle": "Studio premium de tatuaje | Mamaia Nord",
+      "ctaBooking": "Programeaza o consultatie",
+      "ctaGallery": "Vezi portofoliul"
+    },
+    "artists": {
+      "title": "Artistii nostri",
+      "subtitle": "Doi artisti, doua viziuni, o singura pasiune",
+      "viewPortfolio": "Vezi portofoliul",
+      "madalina": {
+        "specialty": "Realism & Portrete",
+        "description": "Specializata in realism, portrete si lucrari color cu detalii exceptionale."
+      },
+      "florentin": {
+        "specialty": "Graphic & Line Work",
+        "description": "Pasionat de graphic design, line work, geometric si minimalism."
+      }
+    },
+    "gallery": {
+      "title": "Lucrarile noastre",
+      "subtitle": "Fiecare tatuaj spune o poveste",
+      "viewAll": "Exploreaza Spatiul Ink",
+      "filters": {
+        "all": "Toate",
+        "realism": "Realism",
+        "graphic": "Graphic"
+      }
+    },
+    "whyUs": {
+      "title": "De ce Insomnia Tattoo",
+      "experience": "6+ ani experienta",
+      "experienceDesc": "Peste 6 ani de experienta in arta tatuajului, cu mii de lucrari realizate.",
+      "location": "Locatie premium",
+      "locationDesc": "Studio modern in Mamaia Nord, intr-un ambient relaxant si profesional.",
+      "consultation": "Consultatie personalizata",
+      "consultationDesc": "Fiecare proiect incepe cu o consultatie gratuita pentru a crea designul perfect.",
+      "rating": "4.9 pe Google",
+      "reviews": "recenzii"
+    },
+    "location": {
+      "title": "Unde ne gasesti",
+      "address": "Mamaia Nord, Constanta, Romania",
+      "schedule": "Program",
+      "weekdays": "Luni - Vineri: 10:00 - 18:00",
+      "saturday": "Sambata: 10:00 - 16:00",
+      "sunday": "Duminica: Inchis"
+    },
+    "cta": {
+      "title": "Pregatit pentru urmatorul tau tatuaj?",
+      "subtitle": "Programeaza o consultatie gratuita si hai sa cream ceva unic impreuna.",
+      "button": "Programeaza acum"
+    }
+  },
+  "artistModal": {
+    "bookWith": "Booking cu {name}",
+    "viewFullPortfolio": "Vezi tot portofoliul",
+    "specialties": "Specialitati",
+    "bestWorks": "Cele mai bune lucrari"
+  },
+  "bookingModal": {
+    "title": "Hai sa incepem proiectul tau",
+    "chooseArtist": "Alege artistul",
+    "whatsOnYourMind": "Ce ai in minte?",
+    "descriptionPlaceholder": "Descrie pe scurt ideea ta pentru tatuaj...",
+    "contactInfo": "Cum te contactam?",
+    "name": "Nume",
+    "phone": "Telefon (WhatsApp)",
+    "email": "Email",
+    "gdpr": "Sunt de acord cu prelucrarea datelor personale.",
+    "submit": "Trimite cererea",
+    "submitting": "Se trimite...",
+    "success": "Cererea ta a fost trimisa! Te contactam in maxim 24h.",
+    "wantMore": "Vrei sa alegi si data?",
+    "fullForm": "Completeaza formularul extins"
+  },
+  "artists": {
+    "title": "Artisti",
+    "subtitle": "Doi artisti, doua viziuni, o singura pasiune",
+    "bookWith": "Booking cu {name}",
+    "viewPortfolio": "Vezi tot portofoliul",
+    "specialties": "Specialitati",
+    "ctaTitle": "Iti place stilul lui {name}?",
+    "ctaSubtitle": "Programeaza o consultatie gratuita si discutam despre proiectul tau.",
+    "portfolio": "Portofoliu",
+    "reviews": "Recenzii",
+    "styles": {
+      "realism": "Realism",
+      "portraits": "Portrete",
+      "color": "Color",
+      "black_grey": "Black & Grey",
+      "nature": "Natura",
+      "graphic": "Graphic",
+      "linework": "Line Work",
+      "geometric": "Geometric",
+      "minimalist": "Minimalist",
+      "blackwork": "Blackwork",
+      "blackgrey": "Black & Grey"
+    }
+  },
+  "inkSpace": {
+    "title": "Spatiul Ink",
+    "subtitle": "Fiecare linie spune o poveste",
+    "viewMore": "Incarca mai multe",
+    "bookWith": "Booking cu {name}"
+  },
+  "gallery": {
+    "title": "Spatiul Ink",
+    "subtitle": "Fiecare linie spune o poveste",
+    "filters": {
+      "all": "Toate",
+      "realism": "Realism",
+      "graphic": "Graphic & Line Work",
+      "color": "Color",
+      "blackgrey": "Black & Grey",
+      "geometric": "Geometric",
+      "minimalist": "Minimalist",
+      "blackwork": "Blackwork"
+    },
+    "byArtist": "Dupa artist",
+    "noResults": "Nu am gasit lucrari cu aceste filtre.",
+    "loadMore": "Incarca mai multe"
+  },
+  "booking": {
+    "title": "Programeaza o consultatie",
+    "subtitle": "Completeaza formularul si te vom contacta in maxim 24 de ore.",
+    "step1": {
+      "title": "Alege artistul",
+      "notSure": "Nu sunt sigur — ajuta-ma sa aleg"
+    },
+    "step2": {
+      "title": "Descrie tatuajul dorit",
+      "bodyArea": "Zona corpului",
+      "bodyAreas": {
+        "arm": "Brat",
+        "forearm": "Antebrat",
+        "shoulder": "Umar",
+        "back": "Spate",
+        "chest": "Piept",
+        "ribs": "Coaste",
+        "leg": "Picior",
+        "calf": "Gamba",
+        "thigh": "Coapse",
+        "hand": "Mana",
+        "neck": "Gat",
+        "other": "Alta zona"
+      },
+      "size": "Dimensiune aproximativa",
+      "sizes": {
+        "small": "Mic (sub 10cm)",
+        "medium": "Mediu (10-20cm)",
+        "large": "Mare (peste 20cm)",
+        "sleeve": "Sleeve / Proiect mare"
+      },
+      "style": "Stil dorit",
+      "description": "Descrierea ideii tale",
+      "descriptionPlaceholder": "Descrie ideea ta pentru tatuaj... Ce iti doresti, ce semnificatie are, ce elemente vrei sa includa.",
+      "references": "Imagini de referinta (optional)",
+      "referencesHelp": "Maximum 3 imagini, format JPG/PNG, max 5MB fiecare"
+    },
+    "step3": {
+      "title": "Alege data consultatiei",
+      "selectDate": "Selecteaza o zi disponibila",
+      "selectTime": "Alege ora",
+      "noSlots": "Nu sunt sloturi disponibile in aceasta zi."
+    },
+    "step4": {
+      "title": "Datele tale de contact",
+      "name": "Nume complet",
+      "phone": "Telefon (WhatsApp)",
+      "email": "Email",
+      "gdpr": "Sunt de acord cu prelucrarea datelor personale conform politicii de confidentialitate.",
+      "source": "Cum ai auzit de noi?",
+      "sources": {
+        "instagram": "Instagram",
+        "tiktok": "TikTok",
+        "google": "Google",
+        "referral": "Recomandare",
+        "other": "Altele"
+      }
+    },
+    "step5": {
+      "title": "Confirmare",
+      "summary": "Rezumatul cererii tale",
+      "artist": "Artist",
+      "date": "Data",
+      "time": "Ora",
+      "submit": "Trimite cererea",
+      "submitting": "Se trimite..."
+    },
+    "success": {
+      "title": "Cererea ta a fost trimisa!",
+      "message": "Te vom contacta in maxim 24 de ore pentru confirmare.",
+      "reference": "Codul tau de referinta",
+      "backHome": "Inapoi acasa"
+    },
+    "navigation": {
+      "next": "Continua",
+      "back": "Inapoi",
+      "step": "Pasul {current} din {total}"
+    },
+    "validation": {
+      "artistRequired": "Te rugam sa alegi un artist.",
+      "bodyAreaRequired": "Te rugam sa selectezi zona corpului.",
+      "sizeRequired": "Te rugam sa selectezi dimensiunea.",
+      "descriptionRequired": "Te rugam sa descrii ideea ta.",
+      "dateRequired": "Te rugam sa alegi o data.",
+      "timeRequired": "Te rugam sa alegi o ora.",
+      "nameRequired": "Numele este obligatoriu.",
+      "phoneRequired": "Numarul de telefon este obligatoriu.",
+      "emailRequired": "Adresa de email este obligatorie.",
+      "emailInvalid": "Adresa de email nu este valida.",
+      "gdprRequired": "Trebuie sa fii de acord cu prelucrarea datelor."
+    }
+  },
+  "about": {
+    "title": "Despre noi",
+    "subtitle": "Povestea Insomnia Tattoo",
+    "storyTitle": "Cum a inceput totul",
+    "story": "Insomnia Tattoo s-a nascut din pasiunea comuna a doi artisti care au ales sa transforme pielea in panza. Cu peste 6 ani de experienta, Madalina si Florentin au creat un spatiu unde arta si profesionalismul se intalnesc.",
+    "valuesTitle": "Valorile noastre",
+    "values": {
+      "quality": {
+        "title": "Calitate",
+        "description": "Folosim doar echipamente premium si cerneluri de cea mai inalta calitate."
+      },
+      "authenticity": {
+        "title": "Autenticitate",
+        "description": "Fiecare tatuaj este unic, creat special pentru tine."
+      },
+      "experience": {
+        "title": "Experienta",
+        "description": "O experienta placuta de la prima consultatie pana la rezultatul final."
+      }
+    },
+    "timelineTitle": "Parcursul nostru",
+    "cta": "Hai sa ne cunoastem — programeaza o consultatie"
+  },
+  "aftercare": {
+    "title": "Ghid Aftercare Tatuaj",
+    "subtitle": "Cum iti ingrijesti tatuajul proaspat pentru rezultate perfecte",
+    "intro": "Ingrijirea corecta a tatuajului in primele saptamani este esentiala pentru un rezultat perfect. Urmeaza acest ghid pas cu pas.",
+    "first24h": {
+      "title": "Primele 24 de ore",
+      "steps": [
+        "Pastreaza bandajul aplicat de artist timp de 2-4 ore.",
+        "Spala tatuajul cu apa calduta si sapun antibacterian fara parfum.",
+        "Tamponeaza usor cu un prosop curat (nu freca).",
+        "Aplica un strat subtire de crema de vindecare recomandata.",
+        "Nu acoperi tatuajul cu bandaj dupa prima spalare."
+      ]
+    },
+    "firstWeek": {
+      "title": "Prima saptamana",
+      "steps": [
+        "Spala tatuajul de 2-3 ori pe zi cu sapun antibacterian.",
+        "Aplica crema de vindecare dupa fiecare spalare.",
+        "Nu scarpina si nu ridica crustele care se formeaza.",
+        "Poarta haine largi peste zona tatuata.",
+        "Evita apa din piscina, mare sau cada."
+      ]
+    },
+    "firstMonth": {
+      "title": "Prima luna",
+      "steps": [
+        "Continua sa hidratezi zona cu o crema fara parfum.",
+        "Protejeaza tatuajul de expunerea directa la soare.",
+        "Evita activitatile intense care cauzeaza transpiratie excesiva.",
+        "Nu expune tatuajul la bronzare naturala sau artificiala.",
+        "Daca observi semne de infectie, contacteaza un medic."
+      ]
+    },
+    "dos": {
+      "title": "Ce sa faci",
+      "items": [
+        "Spala-ti mainile inainte de a atinge tatuajul.",
+        "Foloseste produse fara parfum si alcool.",
+        "Lasa tatuajul sa respire.",
+        "Protejeaza-l de soare cu SPF 50+ dupa vindecare.",
+        "Bea multa apa pentru hidratare."
+      ]
+    },
+    "donts": {
+      "title": "Ce sa NU faci",
+      "items": [
+        "Nu scarpina si nu ridica crustele.",
+        "Nu inmui tatuajul in apa (cada, piscina, mare).",
+        "Nu aplica alcool, peroxid sau betadina.",
+        "Nu expune tatuajul la soare direct.",
+        "Nu purta haine stramte peste tatuaj."
+      ]
+    }
+  },
+  "faq": {
+    "title": "Intrebari frecvente",
+    "subtitle": "Gaseste raspunsuri la cele mai comune intrebari despre tatuaje",
+    "items": [
+      {
+        "question": "Cat dureaza o sesiune de tatuaj?",
+        "answer": "Durata variaza in functie de complexitatea si dimensiunea tatuajului. O sesiune poate dura de la 1 ora pentru un tatuaj mic, pana la 6-8 ore pentru proiecte mai mari. In cadrul consultatiei, artistul iti va oferi o estimare mai exacta."
+      },
+      {
+        "question": "Cat costa un tatuaj?",
+        "answer": "Pretul variaza in functie de dimensiune, complexitate, detalii si timpul necesar. Programeaza o consultatie gratuita si discutam despre proiectul tau — iti vom oferi o estimare personalizata."
+      },
+      {
+        "question": "Doare sa te tatuezi?",
+        "answer": "Nivelul de disconfort variaza in functie de zona corpului si de toleranta individuala la durere. Cele mai sensibile zone sunt coaste, coloana vertebrala si interiorul bratului. Artistul tau te va ghida pentru a face experienta cat mai confortabila."
+      },
+      {
+        "question": "Ce trebuie sa fac inainte de sesiune?",
+        "answer": "Asigura-te ca esti odihnit, hidratat si ca ai mancat inainte de sesiune. Evita alcoolul si aspirina cu 24h inainte. Poarta haine confortabile care permit acces la zona ce va fi tatuata."
+      },
+      {
+        "question": "Pot veni fara programare?",
+        "answer": "Lucram doar cu programare pentru a oferi fiecarui client atentia cuvenita. Programeaza o consultatie online, iar noi te vom contacta in maxim 24 de ore."
+      },
+      {
+        "question": "Ce stiluri de tatuaje faceti?",
+        "answer": "Madalina este specializata in realism, portrete, color si black & grey. Florentin este specializat in graphic design, line work, geometric si minimalism. Intre noi doi, acoperim o gama larga de stiluri."
+      },
+      {
+        "question": "Acceptati proiecte personalizate?",
+        "answer": "Absolut! Fiecare tatuaj pe care il realizam este unic si personalizat. In cadrul consultatiei, discutam ideea ta si cream un design custom care sa se potriveasca viziunii tale."
+      },
+      {
+        "question": "Cum ingrijesc tatuajul dupa sesiune?",
+        "answer": "Avem un ghid complet de aftercare pe site. In plus, la finalul sesiunii, artistul tau iti va da instructiuni detaliate si personalizate pentru ingrijirea tatuajului tau."
+      }
+    ],
+    "aftercareCard": {
+      "title": "Aftercare — Ingrijirea tatuajului",
+      "description": "Ghid complet despre cum sa iti ingrijesti tatuajul proaspat.",
+      "cta": "Citeste ghidul Aftercare"
+    },
+    "noAnswer": "Nu ai gasit raspunsul? Contacteaza-ne direct."
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Suntem aici pentru tine",
+    "form": {
+      "name": "Numele tau",
+      "email": "Email",
+      "phone": "Telefon (optional)",
+      "message": "Mesajul tau",
+      "messagePlaceholder": "Scrie-ne mesajul tau aici...",
+      "send": "Trimite mesajul",
+      "sending": "Se trimite...",
+      "success": "Mesajul tau a fost trimis cu succes! Te vom contacta in curand.",
+      "error": "A aparut o eroare. Te rugam sa incerci din nou."
+    },
+    "info": {
+      "address": "Adresa",
+      "addressValue": "Mamaia Nord, Constanta, Romania",
+      "phone": "Telefon",
+      "email": "Email",
+      "emailValue": "contact@insomniatattoo.ro",
+      "schedule": "Program",
+      "weekdays": "Luni - Vineri: 10:00 - 18:00",
+      "saturday": "Sambata: 10:00 - 16:00",
+      "sunday": "Duminica: Inchis"
+    }
+  },
+  "admin": {
+    "login": {
+      "title": "Admin Login",
+      "email": "Email",
+      "password": "Parola",
+      "submit": "Autentificare",
+      "error": "Email sau parola incorecta."
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "bookings": "Programari",
+      "availability": "Disponibilitate",
+      "gallery": "Galerie",
+      "artists": "Artisti",
+      "reviews": "Recenzii",
+      "loyalty": "Fidelitate",
+      "settings": "Setari",
+      "logout": "Deconectare"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "newBookings": "Programari noi",
+      "thisMonth": "Luna aceasta",
+      "confirmed": "Confirmate",
+      "recentBookings": "Programari recente",
+      "code": "Cod",
+      "client": "Client",
+      "artist": "Artist",
+      "status": "Status",
+      "date": "Data"
+    },
+    "bookings": {
+      "title": "Gestionare programari",
+      "loading": "Se incarca...",
+      "all": "Toate",
+      "status": {
+        "new": "Noua",
+        "contacted": "Contactat",
+        "confirmed": "Confirmata",
+        "completed": "Finalizata",
+        "cancelled": "Anulata",
+        "no_show": "Neprezentare"
+      },
+      "actions": {
+        "confirm": "Confirma",
+        "reject": "Respinge",
+        "contact": "Contacteaza",
+        "complete": "Finalizeaza"
+      },
+      "table": {
+        "code": "Cod",
+        "client": "Client",
+        "artist": "Artist",
+        "date": "Data",
+        "status": "Status"
+      },
+      "details": {
+        "client": "Client",
+        "phone": "Telefon",
+        "email": "Email",
+        "artist": "Artist",
+        "bodyArea": "Zona",
+        "size": "Dimensiune",
+        "description": "Descriere",
+        "consultationDate": "Data consultatie",
+        "source": "Sursa"
+      },
+      "adminNotes": "Note admin",
+      "noBookings": "Nu exista programari.",
+      "exportBookings": "Export programari",
+      "exportClients": "Export clienti"
+    },
+    "availability": {
+      "title": "Gestionare disponibilitate",
+      "setHours": "Seteaza orele",
+      "available": "Disponibil",
+      "unavailable": "Indisponibil",
+      "allDay": "Toata ziua",
+      "customHours": "Ore personalizate",
+      "template": "Program standard",
+      "override": "Exceptie",
+      "noOverrides": "Nicio exceptie",
+      "days": {
+        "sunday": "Duminica",
+        "monday": "Luni",
+        "tuesday": "Marti",
+        "wednesday": "Miercuri",
+        "thursday": "Joi",
+        "friday": "Vineri",
+        "saturday": "Sambata"
+      }
+    },
+    "gallery": {
+      "title": "Gestionare galerie",
+      "upload": "Incarca imagini",
+      "uploading": "Se incarca...",
+      "uploadFailed": "Upload esuat",
+      "featured": "Evidentiata",
+      "visible": "Vizibila",
+      "delete": "Sterge",
+      "edit": "Editeaza",
+      "confirmDelete": "Esti sigur ca vrei sa stergi aceasta imagine?",
+      "titleRo": "Titlu (RO)",
+      "titleEn": "Titlu (EN)",
+      "style": "Stil",
+      "sortOrder": "Ordine",
+      "cancel": "Anuleaza",
+      "save": "Salveaza"
+    },
+    "artists": {
+      "title": "Gestionare artisti",
+      "addArtist": "Adauga artist",
+      "editArtist": "Editeaza artist",
+      "name": "Nume",
+      "email": "Email",
+      "password": "Parola",
+      "bioRo": "Bio (RO)",
+      "bioEn": "Bio (EN)",
+      "specialtyRo": "Specialitate (RO)",
+      "specialtyEn": "Specialitate (EN)",
+      "specialties": "Stiluri",
+      "profileImage": "Foto profil",
+      "instagram": "Instagram URL",
+      "tiktok": "TikTok URL",
+      "sortOrder": "Ordine",
+      "active": "Activ",
+      "inactive": "Inactiv",
+      "deactivate": "Dezactiveaza",
+      "activate": "Activeaza",
+      "save": "Salveaza",
+      "cancel": "Anuleaza",
+      "generatedPassword": "Parola generata",
+      "noArtists": "Niciun artist."
+    },
+    "reviews": {
+      "title": "Moderare recenzii",
+      "pending": "In asteptare",
+      "approved": "Aprobate",
+      "all": "Toate",
+      "approve": "Aproba",
+      "hide": "Ascunde",
+      "delete": "Sterge",
+      "confirmDelete": "Esti sigur ca vrei sa stergi aceasta recenzie?",
+      "client": "Client",
+      "artist": "Artist",
+      "rating": "Rating",
+      "date": "Data",
+      "status": "Status",
+      "noReviews": "Nicio recenzie."
+    },
+    "loyalty": {
+      "title": "Gestionare fidelitate",
+      "searchClients": "Cauta clienti...",
+      "searchMinChars": "Minim 2 caractere",
+      "balance": "Balanta",
+      "transactions": "Tranzactii",
+      "award": "Acorda puncte",
+      "redeem": "Utilizeaza puncte",
+      "adjust": "Ajusteaza",
+      "awardSurprise": "Acorda surpriza P10",
+      "surpriseTypes": {
+        "tattoo": "Tatuaj gratuit mic",
+        "merch": "Merch gratuit",
+        "discount": "Discount custom",
+        "other": "Altul"
+      },
+      "points": "Puncte",
+      "description": "Descriere",
+      "submit": "Confirma",
+      "noClients": "Niciun client gasit."
+    },
+    "settings": {
+      "title": "Setari",
+      "studioInfo": "Informatii studio",
+      "phone": "Telefon",
+      "email": "Email",
+      "address": "Adresa",
+      "googleMaps": "URL Google Maps",
+      "socialMedia": "Retele sociale",
+      "instagram": "Instagram Studio",
+      "instagramMadalina": "Instagram Madalina",
+      "instagramFlorentin": "Instagram Florentin",
+      "bookingConfig": "Configurare programari",
+      "advanceDays": "Zile in avans",
+      "consultationMinutes": "Durata consultatie (min)",
+      "maxReferenceImages": "Max imagini referinta",
+      "smtpTest": "Test email SMTP",
+      "smtpDescription": "Trimite un email de test pentru a verifica configurarea SMTP.",
+      "smtpSendTest": "Trimite test",
+      "smtpTesting": "Se trimite...",
+      "smtpError": "Eroare la testare SMTP.",
+      "save": "Salveaza setarile",
+      "saving": "Se salveaza...",
+      "saved": "Setarile au fost salvate.",
+      "saveError": "Eroare la salvare. Incearca din nou."
+    }
+  },
+  "metadata": {
+    "home": {
+      "title": "Insomnia Tattoo | Studio Premium Tatuaje Mamaia Nord",
+      "description": "Studio premium de tatuaje in Mamaia Nord, Constanta. Specializati in realism, graphic design si line work. Programeaza o consultatie gratuita."
+    },
+    "artists": {
+      "title": "Artistii Nostri | Insomnia Tattoo Mamaia Nord",
+      "description": "Cunoaste-i pe Madalina si Florentin, artistii din spatele Insomnia Tattoo. Specializati in realism, portrete, graphic si line work."
+    },
+    "gallery": {
+      "title": "Portofoliu Tatuaje Realism & Graphic | Insomnia Tattoo",
+      "description": "Exploreaza galeria noastra de tatuaje: realism, portrete, graphic, line work, geometric si minimalist. Studio Insomnia Tattoo Mamaia Nord."
+    },
+    "booking": {
+      "title": "Programare Consultatie Tatuaj | Insomnia Tattoo Mamaia Nord",
+      "description": "Programeaza o consultatie gratuita la Insomnia Tattoo. Alege artistul, descrie tatuajul dorit si selecteaza o data convenabila."
+    },
+    "about": {
+      "title": "Despre Insomnia Tattoo | Povestea Studioului din Mamaia Nord",
+      "description": "Afla povestea Insomnia Tattoo, studio de tatuaje premium in Mamaia Nord. Doi artisti, 6+ ani de experienta, o pasiune pentru arta."
+    },
+    "aftercare": {
+      "title": "Ghid Aftercare Tatuaj — Cum Iti Ingrijesti Tatuajul | Insomnia Tattoo",
+      "description": "Ghid complet pentru ingrijirea tatuajului proaspat. Afla ce sa faci si ce sa eviti in primele zile, saptamana si luna dupa sesiune."
+    },
+    "faq": {
+      "title": "Intrebari Frecvente Tatuaje | Insomnia Tattoo Mamaia Nord",
+      "description": "Raspunsuri la cele mai frecvente intrebari despre tatuaje: pret, durere, durata, aftercare si programare la Insomnia Tattoo."
+    },
+    "contact": {
+      "title": "Contact Insomnia Tattoo | Studio Tatuaje Mamaia Nord",
+      "description": "Contacteaza Insomnia Tattoo. Adresa, program, telefon si formular de contact. Studio de tatuaje in Mamaia Nord, Constanta."
+    },
+    "privacy": {
+      "title": "Politica de Confidentialitate | Insomnia Tattoo",
+      "description": "Politica de confidentialitate a Insomnia Tattoo. Afla cum colectam, folosim si protejam datele tale personale."
+    },
+    "terms": {
+      "title": "Termeni si Conditii | Insomnia Tattoo",
+      "description": "Termenii si conditiile de utilizare a site-ului Insomnia Tattoo. Reguli privind programarile, platile si serviciile noastre."
+    },
+    "cookies": {
+      "title": "Politica Cookies | Insomnia Tattoo",
+      "description": "Politica de cookies a Insomnia Tattoo. Afla ce cookies folosim si cum iti poti gestiona preferintele."
+    }
+  }
+}
