@@ -137,7 +137,9 @@ export default function RegisterPage() {
 
     const container = document.getElementById('google-btn-container-register');
     if (container) {
-      container.innerHTML = '';
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
       window.google.accounts.id.renderButton(container, {
         type: 'standard',
         theme: 'filled_black',

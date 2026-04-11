@@ -198,6 +198,7 @@ model Booking {
   @@index([consultationDate])
   @@index([artistId, consultationDate])
   @@index([clientId])
+  @@index([createdAt])
   @@map("bookings")
 }
 
@@ -214,6 +215,10 @@ model GalleryItem {
   titleEn  String? @map("title_en") @db.VarChar(200)
   style    String? @db.VarChar(50)
   bodyArea String? @map("body_area") @db.VarChar(100)
+
+  // Before/After comparison
+  beforeImagePath String?  @map("before_image_path") @db.VarChar(500)
+  isBeforeAfter   Boolean  @default(false) @map("is_before_after")
 
   // Display
   isFeatured Boolean @default(false) @map("is_featured")

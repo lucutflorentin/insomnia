@@ -16,6 +16,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "^6.4.1",
+    "@sentry/nextjs": "^10.48.0",
     "@tailwindcss/postcss": "^4.2.2",
     "bcryptjs": "^2.4.3",
     "date-fns": "^4.1.0",

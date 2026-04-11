@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateReferenceCode } from '@/lib/utils';
-import { bookingSchema, quickBookingSchema } from '@/lib/validations';
+import { bookingSchema, quickBookingSchema, sanitizeText } from '@/lib/validations';
 import { sendBookingConfirmation, sendBookingNotification } from '@/lib/email';
 import { verifyAdminRequest, getCurrentUser } from '@/lib/auth';
 import { checkRateLimit, getClientIp, BOOKING_LIMIT } from '@/lib/rate-limit';
@@ -97,6 +97,11 @@ export async function POST(request: NextRequest) {
       language = parsed.data.language;
     }
 
+    // Sanitize all free-text fields
+    clientName = sanitizeText(clientName);
+    if (description) description = sanitizeText(description);
+    if (stylePreference) stylePreference = sanitizeText(stylePreference);
+
     // Lookup artist by slug (includes user for email)
     const artist = await prisma.artist.findUnique({
       where: { slug: artistSlug },
@@ -152,7 +157,7 @@ export async function POST(request: NextRequest) {
           language,
         },
       });
-    });
+    }, { isolationLevel: 'Serializable' });
 
     // Send emails async (fire-and-forget)
     const emailData = {

@@ -4,6 +4,7 @@ import { getMessages, getTranslations } from 'next-intl/server';
 import { Playfair_Display, Inter, Cormorant_Garamond } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import { ToastProvider } from '@/components/ui/Toast';
+import { AuthProvider } from '@/contexts/AuthContext';
 import JsonLd, { getLocalBusinessSchema } from '@/components/seo/JsonLd';
 import Analytics from '@/components/seo/Analytics';
 import CookieConsent from '@/components/ui/CookieConsent';
@@ -65,20 +66,11 @@ export async function generateMetadata({
       title: t('title'),
       description: t('description'),
       locale: locale === 'ro' ? 'ro_RO' : 'en_US',
-      images: [
-        {
-          url: '/og-image.svg',
-          width: 1200,
-          height: 630,
-          alt: 'Insomnia Tattoo — Studio Premium Tatuaje Mamaia Nord',
-        },
-      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: t('title'),
       description: t('description'),
-      images: ['/og-image.svg'],
     },
   };
 }
@@ -98,10 +90,17 @@ export default async function LocaleLayout({
       lang={locale}
       className={`${playfair.variable} ${inter.variable} ${cormorant.variable}`}
     >
-      <body className="min-h-screen bg-bg-primary font-body text-text-primary antialiased">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#0A0A0A" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
+      <body className="bg-bg-primary font-body text-text-primary antialiased">
         <JsonLd data={getLocalBusinessSchema()} />
         <Analytics />
         <NextIntlClientProvider messages={messages}>
+          <AuthProvider>
           <ToastProvider>
             <PublicOnlyComponents>
               <CursorGlow />
@@ -112,6 +111,7 @@ export default async function LocaleLayout({
               <CookieConsent />
             </PublicOnlyComponents>
           </ToastProvider>
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>

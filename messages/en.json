@@ -35,6 +35,12 @@
       "decline": "Decline",
       "learnMore": "Learn more"
     },
+    "error": {
+      "title": "Something went wrong",
+      "description": "An unexpected error occurred. Please try again.",
+      "retry": "Try again",
+      "home": "Home"
+    },
     "notFound": {
       "title": "Page not found",
       "description": "Sorry, the page you are looking for does not exist or has been moved.",
@@ -348,13 +354,15 @@
       "description": "Describe your idea",
       "descriptionPlaceholder": "Describe your tattoo idea... What do you want, what does it mean to you, what elements should it include.",
       "references": "Reference images (optional)",
-      "referencesHelp": "Maximum 3 images, JPG/PNG format, max 5MB each"
+      "referencesHelp": "Maximum 3 images, JPG/PNG format, max 5MB each",
+      "recommendation": "We recommend"
     },
     "step3": {
       "title": "Choose consultation date",
       "selectDate": "Select an available day",
       "selectTime": "Choose a time",
-      "noSlots": "No available slots on this day."
+      "noSlots": "No available slots on this day.",
+      "loading": "Loading availability..."
     },
     "step4": {
       "title": "Your contact information",

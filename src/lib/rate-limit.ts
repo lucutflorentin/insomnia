@@ -61,9 +61,10 @@ export function checkRateLimit(
  * Extract client IP from request headers.
  */
 export function getClientIp(request: Request): string {
+  // Vercel sets x-real-ip authoritatively; prefer it over x-forwarded-for
   return (
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     request.headers.get('x-real-ip') ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     'unknown'
   );
 }
@@ -75,3 +76,4 @@ export const BOOKING_LIMIT = { max: 10, windowSec: 60 };    // 10 bookings / min
 export const UPLOAD_LIMIT = { max: 20, windowSec: 60 };     // 20 uploads / minute
 export const CANCEL_LIMIT = { max: 5, windowSec: 60 };      // 5 cancellations / minute
 export const PASSWORD_RESET_LIMIT = { max: 5, windowSec: 15 * 60 }; // 5 attempts / 15 min
+export const PASSWORD_CHANGE_LIMIT = { max: 5, windowSec: 15 * 60 }; // 5 attempts / 15 min

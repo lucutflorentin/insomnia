@@ -13,7 +13,7 @@ async function getAdminUser() {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
     const user = await prisma.user.findUnique({
-      where: { id: payload.userId as number },
+      where: { id: Number(payload.sub) },
       select: { name: true, role: true },
     });
     return user;

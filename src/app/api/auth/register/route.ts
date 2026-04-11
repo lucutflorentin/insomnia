@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
-import { registerSchema } from '@/lib/validations';
+import { registerSchema, sanitizeText } from '@/lib/validations';
 import {
   hashPassword,
   signToken,
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       data: {
         email: parsed.data.email,
         passwordHash,
-        name: parsed.data.name,
+        name: sanitizeText(parsed.data.name),
         phone: parsed.data.phone || null,
         role: 'CLIENT',
       },

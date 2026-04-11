@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavItem {
   key: string;
@@ -27,18 +27,9 @@ const navItems: NavItem[] = [
 export default function AdminSidebar() {
   const t = useTranslations('admin.nav');
   const pathname = usePathname();
-  const [role, setRole] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) setRole(data.data.role);
-      })
-      .catch(() => {});
-  }, []);
-
-  const isSuperAdmin = role === 'SUPER_ADMIN';
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });

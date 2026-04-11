@@ -12,6 +12,7 @@ import SlideUp from '@/components/animations/SlideUp';
 import { cn } from '@/lib/utils';
 import { BODY_AREAS, SIZE_CATEGORIES, BOOKING_SOURCES, TATTOO_STYLES } from '@/lib/constants';
 import { trackEvent } from '@/components/seo/Analytics';
+import { useToast } from '@/components/ui/Toast';
 
 interface DayAvailability {
   date: string;
@@ -29,6 +30,7 @@ export default function BookingWizard() {
   const searchParams = useSearchParams();
   const preselectedArtist = searchParams.get('artist');
 
+  const { showToast } = useToast();
   const tStyles = useTranslations('artists.styles');
   const [artists, setArtists] = useState<{ slug: string; name: string; specialtyRo: string | null; specialtyEn: string | null; specialties: string[] }[]>([]);
   const [step, setStep] = useState(1);
@@ -43,7 +45,7 @@ export default function BookingWizard() {
       .then((data) => {
         if (data.success) setArtists(data.data);
       })
-      .catch(() => {});
+      .catch((err) => console.error('Failed to load artists:', err));
   }, []);
 
   const [availability, setAvailability] = useState<DayAvailability[]>([]);
@@ -113,9 +115,12 @@ export default function BookingWizard() {
         setReferenceCode(data.referenceCode || 'INS-2024-0001');
         setIsSuccess(true);
         trackEvent('Lead', { content_name: 'booking', value: form.artist });
+      } else {
+        showToast(data.error || t('error'), 'error');
       }
-    } catch {
-      // handle error
+    } catch (err) {
+      console.error('Booking submission failed:', err);
+      showToast(t('error'), 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -249,7 +254,7 @@ export default function BookingWizard() {
                       {t('step2.style')}: <span className="font-medium text-accent">{tStyles(form.style)}</span>
                     </p>
                     <p className="text-sm text-text-primary">
-                      Recomandam pe <button type="button" className="font-semibold text-accent hover:underline" onClick={() => updateForm('artist', match.slug)}>{match.name}</button>
+                      {t('step2.recommendation')} <button type="button" className="font-semibold text-accent hover:underline" onClick={() => updateForm('artist', match.slug)}>{match.name}</button>
                     </p>
                   </div>
                 </div>
@@ -313,7 +318,7 @@ export default function BookingWizard() {
 
           {loadingAvailability ? (
             <div className="rounded-sm border border-border bg-bg-secondary p-8 text-center">
-              <p className="text-text-muted">Se incarca...</p>
+              <p className="text-text-muted">{t('step3.loading')}</p>
             </div>
           ) : (
             <>

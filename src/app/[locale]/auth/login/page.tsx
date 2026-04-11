@@ -123,7 +123,9 @@ export default function LoginPage() {
 
     const container = document.getElementById('google-btn-container');
     if (container) {
-      container.innerHTML = '';
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
       window.google.accounts.id.renderButton(container, {
         type: 'standard',
         theme: 'filled_black',

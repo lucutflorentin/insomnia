@@ -6,6 +6,162 @@
 
 ## JURNAL TEHNIC — Ce s-a implementat
 
+### Sesiunea 8 (12 Aprilie 2026) — Audit complet, securitate, bugfix-uri, performanta, PWA
+
+Audit complet al intregului proiect: cod, securitate, performanta, UX. Identificate si rezolvate 35+ probleme in 5 faze.
+
+#### ✅ FAZA 1: Securitate (8 vulnerabilitati fixate)
+
+**1.1 Google OAuth token — validare audience obligatorie**
+- `src/lib/auth.ts:200-203` — `if (clientId && data.aud !== clientId)` era bypass-abil cand `GOOGLE_CLIENT_ID` lipsea din env
+- Fix: throw error daca `GOOGLE_CLIENT_ID` nu e setat; validare mereu obligatorie
+- Impact: prevenire autentificare cu token-uri Google de la alte aplicatii
+
+**1.2 JWT secret strength enforcement**
+- `src/lib/auth.ts:6-9` — fara verificare la runtime daca secretele sunt suficient de puternice
+- Fix: validare la startup — minim 32 caractere, crash explicit cu mesaj descriptiv
+- Impact: previne deploy cu secrete slabe/predictibile
+
+**1.3 Content-Security-Policy header**
+- `next.config.ts` — lipsea CSP complet; orice XSS era exploatabil fara protectie
+- Fix: CSP header cu whitelist: Google OAuth, GA4, Meta Pixel, Sentry, fonts
+- Include: `default-src 'self'`, `object-src 'none'`, `base-uri 'self'`
+
+**1.4 Rate limit pe password change**
+- `src/app/api/client/profile/route.ts` — zero rate limiting pe schimbare parola
+- Fix: 5 incercari / 15 minute, cheie pe userId + IP
+- Adaugat `PASSWORD_CHANGE_LIMIT` in `src/lib/rate-limit.ts`
+
+**1.5 Sanitizare input in API routes**
+- `sanitizeText()` exista in `src/lib/validations.ts` dar NU era importata nicaieri
+- Fix: aplicat pe 3 API routes:
+  - `POST /api/bookings` — clientName, description, stylePreference
+  - `PUT /api/client/profile` — name
+  - `POST /api/auth/register` — name
+
+**1.6 IP detection fix in rate limiter**
+- `src/lib/rate-limit.ts` — `x-forwarded-for` era prioritizat (spoofabil)
+- Fix: `x-real-ip` prioritizat (Vercel il seteaza autoritativ)
+
+**1.7 Body size limits**
+- `next.config.ts` — fara limita pe body size, potential DoS
+- Fix: `experimental.serverActions.bodySizeLimit: '2mb'`
+
+**1.8 innerHTML eliminat din auth pages**
+- `src/app/[locale]/auth/login/page.tsx` si `register/page.tsx` — `innerHTML = ''` pt Google button
+- Fix: `while (container.firstChild) container.removeChild(container.firstChild)`
+
+#### ✅ FAZA 2: Buguri confirmate (7 fix-uri)
+
+**2.1 Admin dashboard JWT payload mismatch (BUG CRITIC)**
+- `src/app/[locale]/admin/page.tsx:16` — folosea `payload.userId` care NU exista in JWT
+- JWT-ul are `payload.sub` (string cu user ID)
+- Fix: `payload.userId as number` → `Number(payload.sub)`
+- Impact: Dashboard-ul afiseaza acum corect "Bun venit, [Nume]"
+
+**2.2 Silent error swallowing**
+- 4 fisiere aveau `.catch(() => {})` — erori inghitite complet
+- Fix: `console.error()` adaugat in Header.tsx, AdminSidebar.tsx, BookingWizard.tsx
+
+**2.3 AuthContext — eliminare fetch /api/auth/me pe fiecare navigare**
+- `src/components/layout/Header.tsx` — `useEffect` cu `pathname` in deps → fetch la fiecare navigare
+- Fix: creat `src/contexts/AuthContext.tsx` — fetch o singura data la mount, partajat global
+- Integrat in layout.tsx ca `<AuthProvider>`
+- Header.tsx si AdminSidebar.tsx refactorizate sa foloseasca `useAuth()`
+- Impact: API calls reduse de la N (cate pagini vizitezi) la 1
+
+**2.4 Serializable isolation level pt bookings**
+- `src/app/api/bookings/route.ts` — `$transaction` fara isolation level explicit
+- Fix: `isolationLevel: 'Serializable'` adaugat — previne phantom reads in double-booking check
+
+**2.5 Index DB pe Booking.createdAt**
+- `prisma/schema.prisma` — admin-ul sorteaza/filtreaza dupa `createdAt` fara index
+- Fix: `@@index([createdAt])` pe Booking model
+- Necesita migration: `npx prisma migrate dev`
+
+**2.6 OG Image SVG → PNG dinamic**
+- `public/og-image.svg` — Facebook/Twitter/LinkedIn/WhatsApp NU randeaza SVG ca OG image
+- Fix: creat `src/app/[locale]/opengraph-image.tsx` — genereaza PNG 1200x630 cu `next/og`
+- Layout.tsx actualizat sa nu mai referentieze `/og-image.svg` manual
+
+**2.7 String-uri hardcoded in romana**
+- `BookingWizard.tsx:316` — "Se incarca..." → `t('step3.loading')`
+- `BookingWizard.tsx:252` — "Recomandam pe" → `t('step2.recommendation')`
+- `error.tsx` — 4 string-uri hardcoded → `t('common.error.*')`
+- `loading.tsx` — eliminat text, pastrat doar spinner
+- Adaugate chei noi in `messages/ro.json` si `messages/en.json`:
+  - `common.error.title/description/retry/home`
+  - `booking.step3.loading`, `booking.step2.recommendation`
+
+#### ✅ FAZA 3: Performanta
+
+**3.1 Next.js Image in ArtistCards**
+- `src/components/sections/ArtistCards.tsx` — `<img>` raw inlocuit cu `<Image>` Next.js
+- Adaugat: `fill`, `sizes`, `priority` pe primele 2 carduri
+- CSS transition `hover:scale-[1.02]` in loc de `framer-motion` `whileHover`
+- `aria-label` adaugat pe artist cards
+
+**3.2 Image optimization config**
+- `next.config.ts` — adaugat `deviceSizes`, `imageSizes`, `*.googleusercontent.com` in `remotePatterns`
+
+#### ✅ FAZA 4: UX & Imbunatatiri
+
+**4.1 Toast integrat in BookingWizard**
+- Toast system exista (`src/components/ui/Toast.tsx`) dar NU era folosit nicaieri
+- Fix: `useToast()` integrat in BookingWizard — erori si non-success responses afisate ca toast
+
+**4.2 ConfirmDialog component**
+- Creat `src/components/ui/ConfirmDialog.tsx` — dialog reutilizabil cu variant `danger/warning`
+- Bazeaza pe Modal.tsx existent, adauga icon, mesaj, butoane confirmare/anulare
+
+**4.3 Error boundary cu Sentry**
+- `src/app/[locale]/error.tsx` — rescris cu i18n + `Sentry.captureException(error)`
+- Captureaza automat erorile de pagina in Sentry
+
+**4.4 Sentry integration**
+- Instalat `@sentry/nextjs`
+- Creat: `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`
+- `next.config.ts` — wrapat cu `withSentryConfig()`
+- CSP actualizat cu `https://*.ingest.sentry.io`
+- Conditional pe `NEXT_PUBLIC_SENTRY_DSN` — nu face nimic daca nu e setat
+
+#### ✅ FAZA 5: Inovatii
+
+**5.1 PWA Support**
+- Creat `public/manifest.json` — name, short_name, theme_color #0A0A0A, icon sizes
+- Layout.tsx — adaugat `<link rel="manifest">`, `<meta name="theme-color">`, Apple PWA meta tags
+- Pregatit pentru service worker si offline draft saving (viitor)
+
+**5.2 Before/After Gallery Slider**
+- Creat `src/components/features/gallery/BeforeAfterSlider.tsx`
+- Slider comparatie imagini cu suport: mouse drag, touch, keyboard (arrows), click
+- ARIA `role="slider"` cu `aria-valuenow/min/max`
+- Labels configurabile (Fresh/Healed)
+- `prisma/schema.prisma` — adaugat campuri pe GalleryItem: `beforeImagePath`, `isBeforeAfter`
+
+#### Fisiere noi create
+- `src/contexts/AuthContext.tsx` — auth state management global
+- `src/app/[locale]/opengraph-image.tsx` — OG image PNG dinamic
+- `src/components/ui/ConfirmDialog.tsx` — dialog confirmare actiuni destructive
+- `src/components/features/gallery/BeforeAfterSlider.tsx` — slider before/after
+- `public/manifest.json` — PWA manifest
+- `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` — Sentry config
+
+#### Fisiere modificate (20+)
+- `src/lib/auth.ts`, `src/lib/rate-limit.ts`, `src/lib/validations.ts`
+- `next.config.ts`, `prisma/schema.prisma`
+- `src/middleware.ts` (nu, dar verificat)
+- `src/app/[locale]/layout.tsx`, `src/app/[locale]/error.tsx`, `src/app/[locale]/loading.tsx`
+- `src/app/[locale]/admin/page.tsx`
+- `src/app/[locale]/auth/login/page.tsx`, `src/app/[locale]/auth/register/page.tsx`
+- `src/app/api/bookings/route.ts`, `src/app/api/client/profile/route.ts`, `src/app/api/auth/register/route.ts`
+- `src/components/layout/Header.tsx`, `src/components/admin/AdminSidebar.tsx`
+- `src/components/sections/ArtistCards.tsx`
+- `src/components/features/booking/BookingWizard.tsx`
+- `messages/ro.json`, `messages/en.json`
+
+---
+
 ### Sesiunea 7 (11-12 Aprilie 2026) — Deploy live + bugfixuri critice
 
 #### ✅ Deploy pe Vercel (inlocuire cPanel)

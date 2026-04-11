@@ -40,6 +40,12 @@
       "description": "Ne pare rau, dar pagina pe care o cauti nu exista sau a fost mutata.",
       "backHome": "Inapoi acasa",
       "bookConsultation": "Programeaza o consultatie"
+    },
+    "error": {
+      "title": "Ceva nu a mers bine",
+      "description": "A aparut o eroare neasteptata. Te rugam sa incerci din nou.",
+      "retry": "Incearca din nou",
+      "home": "Acasa"
     }
   },
   "auth": {
@@ -348,13 +354,15 @@
       "description": "Descrierea ideii tale",
       "descriptionPlaceholder": "Descrie ideea ta pentru tatuaj... Ce iti doresti, ce semnificatie are, ce elemente vrei sa includa.",
       "references": "Imagini de referinta (optional)",
-      "referencesHelp": "Maximum 3 imagini, format JPG/PNG, max 5MB fiecare"
+      "referencesHelp": "Maximum 3 imagini, format JPG/PNG, max 5MB fiecare",
+      "recommendation": "Recomandam pe"
     },
     "step3": {
       "title": "Alege data consultatiei",
       "selectDate": "Selecteaza o zi disponibila",
       "selectTime": "Alege ora",
-      "noSlots": "Nu sunt sloturi disponibile in aceasta zi."
+      "noSlots": "Nu sunt sloturi disponibile in aceasta zi.",
+      "loading": "Se incarca disponibilitatea..."
     },
     "step4": {
       "title": "Datele tale de contact",

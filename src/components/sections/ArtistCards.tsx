@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { motion } from 'framer-motion';
+import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import SlideUp from '@/components/animations/SlideUp';
 import type { HomeArtist } from '@/components/sections/HomePageClient';
@@ -35,22 +35,24 @@ export default function ArtistCards({ artists, onArtistClick }: ArtistCardsProps
 
             return (
               <SlideUp key={artist.slug} delay={index * 0.2}>
-                <motion.div
+                <div
                   role="button"
                   tabIndex={0}
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.3 }}
+                  aria-label={`${t('viewPortfolio')} — ${artist.name}`}
                   onClick={() => onArtistClick(artist.slug)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onArtistClick(artist.slug); } }}
-                  className="group relative w-full overflow-hidden rounded-sm border border-border bg-bg-secondary text-left cursor-pointer"
+                  className="group relative w-full overflow-hidden rounded-sm border border-border bg-bg-secondary text-left cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
                 >
                   {/* Artist portrait or placeholder */}
-                  <div className="aspect-[4/5] bg-gradient-to-b from-bg-tertiary to-bg-secondary transition-transform duration-500 group-hover:scale-105">
+                  <div className="relative aspect-[4/5] bg-gradient-to-b from-bg-tertiary to-bg-secondary overflow-hidden">
                     {artist.profileImage ? (
-                      <img
+                      <Image
                         src={artist.profileImage}
-                        alt={artist.name}
-                        className="h-full w-full object-cover"
+                        alt={`${artist.name} — ${specialty || 'Tattoo Artist'}`}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        priority={index < 2}
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">
@@ -91,7 +93,7 @@ export default function ArtistCards({ artists, onArtistClick }: ArtistCardsProps
                   </div>
 
                   <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-accent transition-all duration-500 group-hover:w-full" />
-                </motion.div>
+                </div>
               </SlideUp>
             );
           })}

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAuthRequest, comparePassword, hashPassword } from '@/lib/auth';
+import { checkRateLimit, getClientIp, PASSWORD_CHANGE_LIMIT } from '@/lib/rate-limit';
+import { sanitizeText } from '@/lib/validations';
 
 // GET /api/client/profile — Authenticated: get own profile
 export async function GET(request: NextRequest) {
@@ -52,6 +54,18 @@ export async function PUT(request: NextRequest) {
 
     // --- Password change flow ---
     if (body.currentPassword && body.newPassword) {
+      const ip = getClientIp(request);
+      const { allowed, retryAfterSec } = checkRateLimit(
+        `password-change:${userId}:${ip}`,
+        PASSWORD_CHANGE_LIMIT,
+      );
+      if (!allowed) {
+        return NextResponse.json(
+          { success: false, error: 'Too many password change attempts. Try again later.' },
+          { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
+        );
+      }
+
       if (typeof body.newPassword !== 'string' || body.newPassword.length < 8) {
         return NextResponse.json(
           { success: false, error: 'New password must be at least 8 characters' },
@@ -91,7 +105,7 @@ export async function PUT(request: NextRequest) {
     // --- Profile update flow ---
     const data: Record<string, unknown> = {};
     if (typeof body.name === 'string' && body.name.trim().length >= 2) {
-      data.name = body.name.trim();
+      data.name = sanitizeText(body.name);
     }
     if (typeof body.phone === 'string') {
       data.phone = body.phone.trim() || null;

@@ -3,10 +3,22 @@ import { compare, hash } from 'bcryptjs';
 import { cookies } from 'next/headers';
 import type { UserRole } from '@/types';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
-const JWT_REFRESH_SECRET = new TextEncoder().encode(
-  process.env.JWT_REFRESH_SECRET,
-);
+// --- Secret validation at startup ---
+const rawJwtSecret = process.env.JWT_SECRET;
+if (!rawJwtSecret || rawJwtSecret.length < 32) {
+  throw new Error(
+    'JWT_SECRET must be set and at least 32 characters. Generate one with: openssl rand -base64 48',
+  );
+}
+const rawJwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
+if (!rawJwtRefreshSecret || rawJwtRefreshSecret.length < 32) {
+  throw new Error(
+    'JWT_REFRESH_SECRET must be set and at least 32 characters. Generate one with: openssl rand -base64 48',
+  );
+}
+
+const JWT_SECRET = new TextEncoder().encode(rawJwtSecret);
+const JWT_REFRESH_SECRET = new TextEncoder().encode(rawJwtRefreshSecret);
 
 export interface JWTPayload {
   sub: string; // User.id as string
@@ -197,9 +209,12 @@ export async function verifyGoogleToken(
 
   const data = await response.json();
 
-  // Verify the token is for our app
+  // Verify the token is for our app — mandatory check
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  if (clientId && data.aud !== clientId) {
+  if (!clientId) {
+    throw new Error('GOOGLE_CLIENT_ID environment variable is required for Google OAuth');
+  }
+  if (data.aud !== clientId) {
     throw new Error('Google token audience mismatch');
   }
 

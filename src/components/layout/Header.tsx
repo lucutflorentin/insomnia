@@ -8,13 +8,14 @@ import LanguageSwitcher from './LanguageSwitcher';
 import MobileMenu from './MobileMenu';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
   const t = useTranslations('common');
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,15 +24,6 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.success) setUser(data.data);
-      })
-      .catch(() => {});
-  }, [pathname]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
