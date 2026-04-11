@@ -1,10 +1,65 @@
 # Insomnia Tattoo — Roadmap & Strategie
 
-> Ultima actualizare: 9 Aprilie 2026
+> Ultima actualizare: 12 Aprilie 2026
 
 ---
 
 ## JURNAL TEHNIC — Ce s-a implementat
+
+### Sesiunea 7 (11-12 Aprilie 2026) — Deploy live + bugfixuri critice
+
+#### ✅ Deploy pe Vercel (inlocuire cPanel)
+- cPanel shared hosting (cloud607.c-f.ro) nu suporta Node.js — doar PHP
+- Migrat deploy pe **Vercel** (free tier) cu auto-deploy din GitHub (`lucutflorentin/insomnia`)
+- Configurat environment variables pe Vercel (DATABASE_URL, JWT secrets, etc.)
+
+#### ✅ Baza de date Railway MySQL
+- MySQL-ul de pe cPanel avea portul 3306 firewalled (nu se putea accesa remote)
+- Creat baza de date MySQL pe **Railway** (free tier)
+- DATABASE_URL: `mysql://root:...@mainline.proxy.rlwy.net:40798/railway`
+- Rulat `prisma migrate` + `db:seed` pe Railway
+
+#### ✅ Conectare domeniu insomniatattoo.ro
+- Configurat DNS: A record + CNAME www → Vercel
+- SSL auto-generat de Vercel
+- Site-ul live pe `https://insomniatattoo.ro`
+
+#### ✅ Izolare admin de componentele publice
+- Creat `src/components/layout/PublicOnlyComponents.tsx` — client component wrapper
+- Foloseste `usePathname()` pentru a detecta paginile admin
+- Wraps: `<CursorGlow />`, `<WhatsAppButton />`, `<CookieConsent />` — nu mai apar pe `/admin/*`
+
+#### ✅ Dashboard admin imbunatatit
+- `src/app/[locale]/admin/page.tsx` rescris complet:
+  - Header cu salut personalizat ("Bun venit, [Nume]") + data curenta + badge rol
+  - 4 stat cards: booking-uri noi, luna aceasta, confirmate, recenzii pending
+  - Quick actions: Vezi booking-uri, Galerie, Disponibilitate (cu iconuri + descrieri)
+  - Tabel booking-uri recente cu link detalii
+  - Panou recenzii recente
+- Adaugate ~15 chei i18n noi in `messages/ro.json` si `messages/en.json`
+
+#### ✅ Fix Header auth detection
+- `src/components/layout/Header.tsx` — API-ul returna `data.data` (nested), dar Header-ul citea `data.user`
+- Fix: `data.user` → `data.data` pentru a detecta corect starea de autentificare
+
+#### ✅ Fix admin redirect dupa login
+- `src/app/[locale]/auth/login/page.tsx` — rolul era nested in `data.data.role`, dar login page citea `data.role`
+- Fix: `const role = data.data?.role || data.role` — acum admin-ul e redirectionat corect catre `/admin`
+- Aplicat fix pe ambele flow-uri: email login si Google OAuth
+
+#### ✅ Fix noise texture z-index
+- `src/app/globals.css` — `body::before` (noise texture overlay) avea `z-index: 50`
+- Interferea cu overlay-uri si componente interactive
+- Fix: `z-index: 50` → `z-index: 1`
+
+#### ✅ Fix dead space sub footer (~3200px spatiu gol)
+- **Cauza root:** `<motion.button>` in `ArtistCards.tsx` wrapa un `<Button>` component (care randeaza `<button>`) — HTML invalid (`<button>` in `<button>`)
+- Eroarea de hydration facea React sa bail out si sa re-randeze, duplicand 4 sectiuni (GalleryHighlight, SocialProof, CTABanner, MapSection) direct in `<body>` in afara `<main>` wrapper
+- **Fix:** `<motion.button>` → `<motion.div>` cu `role="button"`, `tabIndex={0}` si keyboard handler
+- **Fix complementar:** Public layout (`src/app/[locale]/(public)/layout.tsx`) restructurat cu `flex min-h-screen flex-col` + `<main className="flex-1">`
+- Rezultat: 0 sectiuni orphan, footer e ultimul element vizibil pe pagina
+
+---
 
 ### Sesiunea 6 (9 Aprilie 2026) — Analiza post-implementare v2.0 + bugfixuri
 
@@ -250,27 +305,16 @@ GOOGLE_CLIENT_SECRET=secret_google_oauth
 ADMIN_EMAIL=admin@insomniatattoo.ro
 ```
 
-#### 3. Rulare database setup + migrare v2.0
-```bash
-npm install
-npx prisma migrate dev    # aplica schema v2.0 (User, LoyaltyTransaction, Session, Review update, etc.)
-npm run db:seed            # populeaza admin, artisti, templates
-npm run dev                # test local
-```
-**IMPORTANT:** Schema s-a schimbat major (User model nou, Artist refactored, noi modele). Trebuie `migrate dev` inainte de orice altceva.
+#### ~~3. Rulare database setup + migrare v2.0~~ ✅ Rezolvat
+- Baza de date pe Railway MySQL (cloud)
+- Schema migrata si seed-ul rulat cu succes
 
-#### 4. Build verification
-```bash
-npx next build             # verifica compilare TypeScript + toate importurile
-```
-Nu s-a putut rula in sesiunea de dezvoltare (Node.js indisponibil in shell). Poate avea erori minore de compilare.
+#### ~~4. Build verification~~ ✅ Rezolvat
+- Build ruleaza fara erori pe Vercel
 
-#### 5. Deploy pe cPanel
-```bash
-npm run build
-# copiaza .next/standalone/ + public/ + .env.local pe cPanel
-# configureaza Node.js app in cPanel cu entry: server.js
-```
+#### ~~5. Deploy~~ ✅ Rezolvat
+- Site-ul e live pe Vercel la `https://insomniatattoo.ro`
+- Auto-deploy din GitHub la fiecare `git push origin main`
 
 ---
 
@@ -292,9 +336,9 @@ Inainte de lansare, testeaza manual toate scenariile (10 teste):
 9. **Permisiuni:** Artist logat → Verifica NU poate accesa `/admin/artists` sau `/admin/loyalty`
 10. **Upload:** Guest → Incearca upload → 401. Artist → Upload → OK doar propria galerie
 
-#### 8. Header auth state
-- Header-ul public (`src/components/layout/Header.tsx`) nu arata link-uri Login/Contul meu in functie de starea de autentificare
-- Optional: adauga buton "Contul meu" / "Autentificare" in header pe baza cookie-ului JWT
+#### ~~8. Header auth state~~ ✅ Rezolvat
+- Header-ul detecteaza corect starea de autentificare (fix `data.user` → `data.data`)
+- Arata "Contul meu" / "Sign In" in functie de JWT cookie
 
 ---
 
@@ -334,14 +378,14 @@ Inainte de lansare, testeaza manual toate scenariile (10 teste):
 ## PARTEA 2: Plan de Extindere
 
 ### Faza A: Pre-Launch (1-2 saptamani)
-1. Rezolva toate item-urile 🔴 CRITICE de mai sus
-2. Ruleaza `prisma migrate dev` + `next build` — verifica totul compileaza
-3. Incarca imagini reale (portrete artisti + 10-15 lucrari per artist)
-4. Testeaza toate 10 scenariile end-to-end (vezi sectiunea 🟡 mai sus)
-5. Testeaza pe mobile (70%+ din trafic va fi mobil)
-6. Config SSL pe cPanel (HTTPS obligatoriu)
-7. Configureaza Google OAuth (creaza proiect in Google Cloud Console, adauga `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET`)
-8. Deploy pe cPanel cu `next build` + `standalone` output
+1. ~~Deploy pe hosting~~ ✅ Live pe Vercel + Railway MySQL
+2. ~~SSL~~ ✅ Auto-generat de Vercel
+3. ~~Database migration~~ ✅ Schema v2.0 pe Railway
+4. Incarca imagini reale (portrete artisti + 10-15 lucrari per artist)
+5. Completeaza `.env` production: SMTP_PASS, Google Maps key, GA ID, Meta Pixel
+6. Configureaza Google OAuth (creaza proiect in Google Cloud Console)
+7. Testeaza toate 10 scenariile end-to-end (vezi sectiunea 🟡 mai sus)
+8. Testeaza pe mobile (70%+ din trafic va fi mobil)
 
 ### Faza B: Soft Launch (saptamana 1-2)
 1. Anunta pe Instagram Stories (@insomniatattoo, @madalina.insomnia, @florentin.insomnia)
