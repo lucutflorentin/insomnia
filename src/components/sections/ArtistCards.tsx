@@ -35,11 +35,13 @@ export default function ArtistCards({ artists, onArtistClick }: ArtistCardsProps
 
             return (
               <SlideUp key={artist.slug} delay={index * 0.2}>
-                <motion.button
-                  type="button"
+                <motion.div
+                  role="button"
+                  tabIndex={0}
                   whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.3 }}
                   onClick={() => onArtistClick(artist.slug)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onArtistClick(artist.slug); } }}
                   className="group relative w-full overflow-hidden rounded-sm border border-border bg-bg-secondary text-left cursor-pointer"
                 >
                   {/* Artist portrait or placeholder */}
@@ -89,7 +91,7 @@ export default function ArtistCards({ artists, onArtistClick }: ArtistCardsProps
                   </div>
 
                   <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-accent transition-all duration-500 group-hover:w-full" />
-                </motion.button>
+                </motion.div>
               </SlideUp>
             );
           })}
