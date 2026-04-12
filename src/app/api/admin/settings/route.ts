@@ -56,6 +56,10 @@ export async function PUT(request: NextRequest) {
       'booking_advance_days',
       'booking_consultation_minutes',
       'booking_max_reference_images',
+      'meta_title',
+      'meta_description',
+      'email_on_new_booking',
+      'email_on_new_review',
     ];
 
     const invalidKeys = entries

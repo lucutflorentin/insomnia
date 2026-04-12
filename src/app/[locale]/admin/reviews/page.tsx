@@ -1,7 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
+import { Star, Loader2, BarChart3, ArrowUpDown, ChevronUp, ChevronDown, Filter } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import Select from '@/components/ui/Select';
+import { useToast } from '@/components/ui/Toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface Review {
   id: number;
@@ -16,25 +22,36 @@ interface Review {
   createdAt: string;
 }
 
-const statusLabels: Record<string, string> = {
-  pending: 'In asteptare',
-  approved: 'Aprobata',
-  hidden: 'Ascunsa',
-};
-
-const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-500/20 text-yellow-400',
-  approved: 'bg-green-500/20 text-green-400',
-  hidden: 'bg-gray-500/20 text-gray-400',
-};
+type SortField = 'date' | 'rating';
+type SortDir = 'asc' | 'desc';
 
 export default function AdminReviewsPage() {
+  const t = useTranslations('admin.reviews');
+  const locale = useLocale();
+  const { showToast } = useToast();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // New: sort and artist filter state
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [artistFilter, setArtistFilter] = useState<string>('all');
+
+  const dateLocale = locale === 'ro' ? 'ro-RO' : 'en-US';
+
+  const statusColors: Record<string, string> = {
+    pending: 'bg-yellow-500/20 text-yellow-400',
+    approved: 'bg-green-500/20 text-green-400',
+    hidden: 'bg-gray-500/20 text-gray-400',
+  };
 
   useEffect(() => {
     fetchReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchReviews = async () => {
@@ -44,65 +61,181 @@ export default function AdminReviewsPage() {
         const json = await res.json();
         const list = json.success ? json.data : json;
         setReviews(Array.isArray(list) ? list : []);
+      } else {
+        showToast(t('fetchError'), 'error');
       }
     } catch {
-      // Handle silently
+      showToast(t('fetchError'), 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAction = async (reviewId: number, action: 'approve' | 'hide' | 'delete') => {
+  const handleApprove = async (reviewId: number) => {
+    const actionKey = `approve-${reviewId}`;
+    setActionLoading(actionKey);
     try {
-      if (action === 'delete') {
-        const res = await fetch(`/api/admin/reviews/${reviewId}`, {
-          method: 'DELETE',
-        });
-        if (res.ok) fetchReviews();
+      const res = await fetch(`/api/admin/reviews/${reviewId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isApproved: true, isVisible: true }),
+      });
+      if (res.ok) {
+        showToast(t('approveSuccess'), 'success');
+        fetchReviews();
       } else {
-        const body = action === 'approve'
-          ? { isApproved: true, isVisible: true }
-          : { isVisible: false };
-        const res = await fetch(`/api/admin/reviews/${reviewId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        if (res.ok) fetchReviews();
+        showToast(t('actionError'), 'error');
       }
     } catch {
-      // Handle silently
+      showToast(t('actionError'), 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleHide = async (reviewId: number) => {
+    const actionKey = `hide-${reviewId}`;
+    setActionLoading(actionKey);
+    try {
+      const res = await fetch(`/api/admin/reviews/${reviewId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isVisible: false }),
+      });
+      if (res.ok) {
+        showToast(t('hideSuccess'), 'success');
+        fetchReviews();
+      } else {
+        showToast(t('actionError'), 'error');
+      }
+    } catch {
+      showToast(t('actionError'), 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (deleteTarget === null) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/reviews/${deleteTarget}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        showToast(t('deleteSuccess'), 'success');
+        fetchReviews();
+      } else {
+        showToast(t('actionError'), 'error');
+      }
+    } catch {
+      showToast(t('actionError'), 'error');
+    } finally {
+      setIsDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
   const getStatus = (r: Review) =>
     r.isApproved ? 'approved' : !r.isVisible ? 'hidden' : 'pending';
 
-  const filteredReviews = activeFilter === 'all'
-    ? reviews
-    : reviews.filter((r) => getStatus(r) === activeFilter);
+  // Stats computed from all reviews
+  const stats = useMemo(() => {
+    if (reviews.length === 0) {
+      return { avgRating: 0, total: 0, distribution: [0, 0, 0, 0, 0] };
+    }
+    const total = reviews.length;
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    const avgRating = sum / total;
+    // distribution[0] = 1-star count, distribution[4] = 5-star count
+    const distribution = [0, 0, 0, 0, 0];
+    reviews.forEach((r) => {
+      if (r.rating >= 1 && r.rating <= 5) {
+        distribution[r.rating - 1]++;
+      }
+    });
+    return { avgRating, total, distribution };
+  }, [reviews]);
+
+  // Unique artists for filter dropdown
+  const artistOptions = useMemo(() => {
+    const artistMap = new Map<string, string>();
+    reviews.forEach((r) => {
+      if (r.artist) {
+        artistMap.set(String(r.artist.id), r.artist.name);
+      }
+    });
+    return [
+      { value: 'all', label: t('allArtists') },
+      ...Array.from(artistMap.entries()).map(([id, name]) => ({
+        value: id,
+        label: name,
+      })),
+    ];
+  }, [reviews, t]);
+
+  // Filtered, artist-filtered, and sorted reviews
+  const filteredReviews = useMemo(() => {
+    let result = reviews;
+
+    // Status filter
+    if (activeFilter !== 'all') {
+      result = result.filter((r) => getStatus(r) === activeFilter);
+    }
+
+    // Artist filter
+    if (artistFilter !== 'all') {
+      result = result.filter((r) => r.artist && String(r.artist.id) === artistFilter);
+    }
+
+    // Sort
+    return [...result].sort((a, b) => {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      if (sortField === 'date') {
+        return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * dir;
+      }
+      if (sortField === 'rating') {
+        return (a.rating - b.rating) * dir;
+      }
+      return 0;
+    });
+  }, [reviews, activeFilter, artistFilter, sortField, sortDir]);
 
   const filterTabs = [
-    { key: 'all', label: 'Toate', count: reviews.length },
-    { key: 'pending', label: 'In asteptare', count: reviews.filter((r) => getStatus(r) === 'pending').length },
-    { key: 'approved', label: 'Aprobate', count: reviews.filter((r) => getStatus(r) === 'approved').length },
-    { key: 'hidden', label: 'Ascunse', count: reviews.filter((r) => getStatus(r) === 'hidden').length },
+    { key: 'all', label: t('all'), count: reviews.length },
+    { key: 'pending', label: t('pending'), count: reviews.filter((r) => getStatus(r) === 'pending').length },
+    { key: 'approved', label: t('approved'), count: reviews.filter((r) => getStatus(r) === 'approved').length },
+    { key: 'hidden', label: t('hidden'), count: reviews.filter((r) => getStatus(r) === 'hidden').length },
   ];
 
-  const renderStars = (rating: number) => {
+  const renderStars = (rating: number, size: string = 'h-4 w-4') => {
     return (
       <div className="flex gap-0.5">
         {Array.from({ length: 5 }, (_, i) => (
-          <svg
+          <Star
             key={i}
-            className={`h-4 w-4 ${i < rating ? 'text-warning' : 'text-text-muted'}`}
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-          </svg>
+            className={`${size} ${i < rating ? 'fill-warning text-warning' : 'text-text-muted'}`}
+          />
         ))}
       </div>
+    );
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir(field === 'date' ? 'desc' : 'desc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="ml-1 inline h-3.5 w-3.5 text-text-muted" />;
+    return sortDir === 'asc' ? (
+      <ChevronUp className="ml-1 inline h-3.5 w-3.5 text-accent" />
+    ) : (
+      <ChevronDown className="ml-1 inline h-3.5 w-3.5 text-accent" />
     );
   };
 
@@ -116,10 +249,56 @@ export default function AdminReviewsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 font-heading text-2xl text-text-primary">Recenzii</h1>
+      <div className="mb-6 flex items-center gap-3">
+        <BarChart3 className="h-6 w-6 text-accent" />
+        <h1 className="font-heading text-2xl text-text-primary">{t('title')}</h1>
+      </div>
+
+      {/* Statistics Bar */}
+      {reviews.length > 0 && (
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {/* Average Rating */}
+          <div className="rounded-sm border border-border bg-bg-secondary p-4">
+            <p className="text-xs text-text-muted uppercase tracking-wider mb-2">{t('avgRating')}</p>
+            <div className="flex items-center gap-3">
+              <span className="text-3xl font-bold text-accent">{stats.avgRating.toFixed(1)}</span>
+              {renderStars(Math.round(stats.avgRating), 'h-5 w-5')}
+            </div>
+            <p className="mt-1 text-xs text-text-muted">
+              {stats.total} {t('totalReviews')}
+            </p>
+          </div>
+
+          {/* Rating Distribution */}
+          <div className="rounded-sm border border-border bg-bg-secondary p-4 col-span-1 md:col-span-2">
+            <p className="text-xs text-text-muted uppercase tracking-wider mb-3">{t('ratingDistribution')}</p>
+            <div className="space-y-1.5">
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = stats.distribution[star - 1];
+                const pct = stats.total > 0 ? (count / stats.total) * 100 : 0;
+                return (
+                  <div key={star} className="flex items-center gap-2 text-xs">
+                    <span className="w-4 text-right text-text-secondary">{star}</span>
+                    <Star className="h-3 w-3 fill-warning text-warning" />
+                    <div className="flex-1 h-2 rounded-full bg-bg-primary overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-warning transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="w-12 text-right text-text-muted">
+                      {count} ({pct.toFixed(0)}%)
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filter Tabs */}
-      <div className="mb-6 flex gap-1 rounded-sm border border-border bg-bg-primary p-1">
+      <div className="mb-4 flex gap-1 rounded-sm border border-border bg-bg-primary p-1">
         {filterTabs.map((tab) => (
           <button
             key={tab.key}
@@ -135,23 +314,58 @@ export default function AdminReviewsPage() {
         ))}
       </div>
 
+      {/* Artist Filter + Sort controls */}
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-text-muted" />
+          <Select
+            options={artistOptions}
+            value={artistFilter}
+            onChange={(e) => setArtistFilter(e.target.value)}
+            className="!py-2 text-sm min-w-[160px]"
+          />
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={() => handleSort('date')}
+            className={`flex items-center gap-1 rounded-sm border px-3 py-2 text-xs transition-colors ${
+              sortField === 'date'
+                ? 'border-accent/30 bg-accent/5 text-accent'
+                : 'border-border text-text-muted hover:text-text-secondary'
+            }`}
+          >
+            {t('date')} <SortIcon field="date" />
+          </button>
+          <button
+            onClick={() => handleSort('rating')}
+            className={`flex items-center gap-1 rounded-sm border px-3 py-2 text-xs transition-colors ${
+              sortField === 'rating'
+                ? 'border-accent/30 bg-accent/5 text-accent'
+                : 'border-border text-text-muted hover:text-text-secondary'
+            }`}
+          >
+            {t('rating')} <SortIcon field="rating" />
+          </button>
+        </div>
+      </div>
+
       {/* Reviews Table */}
       {filteredReviews.length === 0 ? (
         <div className="rounded-sm border border-border bg-bg-secondary p-12 text-center">
-          <p className="text-text-muted">Nu exista recenzii in aceasta categorie.</p>
+          <p className="text-text-muted">{t('noReviews')}</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-sm border border-border bg-bg-secondary">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border text-left text-xs text-text-muted">
-                <th className="px-4 py-3">Client</th>
-                <th className="px-4 py-3">Artist</th>
-                <th className="px-4 py-3">Rating</th>
-                <th className="px-4 py-3">Recenzie</th>
-                <th className="px-4 py-3">Data</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Actiuni</th>
+                <th className="px-4 py-3">{t('client')}</th>
+                <th className="px-4 py-3">{t('artist')}</th>
+                <th className="px-4 py-3">{t('rating')}</th>
+                <th className="px-4 py-3">{t('review')}</th>
+                <th className="px-4 py-3">{t('date')}</th>
+                <th className="px-4 py-3">{t('status')}</th>
+                <th className="px-4 py-3">{t('actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -167,7 +381,7 @@ export default function AdminReviewsPage() {
                     {review.reviewTextRo || review.reviewTextEn || '-'}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-text-muted">
-                    {new Date(review.createdAt).toLocaleDateString('ro-RO')}
+                    {new Date(review.createdAt).toLocaleDateString(dateLocale)}
                   </td>
                   <td className="px-4 py-3">
                     {(() => {
@@ -178,7 +392,7 @@ export default function AdminReviewsPage() {
                             statusColors[s] || statusColors.pending
                           }`}
                         >
-                          {statusLabels[s] || s}
+                          {t(s)}
                         </span>
                       );
                     })()}
@@ -189,26 +403,37 @@ export default function AdminReviewsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleAction(review.id, 'approve')}
+                          onClick={() => handleApprove(review.id)}
+                          disabled={actionLoading !== null}
                         >
-                          Aproba
+                          {actionLoading === `approve-${review.id}` ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            t('approve')
+                          )}
                         </Button>
                       )}
                       {getStatus(review) !== 'hidden' && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleAction(review.id, 'hide')}
+                          onClick={() => handleHide(review.id)}
+                          disabled={actionLoading !== null}
                         >
-                          Ascunde
+                          {actionLoading === `hide-${review.id}` ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            t('hide')
+                          )}
                         </Button>
                       )}
                       <Button
                         variant="danger"
                         size="sm"
-                        onClick={() => handleAction(review.id, 'delete')}
+                        onClick={() => setDeleteTarget(review.id)}
+                        disabled={actionLoading !== null}
                       >
-                        Sterge
+                        {t('delete')}
                       </Button>
                     </div>
                   </td>
@@ -218,6 +443,18 @@ export default function AdminReviewsPage() {
           </table>
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        title={t('delete')}
+        message={t('confirmDelete')}
+        confirmLabel={t('delete')}
+        variant="danger"
+        isLoading={isDeleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

@@ -5,24 +5,37 @@ import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Clock,
+  Image,
+  Palette,
+  Star,
+  Gem,
+  Settings,
+  Smartphone,
+  LogOut,
+  type LucideIcon,
+} from 'lucide-react';
 
 interface NavItem {
   key: string;
   href: string;
-  icon: string;
+  icon: LucideIcon;
   superAdminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { key: 'dashboard', href: '/admin', icon: '📊' },
-  { key: 'bookings', href: '/admin/bookings', icon: '📅' },
-  { key: 'availability', href: '/admin/availability', icon: '🕐' },
-  { key: 'gallery', href: '/admin/gallery', icon: '🖼' },
-  { key: 'artists', href: '/admin/artists', icon: '🎨', superAdminOnly: true },
-  { key: 'reviews', href: '/admin/reviews', icon: '⭐', superAdminOnly: true },
-  { key: 'loyalty', href: '/admin/loyalty', icon: '💎', superAdminOnly: true },
-  { key: 'settings', href: '/admin/settings', icon: '⚙️', superAdminOnly: true },
-  { key: 'pwa', href: '/admin/pwa-settings', icon: '📱', superAdminOnly: true },
+  { key: 'dashboard', href: '/admin', icon: LayoutDashboard },
+  { key: 'bookings', href: '/admin/bookings', icon: CalendarDays },
+  { key: 'availability', href: '/admin/availability', icon: Clock },
+  { key: 'gallery', href: '/admin/gallery', icon: Image },
+  { key: 'artists', href: '/admin/artists', icon: Palette, superAdminOnly: true },
+  { key: 'reviews', href: '/admin/reviews', icon: Star, superAdminOnly: true },
+  { key: 'loyalty', href: '/admin/loyalty', icon: Gem, superAdminOnly: true },
+  { key: 'settings', href: '/admin/settings', icon: Settings, superAdminOnly: true },
+  { key: 'pwa', href: '/admin/pwa-settings', icon: Smartphone, superAdminOnly: true },
 ];
 
 export default function AdminSidebar() {
@@ -54,6 +67,8 @@ export default function AdminSidebar() {
                   ? pathname.endsWith('/admin') || pathname.endsWith('/admin/')
                   : pathname.includes(item.href);
 
+              const Icon = item.icon;
+
               return (
                 <li key={item.key}>
                   <Link
@@ -65,7 +80,7 @@ export default function AdminSidebar() {
                         : 'text-text-secondary hover:bg-white/5 hover:text-text-primary',
                     )}
                   >
-                    <span>{item.icon}</span>
+                    <Icon className="h-4 w-4 shrink-0" />
                     <span>{t(item.key)}</span>
                   </Link>
                 </li>
@@ -79,7 +94,7 @@ export default function AdminSidebar() {
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
         >
-          <span>🚪</span>
+          <LogOut className="h-4 w-4 shrink-0" />
           <span>{t('logout')}</span>
         </button>
       </div>

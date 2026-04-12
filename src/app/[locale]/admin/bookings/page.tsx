@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
+import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
+import { useToast } from '@/components/ui/Toast';
 
 interface Booking {
   id: number;
@@ -29,6 +32,8 @@ const STATUSES = ['all', 'new', 'contacted', 'confirmed', 'completed', 'cancelle
 
 export default function AdminBookingsPage() {
   const t = useTranslations('admin.bookings');
+  const locale = useLocale();
+  const { showToast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -36,37 +41,58 @@ export default function AdminBookingsPage() {
   const [selected, setSelected] = useState<Booking | null>(null);
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+
+  const dateLocale = locale === 'ro' ? 'ro-RO' : 'en-US';
 
   const fetchBookings = useCallback(async () => {
     setIsLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: '20' });
-    if (statusFilter !== 'all') params.set('status', statusFilter);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: '20' });
+      if (statusFilter !== 'all') params.set('status', statusFilter);
 
-    const res = await fetch(`/api/bookings?${params}`);
-    if (res.ok) {
-      const data = await res.json();
-      setBookings(data.data);
-      setTotal(data.pagination.total);
+      const res = await fetch(`/api/bookings?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBookings(data.data);
+        setTotal(data.pagination.total);
+      } else {
+        showToast(t('loading'), 'error');
+      }
+    } catch {
+      showToast(t('loading'), 'error');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [page, statusFilter]);
+  }, [page, statusFilter, showToast, t]);
 
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
 
   const updateStatus = async (id: number, status: string) => {
-    const res = await fetch(`/api/bookings/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, adminNotes: notes || undefined }),
-    });
-    if (res.ok) {
-      fetchBookings();
-      if (selected?.id === id) {
-        const data = await res.json();
-        setSelected(data.data);
+    const actionKey = `${id}-${status}`;
+    setUpdatingStatus(actionKey);
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, adminNotes: notes || undefined }),
+      });
+      if (res.ok) {
+        showToast(t(`status.${status}`), 'success');
+        fetchBookings();
+        if (selected?.id === id) {
+          const data = await res.json();
+          setSelected(data.data);
+        }
+      } else {
+        showToast(t('loading'), 'error');
       }
+    } catch {
+      showToast(t('loading'), 'error');
+    } finally {
+      setUpdatingStatus(null);
     }
   };
 
@@ -168,7 +194,7 @@ export default function AdminBookingsPage() {
                       <td className="px-4 py-3 text-text-primary">{b.clientName}</td>
                       <td className="px-4 py-3 text-text-secondary">{b.artist.name}</td>
                       <td className="px-4 py-3 text-text-secondary">
-                        {new Date(b.consultationDate).toLocaleDateString('ro-RO')}
+                        {new Date(b.consultationDate).toLocaleDateString(dateLocale)}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[b.status] || ''}`}>
@@ -194,7 +220,7 @@ export default function AdminBookingsPage() {
                   disabled={page === 1}
                   className="rounded bg-white/5 px-3 py-1 text-sm text-text-secondary disabled:opacity-50"
                 >
-                  ←
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
                 <span className="px-2 py-1 text-sm text-text-secondary">{page}</span>
                 <button
@@ -202,7 +228,7 @@ export default function AdminBookingsPage() {
                   disabled={page * 20 >= total}
                   className="rounded bg-white/5 px-3 py-1 text-sm text-text-secondary disabled:opacity-50"
                 >
-                  →
+                  <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -218,7 +244,7 @@ export default function AdminBookingsPage() {
                 onClick={() => setSelected(null)}
                 className="text-text-muted hover:text-text-primary"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
 
@@ -258,7 +284,7 @@ export default function AdminBookingsPage() {
               <div>
                 <span className="text-text-muted">{t('details.consultationDate')}:</span>
                 <p className="text-text-primary">
-                  {new Date(selected.consultationDate).toLocaleDateString('ro-RO')} — {selected.consultationTime}
+                  {new Date(selected.consultationDate).toLocaleDateString(dateLocale)} — {selected.consultationTime}
                 </p>
               </div>
               <div>
@@ -284,14 +310,24 @@ export default function AdminBookingsPage() {
                   <Button
                     size="sm"
                     onClick={() => updateStatus(selected.id, 'contacted')}
+                    disabled={updatingStatus !== null}
                   >
-                    {t('actions.contact')}
+                    {updatingStatus === `${selected.id}-contacted` ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      t('actions.contact')
+                    )}
                   </Button>
                   <Button
                     size="sm"
                     onClick={() => updateStatus(selected.id, 'confirmed')}
+                    disabled={updatingStatus !== null}
                   >
-                    {t('actions.confirm')}
+                    {updatingStatus === `${selected.id}-confirmed` ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      t('actions.confirm')
+                    )}
                   </Button>
                 </>
               )}
@@ -299,16 +335,26 @@ export default function AdminBookingsPage() {
                 <Button
                   size="sm"
                   onClick={() => updateStatus(selected.id, 'confirmed')}
+                  disabled={updatingStatus !== null}
                 >
-                  {t('actions.confirm')}
+                  {updatingStatus === `${selected.id}-confirmed` ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    t('actions.confirm')
+                  )}
                 </Button>
               )}
               {selected.status === 'confirmed' && (
                 <Button
                   size="sm"
                   onClick={() => updateStatus(selected.id, 'completed')}
+                  disabled={updatingStatus !== null}
                 >
-                  {t('actions.complete')}
+                  {updatingStatus === `${selected.id}-completed` ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    t('actions.complete')
+                  )}
                 </Button>
               )}
               {['new', 'contacted', 'confirmed'].includes(selected.status) && (
@@ -316,8 +362,13 @@ export default function AdminBookingsPage() {
                   size="sm"
                   variant="danger"
                   onClick={() => updateStatus(selected.id, 'cancelled')}
+                  disabled={updatingStatus !== null}
                 >
-                  {t('actions.reject')}
+                  {updatingStatus === `${selected.id}-cancelled` ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    t('actions.reject')
+                  )}
                 </Button>
               )}
             </div>

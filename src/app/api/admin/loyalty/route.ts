@@ -9,22 +9,29 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
+    const listAll = searchParams.get('all');
 
-    if (!search || search.trim().length < 2) {
+    // If "all" param is set, return all clients with loyalty balances (no search required)
+    // Otherwise, require search with at least 2 characters
+    if (!listAll && (!search || search.trim().length < 2)) {
       return NextResponse.json(
         { success: false, error: 'Search query must be at least 2 characters' },
         { status: 400 },
       );
     }
 
+    const whereClause = listAll
+      ? { role: 'CLIENT' as const }
+      : {
+          role: 'CLIENT' as const,
+          OR: [
+            { name: { contains: search! } },
+            { email: { contains: search! } },
+          ],
+        };
+
     const clients = await prisma.user.findMany({
-      where: {
-        role: 'CLIENT',
-        OR: [
-          { name: { contains: search } },
-          { email: { contains: search } },
-        ],
-      },
+      where: whereClause,
       select: {
         id: true,
         name: true,
@@ -36,7 +43,7 @@ export async function GET(request: NextRequest) {
           orderBy: { createdAt: 'desc' },
         },
       },
-      take: 20,
+      take: listAll ? 500 : 20,
     });
 
     const data = clients.map((client) => {

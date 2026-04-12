@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Modal from '@/components/ui/Modal';
+import { useToast } from '@/components/ui/Toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface Artist {
   id: number;
@@ -43,11 +46,20 @@ function generatePassword(): string {
 }
 
 export default function AdminArtistsPage() {
+  const t = useTranslations('admin.artists');
+  const { showToast } = useToast();
+
   const [artists, setArtists] = useState<Artist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingArtist, setEditingArtist] = useState<Artist | null>(null);
   const [generatedCredentials, setGeneratedCredentials] = useState<{ email: string; password: string } | null>(null);
+
+  // Confirm dialog state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmArtistId, setConfirmArtistId] = useState<number | null>(null);
+  const [isDeactivating, setIsDeactivating] = useState(false);
+  const [activatingId, setActivatingId] = useState<number | null>(null);
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -60,7 +72,7 @@ export default function AdminArtistsPage() {
   const [formSpecialties, setFormSpecialties] = useState<string[]>([]);
   const [formInstagram, setFormInstagram] = useState('');
   const [formTiktok, setFormTiktok] = useState('');
-  const [, setFormImage] = useState<File | null>(null);
+  const [formImage, setFormImage] = useState<File | null>(null);
   const [formError, setFormError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -77,7 +89,7 @@ export default function AdminArtistsPage() {
         setArtists(Array.isArray(list) ? list : []);
       }
     } catch {
-      // Handle silently
+      showToast('Failed to load artists.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -130,6 +142,25 @@ export default function AdminArtistsPage() {
     setIsSaving(true);
 
     try {
+      // If an image file was selected, upload it first
+      let profileImagePath: string | undefined;
+      if (formImage) {
+        const uploadForm = new FormData();
+        uploadForm.append('file', formImage);
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadForm,
+        });
+        if (!uploadRes.ok) {
+          const uploadErr = await uploadRes.json();
+          setFormError(uploadErr.error || 'Image upload failed.');
+          setIsSaving(false);
+          return;
+        }
+        const uploadData = await uploadRes.json();
+        profileImagePath = uploadData.data?.imagePath;
+      }
+
       const body: Record<string, unknown> = {
         name: formName,
         email: formEmail,
@@ -142,6 +173,7 @@ export default function AdminArtistsPage() {
         tiktokUrl: formTiktok || null,
       };
       if (formPassword) body.password = formPassword;
+      if (profileImagePath) body.profileImage = profileImagePath;
 
       const url = editingArtist
         ? `/api/admin/artists/${editingArtist.id}`
@@ -157,42 +189,68 @@ export default function AdminArtistsPage() {
       if (res.ok) {
         if (!editingArtist) {
           setGeneratedCredentials({ email: formEmail, password: formPassword });
+          showToast('Artist created successfully.', 'success');
         } else {
           setIsModalOpen(false);
+          showToast('Artist updated successfully.', 'success');
         }
         fetchArtists();
       } else {
         const data = await res.json();
-        setFormError(data.error || 'Eroare la salvare.');
+        setFormError(data.error || 'Save failed.');
       }
     } catch {
-      setFormError('Eroare de conexiune.');
+      setFormError('Connection error.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeactivate = async (artistId: number) => {
+  const requestDeactivate = (artistId: number) => {
+    setConfirmArtistId(artistId);
+    setConfirmOpen(true);
+  };
+
+  const handleDeactivate = async () => {
+    if (confirmArtistId === null) return;
+    setIsDeactivating(true);
     try {
-      const res = await fetch(`/api/admin/artists/${artistId}`, {
+      const res = await fetch(`/api/admin/artists/${confirmArtistId}`, {
         method: 'DELETE',
       });
-      if (res.ok) fetchArtists();
+      if (res.ok) {
+        showToast('Artist deactivated.', 'success');
+        fetchArtists();
+      } else {
+        showToast('Failed to deactivate artist.', 'error');
+      }
     } catch {
-      // Handle silently
+      showToast('Connection error.', 'error');
+    } finally {
+      setIsDeactivating(false);
+      setConfirmOpen(false);
+      setConfirmArtistId(null);
     }
   };
 
   const handleActivate = async (artistId: number) => {
+    setActivatingId(artistId);
     try {
       const res = await fetch(`/api/admin/artists/${artistId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: true }),
       });
-      if (res.ok) fetchArtists();
+      if (res.ok) {
+        showToast('Artist activated.', 'success');
+        fetchArtists();
+      } else {
+        showToast('Failed to activate artist.', 'error');
+      }
     } catch {
-      // Handle silently
+      showToast('Connection error.', 'error');
+    } finally {
+      setActivatingId(null);
     }
   };
 
@@ -213,14 +271,14 @@ export default function AdminArtistsPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-heading text-2xl text-text-primary">Artisti</h1>
-        <Button onClick={openCreateModal}>Adauga Artist</Button>
+        <h1 className="font-heading text-2xl text-text-primary">{t('title')}</h1>
+        <Button onClick={openCreateModal}>{t('addArtist')}</Button>
       </div>
 
       {/* Artists Grid */}
       {artists.length === 0 ? (
         <div className="rounded-sm border border-border bg-bg-secondary p-12 text-center">
-          <p className="text-text-muted">Nu exista artisti inregistrati.</p>
+          <p className="text-text-muted">{t('noArtists')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -255,10 +313,10 @@ export default function AdminArtistsPage() {
                       : 'bg-red-500/10 text-red-400'
                   }`}
                 >
-                  {artist.isActive ? 'Activ' : 'Inactiv'}
+                  {artist.isActive ? t('active') : t('inactive')}
                 </span>
                 <span className="text-xs text-text-muted">
-                  {artist._count?.bookings || 0} programari
+                  {artist._count?.bookings || 0} bookings
                 </span>
               </div>
 
@@ -268,23 +326,24 @@ export default function AdminArtistsPage() {
                   size="sm"
                   onClick={() => openEditModal(artist)}
                 >
-                  Editeaza
+                  {t('editArtist')}
                 </Button>
                 {artist.isActive ? (
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => handleDeactivate(artist.id)}
+                    onClick={() => requestDeactivate(artist.id)}
                   >
-                    Dezactiveaza
+                    {t('deactivate')}
                   </Button>
                 ) : (
                   <Button
                     variant="secondary"
                     size="sm"
                     onClick={() => handleActivate(artist.id)}
+                    isLoading={activatingId === artist.id}
                   >
-                    Activeaza
+                    {t('activate')}
                   </Button>
                 )}
               </div>
@@ -293,6 +352,22 @@ export default function AdminArtistsPage() {
         </div>
       )}
 
+      {/* Deactivate Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        title={t('deactivate')}
+        message="Are you sure you want to deactivate this artist? They will no longer appear on the site."
+        confirmLabel={t('deactivate')}
+        cancelLabel={t('cancel')}
+        variant="danger"
+        isLoading={isDeactivating}
+        onConfirm={handleDeactivate}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setConfirmArtistId(null);
+        }}
+      />
+
       {/* Create/Edit Modal */}
       <Modal
         isOpen={isModalOpen}
@@ -300,22 +375,22 @@ export default function AdminArtistsPage() {
           setIsModalOpen(false);
           resetForm();
         }}
-        title={editingArtist ? 'Editeaza Artist' : 'Adauga Artist'}
+        title={editingArtist ? t('editArtist') : t('addArtist')}
         className="max-w-2xl max-h-[90vh] overflow-y-auto"
       >
         {generatedCredentials ? (
           <div className="space-y-4">
             <div className="rounded-sm border border-success/30 bg-success/10 p-4">
-              <p className="mb-2 text-sm font-semibold text-success">Artist creat cu succes!</p>
-              <p className="text-sm text-text-secondary">Salveaza aceste credentiale:</p>
+              <p className="mb-2 text-sm font-semibold text-success">Artist created successfully!</p>
+              <p className="text-sm text-text-secondary">Save these credentials:</p>
             </div>
             <div className="space-y-3 rounded-sm bg-bg-primary p-4">
               <div>
-                <p className="text-xs text-text-muted">Email</p>
+                <p className="text-xs text-text-muted">{t('email')}</p>
                 <p className="font-mono text-sm text-text-primary">{generatedCredentials.email}</p>
               </div>
               <div>
-                <p className="text-xs text-text-muted">Parola</p>
+                <p className="text-xs text-text-muted">{t('generatedPassword')}</p>
                 <p className="font-mono text-sm text-accent">{generatedCredentials.password}</p>
               </div>
             </div>
@@ -326,21 +401,21 @@ export default function AdminArtistsPage() {
               }}
               className="w-full"
             >
-              Inchide
+              {t('cancel')}
             </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
-                label="Nume"
+                label={t('name')}
                 type="text"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
                 required
               />
               <Input
-                label="Email"
+                label={t('email')}
                 type="email"
                 value={formEmail}
                 onChange={(e) => setFormEmail(e.target.value)}
@@ -351,27 +426,27 @@ export default function AdminArtistsPage() {
             {!editingArtist && (
               <div>
                 <Input
-                  label="Parola (auto-generata)"
+                  label={t('password')}
                   type="text"
                   value={formPassword}
                   onChange={(e) => setFormPassword(e.target.value)}
                   required
                 />
                 <p className="mt-1 text-xs text-text-muted">
-                  Parola generata automat. O poti modifica.
+                  Auto-generated password. You can change it.
                 </p>
               </div>
             )}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Textarea
-                label="Bio (RO)"
+                label={t('bioRo')}
                 value={formBioRo}
                 onChange={(e) => setFormBioRo(e.target.value)}
                 className="min-h-[80px]"
               />
               <Textarea
-                label="Bio (EN)"
+                label={t('bioEn')}
                 value={formBioEn}
                 onChange={(e) => setFormBioEn(e.target.value)}
                 className="min-h-[80px]"
@@ -380,13 +455,13 @@ export default function AdminArtistsPage() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
-                label="Specialitate (RO)"
+                label={t('specialtyRo')}
                 type="text"
                 value={formSpecialtyRo}
                 onChange={(e) => setFormSpecialtyRo(e.target.value)}
               />
               <Input
-                label="Specialitate (EN)"
+                label={t('specialtyEn')}
                 type="text"
                 value={formSpecialtyEn}
                 onChange={(e) => setFormSpecialtyEn(e.target.value)}
@@ -396,7 +471,7 @@ export default function AdminArtistsPage() {
             {/* Specialties checkboxes */}
             <div>
               <label className="mb-2 block text-sm font-medium text-text-secondary">
-                Categorii de specialitate
+                {t('specialties')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {specialtyOptions.map((opt) => (
@@ -422,14 +497,14 @@ export default function AdminArtistsPage() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
-                label="Instagram URL"
+                label={t('instagram')}
                 type="url"
                 value={formInstagram}
                 onChange={(e) => setFormInstagram(e.target.value)}
                 placeholder="https://instagram.com/..."
               />
               <Input
-                label="TikTok URL"
+                label={t('tiktok')}
                 type="url"
                 value={formTiktok}
                 onChange={(e) => setFormTiktok(e.target.value)}
@@ -440,7 +515,7 @@ export default function AdminArtistsPage() {
             {/* Image upload */}
             <div>
               <label className="mb-2 block text-sm font-medium text-text-secondary">
-                Imagine profil
+                {t('profileImage')}
               </label>
               <input
                 type="file"
@@ -458,7 +533,7 @@ export default function AdminArtistsPage() {
 
             <div className="flex gap-3 pt-2">
               <Button type="submit" isLoading={isSaving} className="flex-1">
-                {editingArtist ? 'Salveaza' : 'Creeaza Artist'}
+                {editingArtist ? t('save') : t('addArtist')}
               </Button>
               <Button
                 type="button"
@@ -468,7 +543,7 @@ export default function AdminArtistsPage() {
                   resetForm();
                 }}
               >
-                Anuleaza
+                {t('cancel')}
               </Button>
             </div>
           </form>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import { Smartphone } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
@@ -255,7 +256,7 @@ export default function AdminPWASettingsPage() {
                 </div>
               ) : (
                 <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-white/20 text-text-muted">
-                  <span className="text-3xl">📱</span>
+                  <Smartphone className="h-8 w-8 text-text-muted" />
                 </div>
               )}
               <input
@@ -290,7 +291,7 @@ export default function AdminPWASettingsPage() {
                 </div>
               ) : (
                 <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-white/20 text-text-muted">
-                  <span className="text-3xl">📱</span>
+                  <Smartphone className="h-8 w-8 text-text-muted" />
                 </div>
               )}
               <input
