@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import crypto from 'crypto';
 
 const RESET_PASSWORD_LIMIT = { max: 5, windowSec: 15 * 60 };
 
@@ -39,9 +40,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Hash the incoming token to compare with stored hash
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
     // Find valid token
     const resetToken = await prisma.passwordResetToken.findUnique({
-      where: { token },
+      where: { token: tokenHash },
       include: { user: true },
     });
 

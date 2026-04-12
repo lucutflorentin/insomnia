@@ -23,7 +23,7 @@ import Select from '@/components/ui/Select';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import { TATTOO_STYLES } from '@/lib/constants';
+import { TATTOO_STYLES, BODY_AREAS } from '@/lib/constants';
 
 interface GalleryItem {
   id: number;
@@ -65,6 +65,7 @@ export default function AdminGalleryPage() {
   // Upload state
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const [uploadArtistId, setUploadArtistId] = useState<number | null>(null);
 
   // Edit state
   const [editItem, setEditItem] = useState<GalleryItem | null>(null);
@@ -114,10 +115,16 @@ export default function AdminGalleryPage() {
       .catch(() => showToast(t('fetchError'), 'error'));
   }, [showToast, t]);
 
-  // Clear selection when filter changes
+  // Clear selection and auto-select upload artist when filter changes
   useEffect(() => {
     setSelectedIds(new Set());
-  }, [activeArtistFilter]);
+    if (activeArtistFilter !== 'all') {
+      const artist = artists.find((a) => a.slug === activeArtistFilter);
+      if (artist) setUploadArtistId(artist.id);
+    } else if (artists.length > 0 && !uploadArtistId) {
+      setUploadArtistId(artists[0].id);
+    }
+  }, [activeArtistFilter, artists, uploadArtistId]);
 
   // ── Filtered items ──
 
@@ -164,8 +171,11 @@ export default function AdminGalleryPage() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const artistId = artists[0]?.id;
-    if (!artistId) return;
+    const artistId = uploadArtistId || artists[0]?.id;
+    if (!artistId) {
+      showToast(t('noArtists'), 'error');
+      return;
+    }
 
     setIsUploading(true);
     const totalFiles = files.length;
@@ -236,10 +246,10 @@ export default function AdminGalleryPage() {
         showToast(t('featured'), 'success');
         fetchItems();
       } else {
-        showToast(t('uploadFailed'), 'error');
+        showToast(t('featureFailed'), 'error');
       }
     } catch {
-      showToast(t('uploadFailed'), 'error');
+      showToast(t('featureFailed'), 'error');
     } finally {
       setLoadingAction(null);
     }
@@ -258,10 +268,10 @@ export default function AdminGalleryPage() {
         showToast(t('visible'), 'success');
         fetchItems();
       } else {
-        showToast(t('uploadFailed'), 'error');
+        showToast(t('visibilityFailed'), 'error');
       }
     } catch {
-      showToast(t('uploadFailed'), 'error');
+      showToast(t('visibilityFailed'), 'error');
     } finally {
       setLoadingAction(null);
     }
@@ -273,7 +283,7 @@ export default function AdminGalleryPage() {
     try {
       const res = await fetch(`/api/gallery/${deleteTarget}`, { method: 'DELETE' });
       if (res.ok) {
-        showToast(t('delete'), 'success');
+        showToast(t('deleteSuccess'), 'success');
         setSelectedIds((prev) => {
           const next = new Set(prev);
           next.delete(deleteTarget);
@@ -281,10 +291,10 @@ export default function AdminGalleryPage() {
         });
         fetchItems();
       } else {
-        showToast(t('uploadFailed'), 'error');
+        showToast(t('deleteFailed'), 'error');
       }
     } catch {
-      showToast(t('uploadFailed'), 'error');
+      showToast(t('deleteFailed'), 'error');
     } finally {
       setIsDeleting(false);
       setDeleteTarget(null);
@@ -347,8 +357,13 @@ export default function AdminGalleryPage() {
         // continue with remaining
       }
     }
-    if (successCount > 0) {
-      showToast(t('delete'), 'success');
+    const failCount = ids.length - successCount;
+    if (failCount > 0 && successCount > 0) {
+      showToast(t('bulkDeletePartial', { success: successCount, failed: failCount }), 'error');
+    } else if (successCount > 0) {
+      showToast(t('bulkDeleteSuccess', { count: successCount }), 'success');
+    } else {
+      showToast(t('deleteFailed'), 'error');
     }
     setSelectedIds(new Set());
     setIsDeleting(false);
@@ -369,6 +384,7 @@ export default function AdminGalleryPage() {
           titleRo: editItem.titleRo,
           titleEn: editItem.titleEn,
           style: editItem.style,
+          bodyArea: editItem.bodyArea,
           sortOrder: editItem.sortOrder,
           artistId: editItem.artistId,
         }),
@@ -378,10 +394,10 @@ export default function AdminGalleryPage() {
         setEditItem(null);
         fetchItems();
       } else {
-        showToast(t('uploadFailed'), 'error');
+        showToast(t('saveFailed'), 'error');
       }
     } catch {
-      showToast(t('uploadFailed'), 'error');
+      showToast(t('saveFailed'), 'error');
     } finally {
       setIsSaving(false);
     }
@@ -394,6 +410,20 @@ export default function AdminGalleryPage() {
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-heading text-2xl text-text-primary">{t('title')}</h1>
+        <div className="flex items-center gap-3">
+          {artists.length > 1 && (
+            <select
+              value={String(uploadArtistId || artists[0]?.id || '')}
+              onChange={(e) => setUploadArtistId(parseInt(e.target.value))}
+              className="rounded-sm border border-white/10 bg-bg-secondary px-3 py-3 text-sm text-text-primary outline-none focus:border-accent"
+            >
+              {artists.map((a) => (
+                <option key={a.id} value={String(a.id)}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          )}
         <label className="cursor-pointer">
           <input
             ref={fileInputRef}
@@ -424,6 +454,7 @@ export default function AdminGalleryPage() {
               : t('upload')}
           </span>
         </label>
+        </div>
       </div>
 
       {/* Artist filter tabs */}
@@ -735,6 +766,17 @@ export default function AdminGalleryPage() {
               options={[
                 { value: '', label: '\u2014' },
                 ...TATTOO_STYLES.map((s) => ({ value: s, label: s })),
+              ]}
+            />
+            <Select
+              label={t('bodyArea')}
+              value={editItem.bodyArea || ''}
+              onChange={(e) =>
+                setEditItem({ ...editItem, bodyArea: e.target.value })
+              }
+              options={[
+                { value: '', label: '\u2014' },
+                ...BODY_AREAS.map((area) => ({ value: area, label: area })),
               ]}
             />
             <Input

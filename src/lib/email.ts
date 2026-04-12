@@ -1,5 +1,15 @@
 import nodemailer from 'nodemailer';
 
+/** Escape HTML special characters to prevent injection in email templates */
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT) || 465,
@@ -45,14 +55,14 @@ export async function sendBookingConfirmation(
       </div>
 
       <p style="font-size: 16px; line-height: 1.6;">
-        ${isRo ? `Salut ${data.clientName}!` : `Hi ${data.clientName}!`}
+        ${isRo ? `Salut ${escapeHtml(data.clientName)}!` : `Hi ${escapeHtml(data.clientName)}!`}
       </p>
 
       <p style="font-size: 16px; line-height: 1.6; color: #A0A0A0;">
         ${
           isRo
-            ? `Multumim ca ai ales Insomnia Tattoo. Am primit cererea ta de consultatie cu <strong style="color: #B0B0B0;">${data.artistName}</strong>.`
-            : `Thank you for choosing Insomnia Tattoo. We've received your consultation request with <strong style="color: #B0B0B0;">${data.artistName}</strong>.`
+            ? `Multumim ca ai ales Insomnia Tattoo. Am primit cererea ta de consultatie cu <strong style="color: #B0B0B0;">${escapeHtml(data.artistName)}</strong>.`
+            : `Thank you for choosing Insomnia Tattoo. We've received your consultation request with <strong style="color: #B0B0B0;">${escapeHtml(data.artistName)}</strong>.`
         }
       </p>
 
@@ -113,14 +123,14 @@ export async function sendAftercareReminder(data: {
       </div>
 
       <p style="font-size: 16px; line-height: 1.6;">
-        ${isRo ? `Salut ${data.clientName}!` : `Hi ${data.clientName}!`}
+        ${isRo ? `Salut ${escapeHtml(data.clientName)}!` : `Hi ${escapeHtml(data.clientName)}!`}
       </p>
 
       <p style="font-size: 16px; line-height: 1.6; color: #A0A0A0;">
         ${
           isRo
-            ? `A trecut o saptamana de la sesiunea ta cu <strong style="color: #B0B0B0;">${data.artistName}</strong>. Sper ca tatuajul tau arata superb!`
-            : `It's been a week since your session with <strong style="color: #B0B0B0;">${data.artistName}</strong>. Hope your tattoo looks amazing!`
+            ? `A trecut o saptamana de la sesiunea ta cu <strong style="color: #B0B0B0;">${escapeHtml(data.artistName)}</strong>. Sper ca tatuajul tau arata superb!`
+            : `It's been a week since your session with <strong style="color: #B0B0B0;">${escapeHtml(data.artistName)}</strong>. Hope your tattoo looks amazing!`
         }
       </p>
 
@@ -191,14 +201,14 @@ export async function sendReviewRequest(data: {
       </div>
 
       <p style="font-size: 16px; line-height: 1.6;">
-        ${isRo ? `Salut ${data.clientName}!` : `Hi ${data.clientName}!`}
+        ${isRo ? `Salut ${escapeHtml(data.clientName)}!` : `Hi ${escapeHtml(data.clientName)}!`}
       </p>
 
       <p style="font-size: 16px; line-height: 1.6; color: #A0A0A0;">
         ${
           isRo
             ? `A trecut o luna de la sesiunea ta cu ${data.artistName}. Tatuajul tau ar trebui sa fie complet vindecat acum!`
-            : `It's been a month since your session with ${data.artistName}. Your tattoo should be fully healed by now!`
+            : `It's been a month since your session with ${escapeHtml(data.artistName)}. Your tattoo should be fully healed by now!`
         }
       </p>
 
@@ -249,22 +259,22 @@ export async function sendBookingNotification(
 ): Promise<void> {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h2 style="color: #B0B0B0;">🖤 Booking nou — ${data.clientName}</h2>
+      <h2 style="color: #B0B0B0;">🖤 Booking nou — ${escapeHtml(data.clientName)}</h2>
 
       <p>Ai o cerere noua de consultatie!</p>
 
       <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Client</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${data.clientName}</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Telefon</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${data.clientPhone || '-'}</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Email</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${data.clientEmail}</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Zona</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${data.bodyArea || '-'}</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Dimensiune</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${data.size || '-'}</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Stil</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${data.style || '-'}</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Data</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${data.date} la ${data.time}</td></tr>
-        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Sursa</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${data.source || '-'}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Client</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(data.clientName)}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Telefon</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(data.clientPhone || '-')}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Email</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(data.clientEmail)}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Zona</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(data.bodyArea || '-')}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Dimensiune</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(data.size || '-')}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Stil</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(data.style || '-')}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Data</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(data.date)} la ${escapeHtml(data.time)}</td></tr>
+        <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Sursa</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(data.source || '-')}</td></tr>
       </table>
 
-      ${data.description ? `<p><strong>Descriere:</strong><br/>${data.description}</p>` : ''}
+      ${data.description ? `<p><strong>Descriere:</strong><br/>${escapeHtml(data.description)}</p>` : ''}
 
       <p style="color: #666;">Cod referinta: ${data.referenceCode}</p>
       <p>→ Intra in admin panel pentru detalii complete.</p>
@@ -274,7 +284,7 @@ export async function sendBookingNotification(
   await transporter.sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: data.artistEmail,
-    subject: `🖤 Booking nou — ${data.clientName}`,
+    subject: `Booking nou — ${data.clientName}`,
     html,
   });
 }
@@ -291,9 +301,9 @@ export async function sendSurpriseNotification(data: {
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h2 style="color: #B0B0B0;">🎁 Surpriză loyalty — ${data.clientName}</h2>
+      <h2 style="color: #B0B0B0;">🎁 Surpriză loyalty — ${escapeHtml(data.clientName)}</h2>
 
-      <p><strong>${data.clientName}</strong> (${data.clientEmail}) a ajuns la <strong>${data.totalPoints} puncte</strong> de fidelitate!</p>
+      <p><strong>${escapeHtml(data.clientName)}</strong> (${escapeHtml(data.clientEmail)}) a ajuns la <strong>${data.totalPoints} puncte</strong> de fidelitate!</p>
 
       <div style="background: #1a1a1a; border-left: 3px solid #B0B0B0; padding: 15px; margin: 20px 0; border-radius: 4px;">
         <p style="margin: 0; color: #e0e0e0;">Conform programului de fidelitate, acest client este eligibil pentru o <strong>surpriză</strong> din partea salonului.</p>
@@ -336,7 +346,7 @@ export async function sendBookingCancellationEmail(data: {
           Programare anulata de client
         </p>
         <p style="font-size: 15px; color: #A0A0A0; margin: 5px 0;">
-          Client: <strong style="color: #F5F5F5;">${data.clientName}</strong>
+          Client: <strong style="color: #F5F5F5;">${escapeHtml(data.clientName)}</strong>
         </p>
         <p style="font-size: 15px; color: #A0A0A0; margin: 5px 0;">
           Cod referinta: <strong style="color: #B0B0B0;">${data.referenceCode}</strong>
@@ -384,7 +394,7 @@ export async function sendEmailVerification(data: {
         </h1>
       </div>
 
-      <p style="font-size: 16px; line-height: 1.6;">Salut ${data.name}!</p>
+      <p style="font-size: 16px; line-height: 1.6;">Salut ${escapeHtml(data.name)}!</p>
 
       <p style="font-size: 16px; line-height: 1.6; color: #A0A0A0;">
         Multumim ca ti-ai creat cont pe Insomnia Tattoo. Apasa butonul de mai jos pentru a verifica adresa de email:
@@ -430,7 +440,7 @@ export async function sendPasswordResetEmail(data: {
         </h1>
       </div>
 
-      <p style="font-size: 16px; line-height: 1.6;">Salut ${data.name}!</p>
+      <p style="font-size: 16px; line-height: 1.6;">Salut ${escapeHtml(data.name)}!</p>
 
       <p style="font-size: 16px; line-height: 1.6; color: #A0A0A0;">
         Am primit o cerere de resetare a parolei pentru contul tau. Apasa butonul de mai jos pentru a seta o parola noua:

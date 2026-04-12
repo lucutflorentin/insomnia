@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mkdir } from 'fs/promises';
-import path from 'path';
+import { put } from '@vercel/blob';
 import sharp from 'sharp';
 import { verifyRole } from '@/lib/auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { prisma } from '@/lib/prisma';
 
-const ICONS_DIR = path.resolve('./public/icons');
 const UPLOAD_LIMIT = { max: 10, windowSec: 60 };
 const ALLOWED_SIZES = [192, 512] as const;
 
@@ -80,17 +78,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await mkdir(ICONS_DIR, { recursive: true });
-
-    const filename = `icon-${size}.png`;
-    const filePath = path.join(ICONS_DIR, filename);
-
-    await sharp(buffer)
+    // Process image to exact size as PNG in memory
+    const processedBuffer = await sharp(buffer)
       .resize(size, size, { fit: 'cover' })
       .png({ quality: 90 })
-      .toFile(filePath);
+      .toBuffer();
 
-    const iconPath = `/icons/${filename}`;
+    // Upload to Vercel Blob
+    const blob = await put(`icons/icon-${size}.png`, processedBuffer, {
+      access: 'public',
+      contentType: 'image/png',
+    });
+
+    const iconPath = blob.url;
     const settingKey = `pwa_icon_${size}`;
 
     await prisma.setting.upsert({
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('PWA icon upload error:', error);
     return NextResponse.json(
-      { success: false, error: 'Upload failed' },
+      { success: false, error: 'Upload failed. Please try again.' },
       { status: 500 },
     );
   }

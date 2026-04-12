@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminRequest } from '@/lib/auth';
-import { unlink } from 'fs/promises';
-import path from 'path';
+import { del } from '@vercel/blob';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -26,6 +25,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         isFeatured: body.isFeatured,
         isVisible: body.isVisible,
         sortOrder: body.sortOrder,
+        ...(body.artistId ? { artistId: parseInt(body.artistId) } : {}),
       },
       include: {
         artist: { select: { id: true, name: true, slug: true } },
@@ -58,15 +58,20 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Delete physical files
-    const publicDir = path.resolve('./public');
+    // Delete files from Vercel Blob (if they are blob URLs)
     try {
-      await unlink(path.join(publicDir, item.imagePath));
-      if (item.thumbnailPath) {
-        await unlink(path.join(publicDir, item.thumbnailPath));
+      const urlsToDelete: string[] = [];
+      if (item.imagePath && item.imagePath.includes('blob.vercel-storage.com')) {
+        urlsToDelete.push(item.imagePath);
+      }
+      if (item.thumbnailPath && item.thumbnailPath.includes('blob.vercel-storage.com')) {
+        urlsToDelete.push(item.thumbnailPath);
+      }
+      if (urlsToDelete.length > 0) {
+        await del(urlsToDelete);
       }
     } catch {
-      // Files may not exist, continue with DB deletion
+      // Files may not exist in blob, continue with DB deletion
     }
 
     await prisma.galleryItem.delete({ where: { id: parseInt(id) } });

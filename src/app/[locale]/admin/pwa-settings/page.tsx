@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Smartphone } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Modal from '@/components/ui/Modal';
 
 interface PWASettings {
   pwa_name: string;
@@ -38,6 +39,7 @@ export default function AdminPWASettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [uploadingSize, setUploadingSize] = useState<number | null>(null);
+  const [showManifestPreview, setShowManifestPreview] = useState(false);
   const fileInput192Ref = useRef<HTMLInputElement>(null);
   const fileInput512Ref = useRef<HTMLInputElement>(null);
 
@@ -320,7 +322,7 @@ export default function AdminPWASettingsPage() {
           </Button>
           <Button
             variant="secondary"
-            onClick={() => window.open('/manifest.webmanifest', '_blank')}
+            onClick={() => setShowManifestPreview(true)}
           >
             {t('previewManifest')}
           </Button>
@@ -331,6 +333,43 @@ export default function AdminPWASettingsPage() {
           )}
         </div>
       </div>
+
+      {/* Manifest Preview Modal */}
+      <Modal
+        isOpen={showManifestPreview}
+        onClose={() => setShowManifestPreview(false)}
+        title={t('previewManifest')}
+      >
+        <pre className="max-h-96 overflow-auto rounded-lg bg-bg-primary p-4 text-sm text-text-secondary font-mono">
+          {JSON.stringify(
+            {
+              name: settings.pwa_name,
+              short_name: settings.pwa_short_name,
+              description: settings.pwa_description,
+              start_url: settings.pwa_start_url,
+              display: settings.pwa_display,
+              background_color: settings.pwa_background_color,
+              theme_color: settings.pwa_theme_color,
+              orientation: 'portrait-primary',
+              icons: [
+                settings.pwa_icon_192 && {
+                  src: settings.pwa_icon_192,
+                  sizes: '192x192',
+                  type: 'image/png',
+                },
+                settings.pwa_icon_512 && {
+                  src: settings.pwa_icon_512,
+                  sizes: '512x512',
+                  type: 'image/png',
+                },
+              ].filter(Boolean),
+              categories: ['lifestyle', 'business'],
+            },
+            null,
+            2,
+          )}
+        </pre>
+      </Modal>
     </div>
   );
 }

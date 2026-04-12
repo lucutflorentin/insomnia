@@ -33,9 +33,9 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://www.googletagmanager.com https://connect.facebook.net",
+      "script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com https://connect.facebook.net",
       "style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com",
-      "img-src 'self' data: blob: https://*.googleusercontent.com https://lh3.googleusercontent.com",
+      "img-src 'self' data: blob: https://*.googleusercontent.com https://lh3.googleusercontent.com https://*.public.blob.vercel-storage.com",
       "font-src 'self' https://fonts.gstatic.com",
       "connect-src 'self' https://oauth2.googleapis.com https://accounts.google.com https://www.google-analytics.com https://region1.google-analytics.com https://*.ingest.sentry.io",
       "frame-src https://accounts.google.com https://www.google.com",
@@ -55,6 +55,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '*.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
       },
     ],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

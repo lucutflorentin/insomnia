@@ -737,7 +737,16 @@
       "noImages": "No images found. Upload your first image!",
       "uploadProgress": "Uploading {current} of {total}...",
       "uploadComplete": "{count} images uploaded successfully",
-      "fetchError": "Could not load gallery"
+      "fetchError": "Could not load gallery",
+      "bodyArea": "Body area",
+      "noArtists": "No artists found. Please create an artist first.",
+      "saveFailed": "Failed to save changes",
+      "deleteFailed": "Failed to delete image",
+      "deleteSuccess": "Image deleted successfully",
+      "featureFailed": "Failed to update featured status",
+      "visibilityFailed": "Failed to update visibility",
+      "bulkDeleteSuccess": "{count} images deleted successfully",
+      "bulkDeletePartial": "{success} deleted, {failed} failed"
     },
     "artists": {
       "title": "Manage artists",

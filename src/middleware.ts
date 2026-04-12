@@ -41,6 +41,14 @@ function isSuperAdminOnlyPath(pathname: string): boolean {
   return SUPER_ADMIN_ONLY_PATHS.some((path) => stripped.startsWith(path));
 }
 
+/** Validate redirect target is a safe internal path */
+function sanitizeRedirect(value: string): string | null {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\') || value.includes('://')) {
+    return null;
+  }
+  return value;
+}
+
 interface TokenPayload {
   sub: string;
   role: string;
@@ -65,14 +73,16 @@ export default async function middleware(request: NextRequest) {
   if (isAdminPath(pathname) && !isPublicAdminPath(pathname)) {
     if (!token) {
       const loginUrl = new URL('/admin/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
+      const safeRedirect = sanitizeRedirect(pathname);
+      if (safeRedirect) loginUrl.searchParams.set('redirect', safeRedirect);
       return NextResponse.redirect(loginUrl);
     }
 
     const payload = await verifyJWT(token);
     if (!payload) {
       const loginUrl = new URL('/admin/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
+      const safeRedirect = sanitizeRedirect(pathname);
+      if (safeRedirect) loginUrl.searchParams.set('redirect', safeRedirect);
       return NextResponse.redirect(loginUrl);
     }
 
@@ -91,14 +101,16 @@ export default async function middleware(request: NextRequest) {
   if (isAccountPath(pathname)) {
     if (!token) {
       const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
+      const safeRedirect = sanitizeRedirect(pathname);
+      if (safeRedirect) loginUrl.searchParams.set('redirect', safeRedirect);
       return NextResponse.redirect(loginUrl);
     }
 
     const payload = await verifyJWT(token);
     if (!payload) {
       const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
+      const safeRedirect = sanitizeRedirect(pathname);
+      if (safeRedirect) loginUrl.searchParams.set('redirect', safeRedirect);
       return NextResponse.redirect(loginUrl);
     }
   }

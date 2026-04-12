@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mkdir } from 'fs/promises';
-import path from 'path';
+import { put } from '@vercel/blob';
 import sharp from 'sharp';
 import { BOOKING_CONFIG } from '@/lib/constants';
 import { verifyRole } from '@/lib/auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || './public/uploads';
 const UPLOAD_LIMIT = { max: 20, windowSec: 60 };
 const MAX_IMAGE_DIMENSION = 8000;
 
@@ -98,33 +96,37 @@ export async function POST(request: NextRequest) {
 
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 8);
-    const filename = `${timestamp}-${random}.webp`;
-    const thumbFilename = `${timestamp}-${random}-thumb.webp`;
 
-    // Ensure directories exist
-    const uploadsDir = path.resolve(UPLOAD_DIR);
-    const thumbsDir = path.join(uploadsDir, 'thumbnails');
-    await mkdir(uploadsDir, { recursive: true });
-    await mkdir(thumbsDir, { recursive: true });
-
-    // Process main image (max 1200px wide)
-    await sharp(buffer)
+    // Process main image (max 1200px wide) in memory
+    const mainBuffer = await sharp(buffer)
       .resize(1200, null, { withoutEnlargement: true })
       .webp({ quality: 85 })
-      .toFile(path.join(uploadsDir, filename));
+      .toBuffer();
 
-    // Generate thumbnail (400px wide)
-    await sharp(buffer)
+    // Generate thumbnail (400px wide) in memory
+    const thumbBuffer = await sharp(buffer)
       .resize(400, null, { withoutEnlargement: true })
       .webp({ quality: 75 })
-      .toFile(path.join(thumbsDir, thumbFilename));
+      .toBuffer();
+
+    // Upload to Vercel Blob
+    const [mainBlob, thumbBlob] = await Promise.all([
+      put(`gallery/${timestamp}-${random}.webp`, mainBuffer, {
+        access: 'public',
+        contentType: 'image/webp',
+      }),
+      put(`gallery/thumbnails/${timestamp}-${random}-thumb.webp`, thumbBuffer, {
+        access: 'public',
+        contentType: 'image/webp',
+      }),
+    ]);
 
     return NextResponse.json(
       {
         success: true,
         data: {
-          imagePath: `/uploads/${filename}`,
-          thumbnailPath: `/uploads/thumbnails/${thumbFilename}`,
+          imagePath: mainBlob.url,
+          thumbnailPath: thumbBlob.url,
         },
       },
       { status: 201 },
@@ -132,7 +134,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
-      { success: false, error: 'Upload failed' },
+      { success: false, error: 'Upload failed. Please try again.' },
       { status: 500 },
     );
   }

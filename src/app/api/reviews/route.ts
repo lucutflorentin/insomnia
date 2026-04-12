@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyRole } from '@/lib/auth';
 import { reviewSchema } from '@/lib/validations';
+import { checkRateLimit, getClientIp, PUBLIC_READ_LIMIT } from '@/lib/rate-limit';
 
 // POST /api/reviews — Client: create a review for a completed booking
 export async function POST(request: NextRequest) {
@@ -90,6 +91,15 @@ export async function POST(request: NextRequest) {
 // GET /api/reviews — Public: list approved visible reviews
 export async function GET(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`reviews-read:${ip}`, PUBLIC_READ_LIMIT);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please wait.' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const artistId = searchParams.get('artistId');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));

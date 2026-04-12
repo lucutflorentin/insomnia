@@ -38,19 +38,20 @@ export async function POST(request: NextRequest) {
         data: { usedAt: new Date() },
       });
 
-      // Generate token
+      // Generate token — store hashed, send raw in email
       const token = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
       await prisma.passwordResetToken.create({
         data: {
           userId: user.id,
-          token,
+          token: tokenHash,
           expiresAt,
         },
       });
 
-      // Send email (don't await to avoid timing attacks)
+      // Send email with raw token (don't await to avoid timing attacks)
       const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://insomniatattoo.ro'}/auth/reset-password?token=${token}`;
       sendPasswordResetEmail({
         email: user.email,

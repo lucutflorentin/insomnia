@@ -1,20 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyAdminRequest } from '@/lib/auth';
+import { verifyAdminRequest, getCurrentUser } from '@/lib/auth';
 import { galleryItemSchema } from '@/lib/validations';
+import { checkRateLimit, getClientIp, PUBLIC_READ_LIMIT } from '@/lib/rate-limit';
 
-// GET /api/gallery — Public: list visible gallery items
+// GET /api/gallery — List gallery items (admin sees all, public sees visible only)
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit public reads
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`gallery-read:${ip}`, PUBLIC_READ_LIMIT);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please wait.' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const artistId = searchParams.get('artistId');
+    const artistSlug = searchParams.get('artist');
     const style = searchParams.get('style');
     const featured = searchParams.get('featured');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '30')));
 
-    const where: Record<string, unknown> = { isVisible: true };
-    if (artistId) where.artistId = parseInt(artistId);
+    // Check if request is from admin
+    const user = await getCurrentUser(request);
+    const isAdmin = user && (user.role === 'SUPER_ADMIN' || user.role === 'ARTIST');
+
+    const where: Record<string, unknown> = {};
+
+    // Public users only see visible items
+    if (!isAdmin) {
+      where.isVisible = true;
+    }
+
+    // Filter by artistId (integer) or artist slug
+    if (artistId) {
+      where.artistId = parseInt(artistId);
+    } else if (artistSlug) {
+      const artist = await prisma.artist.findUnique({ where: { slug: artistSlug } });
+      if (artist) {
+        where.artistId = artist.id;
+      }
+    }
+
     if (style) where.style = style;
     if (featured === 'true') where.isFeatured = true;
 

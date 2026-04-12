@@ -737,7 +737,16 @@
       "noImages": "Nicio imagine gasita. Incarca prima imagine!",
       "uploadProgress": "Se incarca {current} din {total}...",
       "uploadComplete": "{count} imagini incarcate cu succes",
-      "fetchError": "Nu s-a putut incarca galeria"
+      "fetchError": "Nu s-a putut incarca galeria",
+      "bodyArea": "Zona corpului",
+      "noArtists": "Niciun artist gasit. Creeaza un artist mai intai.",
+      "saveFailed": "Salvare esuata",
+      "deleteFailed": "Stergere esuata",
+      "deleteSuccess": "Imagine stearsa cu succes",
+      "featureFailed": "Actualizare evidentiata esuata",
+      "visibilityFailed": "Actualizare vizibilitate esuata",
+      "bulkDeleteSuccess": "{count} imagini sterse cu succes",
+      "bulkDeletePartial": "{success} sterse, {failed} esuate"
     },
     "artists": {
       "title": "Gestionare artisti",

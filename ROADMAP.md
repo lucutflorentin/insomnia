@@ -6,6 +6,48 @@
 
 ## JURNAL TEHNIC — Ce s-a implementat
 
+### Sesiunea 11 (12 Aprilie 2026) — Audit Complet, Bug Fixes & Security Hardening
+
+Audit complet al platformei cu 18 probleme identificate si rezolvate: buguri critice de functionalitate, vulnerabilitati de securitate, si imbunatatiri UX in admin dashboard.
+
+#### Buguri Critice Rezolvate
+
+- **Upload galerie reparat** — Migrare de la filesystem local (read-only pe Vercel) la **Vercel Blob Storage** (`@vercel/blob`). Upload imagini, thumbnails si iconite PWA toate stocate in cloud
+- **Google Auth reparat** — Adaugat variabila `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (Next.js nu expune env vars fara prefix `NEXT_PUBLIC_` catre browser)
+- **PWA Preview Manifest** — Inlocuit `window.open()` JSON brut cu modal formatat in-page
+
+#### Buguri Functionale Admin
+
+- **Filtru artist galerie** — API accepta acum parametru `artist=slug` (anterior doar `artistId` integer)
+- **Admin vede toate imaginile** — Eliminat filtru `isVisible: true` hardcodat pentru admin; public vede doar vizibile
+- **Editare artist se salveaza** — Adaugat `artistId` in PUT `/api/gallery/[id]`
+- **Upload artist selector** — Dropdown in header galerie pentru selectia artistului la upload (anterior hardcodat primul artist)
+- **bodyArea in edit modal** — Camp nou dropdown cu zonele corpului in editarea imaginilor
+- **Mesaje eroare contextuale** — Inlocuit `uploadFailed` generic cu `saveFailed`, `deleteFailed`, `featureFailed`, `visibilityFailed`
+- **Bulk delete raport** — Toast afiseaza `"X sterse, Y esuate"` in loc de mesaj generic
+- **Login redirect** — Respecta parametrul `?redirect=` dupa autentificare (anterior hardcodat `/admin`)
+
+#### Securitate
+
+- **Open redirect fix** — Functie `sanitizeRedirect()` in middleware valideaza ca redirect-ul e path intern
+- **Email HTML injection fix** — `escapeHtml()` aplicat pe toate variabilele user-supplied din 8 template-uri email
+- **Rate limiting GET publice** — 60 req/min pe `/api/gallery`, `/api/artists`, `/api/reviews` (anti-scraping)
+- **Password reset token hashing** — SHA-256 hash inainte de stocare in DB; comparare prin hash
+- **CSP hardening** — Eliminat `'unsafe-eval'` din `script-src`
+- **Vercel Blob in CSP** — Adaugat hostname in `img-src` si Next.js `remotePatterns`
+
+#### Config & Documentatie
+
+- **`.env.example` actualizat** — Toate variabilele documentate cu instructiuni de generare
+- **Traduceri noi** — 11 chei noi in `ro.json` si `en.json` pentru mesaje contextuale
+- **Dependinta noua**: `@vercel/blob` pentru cloud storage
+
+#### Fisiere modificate (15)
+
+`src/app/api/upload/route.ts`, `src/app/api/admin/pwa-settings/upload-icon/route.ts`, `src/app/api/gallery/[id]/route.ts`, `src/app/api/gallery/route.ts`, `src/app/api/artists/route.ts`, `src/app/api/reviews/route.ts`, `src/app/api/auth/forgot-password/route.ts`, `src/app/api/auth/reset-password/route.ts`, `src/app/[locale]/admin/gallery/page.tsx`, `src/app/[locale]/admin/pwa-settings/page.tsx`, `src/app/[locale]/auth/login/page.tsx`, `src/middleware.ts`, `src/lib/email.ts`, `src/lib/rate-limit.ts`, `next.config.ts`
+
+---
+
 ### Sesiunea 10 (12 Aprilie 2026) — Admin Dashboard Redesign Complet
 
 Redesign total al admin panel-ului: iconite profesionale, statistici avansate, grafice, calendar vizual, galerie cu bulk actions, si functionalitate 100%.

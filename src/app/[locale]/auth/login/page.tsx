@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -21,11 +22,20 @@ declare global {
 
 export default function LoginPage() {
   const t = useTranslations('auth.login');
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const getRedirectUrl = useCallback((defaultPath: string) => {
+    const rawRedirect = searchParams.get('redirect');
+    if (rawRedirect && rawRedirect.startsWith('/') && !rawRedirect.includes('://') && !rawRedirect.startsWith('//')) {
+      return rawRedirect;
+    }
+    return defaultPath;
+  }, [searchParams]);
 
   const handleGoogleCallback = useCallback(async (response: { credential: string }) => {
     setIsGoogleLoading(true);
@@ -42,11 +52,8 @@ export default function LoginPage() {
 
       if (res.ok) {
         const role = data.data?.role || data.role;
-        if (role === 'SUPER_ADMIN' || role === 'ARTIST') {
-          window.location.href = '/admin';
-        } else {
-          window.location.href = '/account';
-        }
+        const defaultPath = role === 'SUPER_ADMIN' || role === 'ARTIST' ? '/admin' : '/account';
+        window.location.href = getRedirectUrl(defaultPath);
       } else {
         setError(data.error || t('connectionError'));
       }
@@ -55,7 +62,7 @@ export default function LoginPage() {
     } finally {
       setIsGoogleLoading(false);
     }
-  }, [t]);
+  }, [t, getRedirectUrl]);
 
   useEffect(() => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -93,11 +100,8 @@ export default function LoginPage() {
 
       if (res.ok) {
         const role = data.data?.role || data.role;
-        if (role === 'SUPER_ADMIN' || role === 'ARTIST') {
-          window.location.href = '/admin';
-        } else {
-          window.location.href = '/account';
-        }
+        const defaultPath = role === 'SUPER_ADMIN' || role === 'ARTIST' ? '/admin' : '/account';
+        window.location.href = getRedirectUrl(defaultPath);
       } else {
         setError(data.error || t('error'));
       }

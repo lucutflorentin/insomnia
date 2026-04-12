@@ -77,3 +77,4 @@ export const UPLOAD_LIMIT = { max: 20, windowSec: 60 };     // 20 uploads / minu
 export const CANCEL_LIMIT = { max: 5, windowSec: 60 };      // 5 cancellations / minute
 export const PASSWORD_RESET_LIMIT = { max: 5, windowSec: 15 * 60 }; // 5 attempts / 15 min
 export const PASSWORD_CHANGE_LIMIT = { max: 5, windowSec: 15 * 60 }; // 5 attempts / 15 min
+export const PUBLIC_READ_LIMIT = { max: 60, windowSec: 60 };  // 60 reads / minute
