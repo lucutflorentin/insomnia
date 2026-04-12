@@ -6,6 +6,32 @@
 
 ## JURNAL TEHNIC — Ce s-a implementat
 
+### Sesiunea 12 (12 Aprilie 2026) — Deploy & Configurare Productie
+
+Configurarea completa a serviciilor externe necesare functionarii platformei in productie pe Vercel.
+
+#### Vercel Environment Variables Configurate
+
+- **`BLOB_READ_WRITE_TOKEN`** — Vercel Blob Store creat si conectat pentru stocarea imaginilor in cloud
+- **`NEXT_PUBLIC_GOOGLE_CLIENT_ID`** — Variabila lipsa care bloca autentificarea Google pe client-side (Next.js necesita prefix `NEXT_PUBLIC_` pentru browser)
+- **`GOOGLE_CLIENT_ID`** + **`GOOGLE_CLIENT_SECRET`** — Credentiale Google OAuth verificate si functionale
+- **`JWT_SECRET`** + **`JWT_REFRESH_SECRET`** — Secrete de securitate generate cu `openssl rand -base64 48`
+
+#### Google OAuth Fix Complet
+
+- **Problema 1**: Lipsea `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in Vercel — butonul Google nu se incarca fara ea
+- **Problema 2**: `origin_mismatch` — domeniul `https://www.insomniatattoo.ro` nu era in Authorized JavaScript Origins (doar varianta fara `www` era configurata)
+- **Rezolvare**: Adaugat ambele variante (`www` si non-`www`) in Google Cloud Console — Authorized JavaScript Origins si Authorized Redirect URIs
+
+#### Status Final
+
+- ✅ Build production fara erori
+- ✅ Google Auth functional (cu www si fara www)
+- ✅ Upload imagini functional via Vercel Blob Storage
+- ✅ Toate variabilele de mediu configurate corect
+
+---
+
 ### Sesiunea 11 (12 Aprilie 2026) — Audit Complet, Bug Fixes & Security Hardening
 
 Audit complet al platformei cu 18 probleme identificate si rezolvate: buguri critice de functionalitate, vulnerabilitati de securitate, si imbunatatiri UX in admin dashboard.
