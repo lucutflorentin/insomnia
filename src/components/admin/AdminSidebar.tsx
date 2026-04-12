@@ -22,6 +22,7 @@ const navItems: NavItem[] = [
   { key: 'reviews', href: '/admin/reviews', icon: '⭐', superAdminOnly: true },
   { key: 'loyalty', href: '/admin/loyalty', icon: '💎', superAdminOnly: true },
   { key: 'settings', href: '/admin/settings', icon: '⚙️', superAdminOnly: true },
+  { key: 'pwa', href: '/admin/pwa-settings', icon: '📱', superAdminOnly: true },
 ];
 
 export default function AdminSidebar() {

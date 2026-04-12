@@ -578,6 +578,7 @@
       "reviews": "Recenzii",
       "loyalty": "Fidelitate",
       "settings": "Setari",
+      "pwa": "PWA",
       "logout": "Deconectare"
     },
     "dashboard": {
@@ -769,6 +770,30 @@
       "saving": "Se salveaza...",
       "saved": "Setarile au fost salvate.",
       "saveError": "Eroare la salvare. Incearca din nou."
+    },
+    "pwaSettings": {
+      "title": "Setari PWA",
+      "appInfo": "Informatii aplicatie",
+      "appName": "Numele aplicatiei",
+      "shortName": "Nume scurt",
+      "description": "Descriere",
+      "display": "Afisare",
+      "displayMode": "Mod afisare",
+      "startUrl": "URL start",
+      "colors": "Culori",
+      "themeColor": "Culoare tema",
+      "backgroundColor": "Culoare fundal",
+      "icons": "Iconite",
+      "iconsDescription": "Incarca iconitele aplicatiei. Se vor redimensiona automat la dimensiunea corecta. Accepta PNG, JPEG sau WebP.",
+      "uploadIcon": "Incarca iconita",
+      "uploading": "Se incarca...",
+      "iconUploaded": "Iconita a fost incarcata.",
+      "uploadError": "Eroare la incarcare.",
+      "save": "Salveaza",
+      "saving": "Se salveaza...",
+      "saved": "Setarile PWA au fost salvate.",
+      "saveError": "Eroare la salvare.",
+      "previewManifest": "Preview Manifest"
     }
   },
   "metadata": {

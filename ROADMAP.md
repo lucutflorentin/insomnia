@@ -6,6 +6,59 @@
 
 ## JURNAL TEHNIC — Ce s-a implementat
 
+### Sesiunea 9 (12 Aprilie 2026) — PWA Admin Dashboard Management
+
+Adaugare pagina completa de administrare PWA in admin dashboard. Toate setarile PWA sunt acum configurabile din interfata admin, fara a edita manual fisiere.
+
+#### ✅ Manifest dinamic
+
+- **`src/app/manifest.ts`** — manifest generat dinamic din baza de date (inlocuieste `public/manifest.json` static)
+- Citeste setarile `pwa_*` din tabelul `settings` cu fallback la valori default
+- Next.js serveste automat la `/manifest.webmanifest`
+- Layout actualizat cu referinta corecta: `<link rel="manifest" href="/manifest.webmanifest" />`
+
+#### ✅ API Routes PWA Settings
+
+- **`src/app/api/admin/pwa-settings/route.ts`** — GET/PUT pentru setari PWA (pwa_name, pwa_short_name, pwa_description, pwa_theme_color, pwa_background_color, pwa_display, pwa_start_url, pwa_icon_192, pwa_icon_512)
+- **`src/app/api/admin/pwa-settings/upload-icon/route.ts`** — Upload iconite PWA cu:
+  - Validare MIME type + magic bytes (securitate)
+  - Rate limiting (10 uploads/minut)
+  - Resize automat cu Sharp la dimensiunea exacta (192x192 sau 512x512)
+  - Output PNG (cerinta PWA), nu WebP
+  - Salvare in `/public/icons/` + actualizare automata setting in DB
+- Ambele protejate cu `verifyRole(request, ['SUPER_ADMIN'])`
+
+#### ✅ Pagina Admin PWA Settings
+
+- **`src/app/[locale]/admin/pwa-settings/page.tsx`** — Pagina completa cu 4 sectiuni:
+  - **App Info:** nume, nume scurt, descriere
+  - **Display:** mod afisare (standalone/fullscreen/minimal-ui/browser), URL start
+  - **Colors:** culoare tema + culoare fundal cu color picker nativ + input hex
+  - **Icons:** upload 192x192 si 512x512 cu preview, drag & click
+- Buton "Preview Manifest" pentru verificare rapida
+- Urmeaza exact pattern-ul din pagina Settings existenta
+
+#### ✅ Integrare navigatie + i18n
+
+- **`AdminSidebar.tsx`** — adaugat nav item PWA (📱) cu `superAdminOnly: true`
+- **`messages/ro.json`** + **`messages/en.json`** — 17 chei de traducere noi (`admin.pwaSettings.*` si `admin.nav.pwa`)
+
+#### Fisiere modificate/create
+
+| Fisier | Actiune |
+|--------|---------|
+| `src/app/manifest.ts` | NOU — manifest dinamic din DB |
+| `src/app/api/admin/pwa-settings/route.ts` | NOU — GET/PUT settings PWA |
+| `src/app/api/admin/pwa-settings/upload-icon/route.ts` | NOU — upload iconite PNG |
+| `src/app/[locale]/admin/pwa-settings/page.tsx` | NOU — pagina admin PWA |
+| `src/components/admin/AdminSidebar.tsx` | Adaugat nav item PWA |
+| `messages/ro.json` | Adaugat traduceri PWA |
+| `messages/en.json` | Adaugat traduceri PWA |
+| `src/app/[locale]/layout.tsx` | Actualizat link manifest |
+| `public/manifest.json` | STERS — inlocuit de manifest.ts |
+
+---
+
 ### Sesiunea 8 (12 Aprilie 2026) — Audit complet, securitate, bugfix-uri, performanta, PWA
 
 Audit complet al intregului proiect: cod, securitate, performanta, UX. Identificate si rezolvate 35+ probleme in 5 faze.

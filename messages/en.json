@@ -578,6 +578,7 @@
       "reviews": "Reviews",
       "loyalty": "Loyalty",
       "settings": "Settings",
+      "pwa": "PWA",
       "logout": "Sign out"
     },
     "dashboard": {
@@ -769,6 +770,30 @@
       "saving": "Saving...",
       "saved": "Settings saved successfully.",
       "saveError": "Failed to save. Please try again."
+    },
+    "pwaSettings": {
+      "title": "PWA Settings",
+      "appInfo": "App information",
+      "appName": "App name",
+      "shortName": "Short name",
+      "description": "Description",
+      "display": "Display",
+      "displayMode": "Display mode",
+      "startUrl": "Start URL",
+      "colors": "Colors",
+      "themeColor": "Theme color",
+      "backgroundColor": "Background color",
+      "icons": "Icons",
+      "iconsDescription": "Upload your app icons. They will be automatically resized to the correct dimensions. Accepts PNG, JPEG, or WebP.",
+      "uploadIcon": "Upload icon",
+      "uploading": "Uploading...",
+      "iconUploaded": "Icon uploaded successfully.",
+      "uploadError": "Upload failed.",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "PWA settings saved successfully.",
+      "saveError": "Failed to save.",
+      "previewManifest": "Preview Manifest"
     }
   },
   "metadata": {
