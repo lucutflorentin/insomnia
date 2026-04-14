@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
 
@@ -21,23 +22,8 @@ interface User {
   name: string;
 }
 
-const statusLabels: Record<string, string> = {
-  new: 'Noua',
-  contacted: 'Contactat',
-  confirmed: 'Confirmata',
-  completed: 'Finalizata',
-  cancelled: 'Anulata',
-};
-
-const statusColors: Record<string, string> = {
-  new: 'bg-blue-500/20 text-blue-400',
-  contacted: 'bg-yellow-500/20 text-yellow-400',
-  confirmed: 'bg-green-500/20 text-green-400',
-  completed: 'bg-accent/20 text-accent',
-  cancelled: 'bg-red-500/20 text-red-400',
-};
-
 export default function AccountDashboard() {
+  const t = useTranslations('account.dashboard');
   const [user, setUser] = useState<User | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loyalty, setLoyalty] = useState<LoyaltyData>({ points: 0, totalSessions: 0 });
@@ -89,6 +75,14 @@ export default function AccountDashboard() {
   const pointsInRON = loyalty.points * 50;
   const stampsFilled = Math.min(loyalty.totalSessions % 10, 10);
 
+  const statusColors: Record<string, string> = {
+    new: 'bg-blue-500/20 text-blue-400',
+    contacted: 'bg-yellow-500/20 text-yellow-400',
+    confirmed: 'bg-green-500/20 text-green-400',
+    completed: 'bg-accent/20 text-accent',
+    cancelled: 'bg-red-500/20 text-red-400',
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -102,35 +96,35 @@ export default function AccountDashboard() {
       {/* Welcome */}
       <div className="mb-8">
         <h1 className="font-heading text-2xl text-text-primary lg:text-3xl">
-          Bine ai revenit, {user?.name?.split(' ')[0] || 'Client'}!
+          {t('welcome', { name: user?.name?.split(' ')[0] || 'Client' })}
         </h1>
         <p className="mt-1 text-sm text-text-muted">
-          Aici poti vedea programarile, punctele de fidelitate si setarile contului.
+          {t('subtitle')}
         </p>
       </div>
 
       {/* Quick Stats */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-sm border border-border bg-bg-secondary p-5">
-          <p className="text-sm text-text-secondary">Programari viitoare</p>
+          <p className="text-sm text-text-secondary">{t('upcomingBookings')}</p>
           <p className="mt-2 text-3xl font-bold text-accent">{upcomingCount}</p>
         </div>
         <div className="rounded-sm border border-border bg-bg-secondary p-5">
-          <p className="text-sm text-text-secondary">Puncte fidelitate</p>
+          <p className="text-sm text-text-secondary">{t('loyaltyPoints')}</p>
           <p className="mt-2 text-3xl font-bold text-success">{loyalty.points}</p>
         </div>
         <div className="rounded-sm border border-border bg-bg-secondary p-5">
-          <p className="text-sm text-text-secondary">Echivalent RON</p>
-          <p className="mt-2 text-3xl font-bold text-warning">{pointsInRON} RON</p>
+          <p className="text-sm text-text-secondary">{t('equivalentRon')}</p>
+          <p className="mt-2 text-3xl font-bold text-warning">{t('ronValue', { value: pointsInRON })}</p>
         </div>
       </div>
 
       {/* Loyalty Card Preview */}
       <div className="mb-8 rounded-sm border border-border bg-bg-secondary p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-heading text-lg text-text-primary">Card de fidelitate</h2>
+          <h2 className="font-heading text-lg text-text-primary">{t('loyaltyCard')}</h2>
           <Link href="/account/loyalty" className="text-sm text-accent hover:underline">
-            Vezi detalii
+            {t('viewDetails')}
           </Link>
         </div>
         <div className="grid grid-cols-5 gap-3 sm:grid-cols-10">
@@ -144,7 +138,6 @@ export default function AccountDashboard() {
               }`}
             >
               {i === 9 ? (
-                // Gift icon for 10th stamp
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                 </svg>
@@ -159,7 +152,7 @@ export default function AccountDashboard() {
           ))}
         </div>
         <p className="mt-4 text-xs text-text-muted">
-          {stampsFilled}/10 sedinte completate. La 10 sedinte primesti o surpriza!
+          {t('stampsProgress', { filled: stampsFilled })}
         </p>
       </div>
 
@@ -167,7 +160,7 @@ export default function AccountDashboard() {
       <div className="mb-8">
         <Link href="/booking">
           <Button size="lg" className="w-full sm:w-auto">
-            Programeaza o sedinta
+            {t('bookSession')}
           </Button>
         </Link>
       </div>
@@ -175,15 +168,15 @@ export default function AccountDashboard() {
       {/* Recent Bookings */}
       <div className="rounded-sm border border-border bg-bg-secondary">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 className="font-heading text-lg text-text-primary">Programari recente</h2>
+          <h2 className="font-heading text-lg text-text-primary">{t('recentBookings')}</h2>
           <Link href="/account/bookings" className="text-sm text-accent hover:underline">
-            Vezi toate
+            {t('viewAll')}
           </Link>
         </div>
 
         {bookings.length === 0 ? (
           <p className="p-6 text-center text-text-muted">
-            Nu ai inca nicio programare.
+            {t('noBookings')}
           </p>
         ) : (
           <div className="divide-y divide-border/50">
@@ -201,7 +194,7 @@ export default function AccountDashboard() {
                     statusColors[booking.status] || statusColors.new
                   }`}
                 >
-                  {statusLabels[booking.status] || booking.status}
+                  {t(`status.${booking.status}` as 'status.new')}
                 </span>
               </div>
             ))}

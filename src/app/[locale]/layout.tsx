@@ -11,6 +11,8 @@ import CookieConsent from '@/components/ui/CookieConsent';
 import CursorGlow from '@/components/effects/CursorGlow';
 import WhatsAppButton from '@/components/ui/WhatsAppButton';
 import PublicOnlyComponents from '@/components/layout/PublicOnlyComponents';
+import PWAInstallBanner from '@/components/ui/PWAInstallBanner';
+import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import '@/app/globals.css';
 
 const playfair = Playfair_Display({
@@ -99,6 +101,7 @@ export default async function LocaleLayout({
       <body className="bg-bg-primary font-body text-text-primary antialiased">
         <JsonLd data={getLocalBusinessSchema()} />
         <Analytics />
+        <ServiceWorkerRegistration />
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>
           <ToastProvider>
@@ -109,6 +112,7 @@ export default async function LocaleLayout({
             <PublicOnlyComponents>
               <WhatsAppButton />
               <CookieConsent />
+              <PWAInstallBanner />
             </PublicOnlyComponents>
           </ToastProvider>
           </AuthProvider>

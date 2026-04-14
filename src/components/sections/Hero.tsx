@@ -7,9 +7,11 @@ import Button from '@/components/ui/Button';
 
 interface HeroProps {
   onBookingClick: () => void;
+  dynamicTitle?: string;
+  dynamicSubtitle?: string;
 }
 
-export default function Hero({ onBookingClick }: HeroProps) {
+export default function Hero({ onBookingClick, dynamicTitle, dynamicSubtitle }: HeroProps) {
   const t = useTranslations('home.hero');
 
   return (
@@ -35,7 +37,7 @@ export default function Hero({ onBookingClick }: HeroProps) {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="font-heading text-4xl font-bold leading-tight sm:text-5xl md:text-6xl lg:text-7xl"
         >
-          {t('title')}
+          {dynamicTitle || t('title')}
         </motion.h1>
 
         <motion.p
@@ -44,7 +46,7 @@ export default function Hero({ onBookingClick }: HeroProps) {
           transition={{ duration: 0.8, delay: 0.6 }}
           className="mx-auto mt-6 max-w-xl text-lg text-text-secondary sm:text-xl"
         >
-          {t('subtitle')}
+          {dynamicSubtitle || t('subtitle')}
         </motion.p>
 
         <motion.div

@@ -74,6 +74,10 @@ export const routing = defineRouting({
       ro: '/contul-meu/recenzii',
       en: '/account/reviews',
     },
+    '/account/favorites': {
+      ro: '/contul-meu/favorite',
+      en: '/account/favorites',
+    },
     '/auth/forgot-password': {
       ro: '/recuperare-parola',
       en: '/auth/forgot-password',
@@ -93,7 +97,16 @@ export const routing = defineRouting({
     '/admin/artists': '/admin/artists',
     '/admin/reviews': '/admin/reviews',
     '/admin/loyalty': '/admin/loyalty',
+    '/admin/users': '/admin/users',
     '/admin/settings': '/admin/settings',
+    '/admin/content': '/admin/content',
+    '/admin/audit-log': '/admin/audit-log',
+    '/artist': '/artist',
+    '/artist/bookings': '/artist/bookings',
+    '/artist/gallery': '/artist/gallery',
+    '/artist/availability': '/artist/availability',
+    '/artist/reviews': '/artist/reviews',
+    '/artist/profile': '/artist/profile',
   },
 });
 

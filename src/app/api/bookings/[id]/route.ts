@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminRequest } from '@/lib/auth';
 import { bookingStatusSchema } from '@/lib/validations';
-import { sendAftercareReminder } from '@/lib/email';
+import { sendBookingStatusUpdateEmail } from '@/lib/email';
+import { logAuditEvent } from '@/lib/audit';
+import { createNotification } from '@/lib/notifications';
+import { sendPushToUser } from '@/lib/push';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -87,23 +90,33 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       data: {
         status: parsed.data.status,
         adminNotes: parsed.data.adminNotes,
+        ...(parsed.data.clientNotes !== undefined ? { clientNotes: parsed.data.clientNotes } : {}),
       },
       include: {
         artist: { select: { id: true, name: true, slug: true } },
       },
     });
 
-    // Send aftercare email when status changes to 'completed'
-    if (parsed.data.status === 'completed' && current.status !== 'completed') {
-      sendAftercareReminder({
+    // Send status update email to client when status changes
+    if (parsed.data.status !== current.status) {
+      sendBookingStatusUpdateEmail({
         clientName: booking.clientName,
         clientEmail: booking.clientEmail,
         artistName: booking.artist.name,
+        referenceCode: booking.referenceCode,
+        newStatus: parsed.data.status,
+        consultationDate: booking.consultationDate?.toISOString().split('T')[0],
+        consultationTime: booking.consultationTime || undefined,
+        adminNotes: parsed.data.adminNotes || undefined,
         language: (booking.language as 'ro' | 'en') || 'ro',
       }).catch(() => {
         // Email failure shouldn't block status update
       });
+    }
 
+    // Aftercare email is now sent via cron job 7 days after completion (matches email content)
+    // Auto-award loyalty point when status changes to 'completed'
+    if (parsed.data.status === 'completed' && current.status !== 'completed') {
       // Auto-award loyalty point if client is registered
       if (current.clientId) {
         try {
@@ -119,6 +132,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
             },
           });
 
+          // Notify client about earned loyalty point
+          createNotification({
+            userId: current.clientId,
+            type: 'loyalty_earned',
+            title: 'Ai primit 1 punct fidelitate!',
+            message: `Felicitari! Ai castigat 1 punct (50 RON) pentru sedinta cu ${booking.artist.name}.`,
+            link: '/account',
+          });
+
           // Check if 10th point reached → notify admin for surprise
           const earnCount = await prisma.loyaltyTransaction.count({
             where: { userId: current.clientId, type: 'earn' },
@@ -130,11 +152,64 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
               clientEmail: booking.clientEmail,
               totalPoints: earnCount,
             }).catch(() => {});
+
+            // Notify all admins in-app about the loyalty surprise milestone
+            prisma.user.findMany({
+              where: { role: 'SUPER_ADMIN', isActive: true },
+              select: { id: true },
+            }).then((admins) => {
+              for (const a of admins) {
+                createNotification({
+                  userId: a.id,
+                  type: 'loyalty_earned',
+                  title: 'Surpriza loyalty de acordat!',
+                  message: `${booking.clientName} a atins ${earnCount} puncte. Acorda surpriza!`,
+                  link: '/admin/loyalty',
+                });
+              }
+            }).catch(() => {});
           }
         } catch (loyaltyError) {
           console.error('Loyalty point award failed:', loyaltyError);
         }
       }
+    }
+
+    // In-app notification to client about status change
+    if (parsed.data.status !== current.status && current.clientId) {
+      const statusLabels: Record<string, string> = {
+        contacted: 'Te-am contactat',
+        confirmed: 'Programare confirmata',
+        completed: 'Sedinta finalizata',
+        cancelled: 'Programare anulata',
+      };
+      const label = statusLabels[parsed.data.status];
+      if (label) {
+        createNotification({
+          userId: current.clientId,
+          type: 'booking_status',
+          title: label,
+          message: `Programarea ta cu ${booking.artist.name} — ${label.toLowerCase()}`,
+          link: '/account/bookings',
+        });
+        sendPushToUser(current.clientId, {
+          title: label,
+          body: `Programarea ta cu ${booking.artist.name} — ${label.toLowerCase()}`,
+          url: '/account/bookings',
+          tag: `booking-status-${booking.id}`,
+        });
+      }
+    }
+
+    // Audit log
+    if (parsed.data.status !== current.status) {
+      logAuditEvent({
+        userId: Number(admin.sub),
+        action: 'booking.status_change',
+        targetType: 'booking',
+        targetId: booking.id,
+        details: { from: current.status, to: parsed.data.status },
+      });
     }
 
     return NextResponse.json({ success: true, data: booking });

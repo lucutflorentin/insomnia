@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
+import ReviewFormModal from '@/components/features/reviews/ReviewFormModal';
 
 interface Booking {
   id: number;
@@ -15,6 +16,7 @@ interface Booking {
   sizeCategory: string;
   stylePreference: string | null;
   description: string | null;
+  clientNotes: string | null;
   consultationDate: string;
   consultationTime: string;
   status: string;
@@ -30,6 +32,7 @@ export default function BookingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [cancelError, setCancelError] = useState('');
+  const [reviewBookingId, setReviewBookingId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -229,15 +232,52 @@ export default function BookingsPage() {
                     <p className="text-sm text-text-secondary">{selectedBooking.description}</p>
                   </div>
                 )}
+                {selectedBooking.clientNotes && (
+                  <div className="rounded-sm border border-accent/20 bg-accent/5 p-3">
+                    <p className="mb-1 text-xs font-medium text-accent">{t('studioNotes')}</p>
+                    <p className="text-sm text-text-secondary">{selectedBooking.clientNotes}</p>
+                  </div>
+                )}
+                {/* Status timeline */}
                 <div>
-                  <p className="text-xs text-text-muted">Status</p>
-                  <span
-                    className={`mt-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      statusColors[selectedBooking.status] || statusColors.new
-                    }`}
-                  >
-                    {t(`status.${selectedBooking.status}`)}
-                  </span>
+                  <p className="mb-2 text-xs text-text-muted">Status</p>
+                  <div className="flex items-center gap-0">
+                    {(['new', 'contacted', 'confirmed', 'completed'] as const).map((step, i) => {
+                      const steps = ['new', 'contacted', 'confirmed', 'completed'];
+                      const currentIdx = steps.indexOf(selectedBooking.status);
+                      const isCancelled = selectedBooking.status === 'cancelled' || selectedBooking.status === 'no_show';
+                      const isReached = !isCancelled && currentIdx >= i;
+                      const isCurrent = !isCancelled && currentIdx === i;
+                      return (
+                        <div key={step} className="flex items-center">
+                          <div className="flex flex-col items-center">
+                            <div
+                              className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${
+                                isCurrent
+                                  ? 'bg-accent text-bg-primary'
+                                  : isReached
+                                    ? 'bg-accent/30 text-accent'
+                                    : 'bg-bg-tertiary text-text-muted'
+                              }`}
+                            >
+                              {isReached ? '✓' : i + 1}
+                            </div>
+                            <span className={`mt-1 text-[10px] ${isCurrent ? 'font-medium text-accent' : 'text-text-muted'}`}>
+                              {t(`status.${step}`)}
+                            </span>
+                          </div>
+                          {i < 3 && (
+                            <div className={`mx-1 h-0.5 w-4 ${isReached && i < currentIdx ? 'bg-accent/30' : 'bg-bg-tertiary'}`} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {(selectedBooking.status === 'cancelled' || selectedBooking.status === 'no_show') && (
+                    <span className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[selectedBooking.status]}`}>
+                      {t(`status.${selectedBooking.status}`)}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-text-muted">{t('submittedAt')}</p>
@@ -273,7 +313,12 @@ export default function BookingsPage() {
 
                 {selectedBooking.status === 'completed' && !selectedBooking.hasReview && (
                   <div className="pt-2">
-                    <Button variant="secondary" className="w-full" size="sm">
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      size="sm"
+                      onClick={() => setReviewBookingId(selectedBooking.id)}
+                    >
                       {t('leaveReview')}
                     </Button>
                   </div>
@@ -282,6 +327,27 @@ export default function BookingsPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Review Form Modal */}
+      {reviewBookingId && selectedBooking && (
+        <ReviewFormModal
+          isOpen={reviewBookingId !== null}
+          onClose={() => setReviewBookingId(null)}
+          bookingId={reviewBookingId}
+          artistName={selectedBooking.artist?.name || ''}
+          onSuccess={() => {
+            setBookings((prev) =>
+              prev.map((b) =>
+                b.id === reviewBookingId ? { ...b, hasReview: true } : b,
+              ),
+            );
+            if (selectedBooking?.id === reviewBookingId) {
+              setSelectedBooking({ ...selectedBooking, hasReview: true });
+            }
+            setReviewBookingId(null);
+          }}
+        />
       )}
     </div>
   );

@@ -11,6 +11,7 @@ import Select from '@/components/ui/Select';
 import SlideUp from '@/components/animations/SlideUp';
 import { cn } from '@/lib/utils';
 import { BODY_AREAS, SIZE_CATEGORIES, BOOKING_SOURCES, TATTOO_STYLES } from '@/lib/constants';
+import ImageUpload from '@/components/ui/ImageUpload';
 import { trackEvent } from '@/components/seo/Analytics';
 import { useToast } from '@/components/ui/Toast';
 
@@ -68,6 +69,7 @@ export default function BookingWizard() {
     email: '',
     gdpr: false,
     source: '',
+    referenceImages: [] as string[],
   });
 
   const updateForm = (key: string, value: string | boolean) => {
@@ -271,9 +273,10 @@ export default function BookingWizard() {
               <p className="mb-2 text-sm font-medium text-text-secondary">
                 {t('step2.references')}
               </p>
-              <div className="rounded-sm border border-dashed border-border bg-bg-secondary p-8 text-center">
-                <p className="text-sm text-text-muted">{t('step2.referencesHelp')}</p>
-              </div>
+              <ImageUpload
+                images={form.referenceImages}
+                onChange={(urls) => setForm((prev) => ({ ...prev, referenceImages: urls }))}
+              />
             </div>
           </div>
         </SlideUp>
@@ -481,6 +484,18 @@ export default function BookingWizard() {
             </div>
             {form.description && (
               <p className="text-sm text-text-secondary mt-2">{form.description}</p>
+            )}
+            {form.referenceImages.length > 0 && (
+              <div className="border-t border-border pt-3 mt-3">
+                <p className="text-xs text-text-muted mb-2">{t('step2.references')}</p>
+                <div className="flex gap-2">
+                  {form.referenceImages.map((url) => (
+                    <div key={url} className="h-16 w-16 overflow-hidden rounded-sm border border-border">
+                      <img src={url} alt="" className="h-full w-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </SlideUp>

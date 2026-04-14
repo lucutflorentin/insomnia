@@ -472,3 +472,176 @@ export async function sendPasswordResetEmail(data: {
     html,
   });
 }
+
+// ─── Booking Status Update Email (to client) ────────────────────────────────
+
+export async function sendBookingStatusUpdateEmail(data: {
+  clientName: string;
+  clientEmail: string;
+  artistName: string;
+  referenceCode: string;
+  newStatus: string;
+  consultationDate?: string;
+  consultationTime?: string;
+  adminNotes?: string;
+  language: 'ro' | 'en';
+}): Promise<void> {
+  const isRo = data.language === 'ro';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://insomniatattoo.ro';
+
+  const statusLabels: Record<string, { ro: string; en: string; emoji: string; color: string }> = {
+    contacted: { ro: 'Te-am contactat', en: "We've reached out", emoji: '📞', color: '#3B82F6' },
+    confirmed: { ro: 'Programare confirmata', en: 'Booking confirmed', emoji: '✅', color: '#22C55E' },
+    completed: { ro: 'Sedinta finalizata', en: 'Session completed', emoji: '🖤', color: '#A855F7' },
+    cancelled: { ro: 'Programare anulata', en: 'Booking cancelled', emoji: '❌', color: '#EF4444' },
+    no_show: { ro: 'Nu te-ai prezentat', en: 'Missed appointment', emoji: '⚠️', color: '#F59E0B' },
+  };
+
+  const status = statusLabels[data.newStatus];
+  if (!status) return; // Don't email for 'new' (first status, client already got confirmation)
+
+  const subject = isRo
+    ? `${status.emoji} ${status.ro} — Insomnia Tattoo`
+    : `${status.emoji} ${status.en} — Insomnia Tattoo`;
+
+  const statusMessages: Record<string, { ro: string; en: string }> = {
+    contacted: {
+      ro: `Am primit cererea ta si te-am contactat. Verifica telefonul si email-ul pentru detalii.`,
+      en: `We've received your request and reached out. Check your phone and email for details.`,
+    },
+    confirmed: {
+      ro: `Programarea ta cu <strong style="color: #B0B0B0;">${escapeHtml(data.artistName)}</strong> este confirmata!`,
+      en: `Your appointment with <strong style="color: #B0B0B0;">${escapeHtml(data.artistName)}</strong> is confirmed!`,
+    },
+    completed: {
+      ro: `Sedinta ta cu <strong style="color: #B0B0B0;">${escapeHtml(data.artistName)}</strong> a fost finalizata! Multumim ca ai ales Insomnia Tattoo. Vei primi sfaturi de aftercare in curand.`,
+      en: `Your session with <strong style="color: #B0B0B0;">${escapeHtml(data.artistName)}</strong> is complete! Thank you for choosing Insomnia Tattoo. You'll receive aftercare tips soon.`,
+    },
+    cancelled: {
+      ro: `Din pacate, programarea ta a fost anulata.`,
+      en: `Unfortunately, your booking has been cancelled.`,
+    },
+    no_show: {
+      ro: `Am observat ca nu te-ai prezentat la programare. Daca ai o urgenta, contacteaza-ne.`,
+      en: `We noticed you missed your appointment. If something came up, please contact us.`,
+    },
+  };
+
+  const dateBlock =
+    data.newStatus === 'confirmed' && data.consultationDate
+      ? `<div style="background-color: #1A1A1A; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 3px solid ${status.color};">
+          <p style="margin: 8px 0; font-size: 15px;">📅 ${isRo ? 'Data' : 'Date'}: <strong>${escapeHtml(data.consultationDate)}</strong></p>
+          ${data.consultationTime ? `<p style="margin: 8px 0; font-size: 15px;">🕐 ${isRo ? 'Ora' : 'Time'}: <strong>${escapeHtml(data.consultationTime)}</strong></p>` : ''}
+          <p style="margin: 8px 0; font-size: 15px;">📍 Insomnia Tattoo, Mamaia Nord</p>
+        </div>`
+      : '';
+
+  const notesBlock =
+    data.adminNotes
+      ? `<div style="background-color: #1A1A1A; border-radius: 8px; padding: 16px; margin: 16px 0;">
+          <p style="font-size: 13px; color: #A0A0A0; margin: 0 0 8px 0;">${isRo ? 'Nota de la echipa:' : 'Note from the team:'}</p>
+          <p style="font-size: 14px; color: #F5F5F5; margin: 0; line-height: 1.6;">${escapeHtml(data.adminNotes)}</p>
+        </div>`
+      : '';
+
+  const html = `
+    <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0A0A0A; color: #F5F5F5; padding: 40px 30px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="font-family: 'Playfair Display', Georgia, serif; color: #B0B0B0; font-size: 28px; margin: 0;">
+          Insomnia Tattoo
+        </h1>
+      </div>
+
+      <p style="font-size: 16px; line-height: 1.6;">
+        ${isRo ? `Salut ${escapeHtml(data.clientName)}!` : `Hi ${escapeHtml(data.clientName)}!`}
+      </p>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <span style="display: inline-block; padding: 8px 20px; border-radius: 4px; font-size: 15px; font-weight: bold; color: ${status.color}; background-color: ${status.color}15; border: 1px solid ${status.color}40;">
+          ${status.emoji} ${isRo ? status.ro : status.en}
+        </span>
+      </div>
+
+      <p style="font-size: 16px; line-height: 1.6; color: #A0A0A0;">
+        ${statusMessages[data.newStatus]?.[isRo ? 'ro' : 'en'] || ''}
+      </p>
+
+      ${dateBlock}
+      ${notesBlock}
+
+      <p style="font-size: 14px; color: #666666; margin-top: 20px;">
+        ${isRo ? 'Cod referinta' : 'Reference code'}: <strong style="color: #B0B0B0;">${escapeHtml(data.referenceCode)}</strong>
+      </p>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${siteUrl}/account/bookings" style="display: inline-block; padding: 12px 28px; background-color: #B0B0B0; color: #0A0A0A; text-decoration: none; font-weight: 600; font-size: 14px; border-radius: 4px;">
+          ${isRo ? 'Vezi programarile tale' : 'View your bookings'}
+        </a>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid #2A2A2A; margin: 30px 0;" />
+
+      <p style="font-size: 13px; color: #666666; text-align: center;">
+        ${isRo ? 'Cu drag,' : 'Best regards,'}<br />
+        <strong>Echipa Insomnia Tattoo</strong>
+      </p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
+    to: data.clientEmail,
+    subject,
+    html,
+  });
+}
+
+// ─── Contact Form Email ──────────────────────────────────────────────────────
+
+interface ContactFormEmailData {
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+}
+
+export async function sendContactFormEmail(data: ContactFormEmailData) {
+  const safeName = escapeHtml(data.name);
+  const safeEmail = escapeHtml(data.email);
+  const safePhone = data.phone ? escapeHtml(data.phone) : '—';
+  const safeMessage = escapeHtml(data.message).replace(/\n/g, '<br />');
+
+  const html = `
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0A0A0A; color: #F5F5F5; padding: 32px;">
+      <h1 style="font-size: 22px; margin-bottom: 24px; color: #B0B0B0;">
+        Mesaj nou de pe site
+      </h1>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 10px 12px; border-bottom: 1px solid #2A2A2A; color: #A0A0A0; width: 120px;">Nume</td>
+          <td style="padding: 10px 12px; border-bottom: 1px solid #2A2A2A;">${safeName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 12px; border-bottom: 1px solid #2A2A2A; color: #A0A0A0;">Email</td>
+          <td style="padding: 10px 12px; border-bottom: 1px solid #2A2A2A;"><a href="mailto:${safeEmail}" style="color: #B0B0B0;">${safeEmail}</a></td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 12px; border-bottom: 1px solid #2A2A2A; color: #A0A0A0;">Telefon</td>
+          <td style="padding: 10px 12px; border-bottom: 1px solid #2A2A2A;">${safePhone}</td>
+        </tr>
+      </table>
+      <div style="margin-top: 20px; padding: 16px; background-color: #1A1A1A; border-radius: 4px;">
+        <p style="font-size: 13px; color: #A0A0A0; margin-bottom: 8px;">Mesaj:</p>
+        <p style="font-size: 14px; line-height: 1.6;">${safeMessage}</p>
+      </div>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
+    to: process.env.ADMIN_EMAIL || process.env.SMTP_USER || 'contact@insomniatattoo.ro',
+    replyTo: data.email,
+    subject: `Mesaj contact: ${data.name}`,
+    html,
+  });
+}

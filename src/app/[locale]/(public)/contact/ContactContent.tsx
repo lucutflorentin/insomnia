@@ -1,8 +1,13 @@
 'use client';
 
+import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import SlideUp from '@/components/animations/SlideUp';
 import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
 import { Link } from '@/i18n/navigation';
+import { useToast } from '@/components/ui/Toast';
 
 interface ContactContentProps {
   locale: string;
@@ -25,6 +30,36 @@ export default function ContactContent({
   socialLinks,
 }: ContactContentProps) {
   const content = locale === 'en' ? en : ro;
+  const t = useTranslations('contact.form');
+  const { showToast } = useToast();
+
+  const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setIsSuccess(true);
+        setForm({ name: '', email: '', phone: '', message: '' });
+        showToast(t('success'), 'success');
+      } else {
+        const data = await res.json();
+        showToast(data.error || t('error'), 'error');
+      }
+    } catch {
+      showToast(t('error'), 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-bg-primary pt-24 pb-16">
@@ -142,9 +177,68 @@ export default function ContactContent({
             </SlideUp>
           </div>
 
-          {/* Map */}
+          {/* Contact Form + Map */}
           <div className="space-y-6">
+            {/* Contact Form */}
             <SlideUp delay={0.15}>
+              <div className="rounded-lg border border-border bg-bg-secondary p-6">
+                <h2 className="mb-4 text-lg font-semibold text-text-primary">
+                  {content.cta.title}
+                </h2>
+
+                {isSuccess ? (
+                  <div className="py-8 text-center">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success/10">
+                      <svg className="h-7 w-7 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <p className="text-text-secondary">{t('success')}</p>
+                    <button
+                      onClick={() => setIsSuccess(false)}
+                      className="mt-4 text-sm text-accent hover:underline"
+                    >
+                      {t('send')}
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <Input
+                      label={t('name')}
+                      value={form.name}
+                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                      required
+                    />
+                    <Input
+                      label={t('email')}
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                      required
+                    />
+                    <Input
+                      label={t('phone')}
+                      type="tel"
+                      value={form.phone}
+                      onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                    />
+                    <Textarea
+                      label={t('message')}
+                      placeholder={t('messagePlaceholder')}
+                      value={form.message}
+                      onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+                      rows={4}
+                    />
+                    <Button type="submit" isLoading={isSubmitting} className="w-full">
+                      {isSubmitting ? t('sending') : t('send')}
+                    </Button>
+                  </form>
+                )}
+              </div>
+            </SlideUp>
+
+            {/* Map */}
+            <SlideUp delay={0.25}>
               <div className="overflow-hidden rounded-lg border border-border bg-bg-secondary">
                 <h2 className="p-6 pb-0 text-lg font-semibold text-text-primary">
                   {content.mapLabel}
@@ -154,7 +248,7 @@ export default function ContactContent({
                     <iframe
                       src={siteConfig.googleMapsUrl}
                       width="100%"
-                      height="350"
+                      height="250"
                       style={{ border: 0 }}
                       allowFullScreen
                       loading="lazy"
@@ -163,26 +257,11 @@ export default function ContactContent({
                       className="rounded-md"
                     />
                   ) : (
-                    <div className="flex h-[350px] items-center justify-center rounded-md bg-bg-primary text-text-secondary">
+                    <div className="flex h-[250px] items-center justify-center rounded-md bg-bg-primary text-text-secondary">
                       <p>{content.mapPlaceholder}</p>
                     </div>
                   )}
                 </div>
-              </div>
-            </SlideUp>
-
-            {/* CTA */}
-            <SlideUp delay={0.3}>
-              <div className="rounded-lg border border-border bg-bg-secondary p-6 text-center">
-                <h2 className="mb-3 text-lg font-semibold text-text-primary">
-                  {content.cta.title}
-                </h2>
-                <p className="mb-6 text-sm text-text-secondary">
-                  {content.cta.description}
-                </p>
-                <Link href="/booking">
-                  <Button>{content.cta.button}</Button>
-                </Link>
               </div>
             </SlideUp>
           </div>

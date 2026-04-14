@@ -46,6 +46,11 @@
       "description": "A aparut o eroare neasteptata. Te rugam sa incerci din nou.",
       "retry": "Incearca din nou",
       "home": "Acasa"
+    },
+    "push": {
+      "enable": "Activeaza notificari",
+      "enabled": "Notificari active",
+      "loading": "Se proceseaza..."
     }
   },
   "auth": {
@@ -102,20 +107,38 @@
       "bookings": "Programarile mele",
       "loyalty": "Card fidelitate",
       "reviews": "Recenziile mele",
+      "favorites": "Favorite",
       "settings": "Setari"
+    },
+    "favorites": {
+      "title": "Lucrari favorite",
+      "empty": "Nu ai adaugat nicio lucrare la favorite.",
+      "browseGallery": "Exploreaza galeria",
+      "tattooBy": "Tatuaj de",
+      "remove": "Sterge din favorite"
     },
     "dashboard": {
       "title": "Contul meu",
-      "welcome": "Bine ai venit, {name}!",
+      "welcome": "Bine ai revenit, {name}!",
+      "subtitle": "Aici poti vedea programarile, punctele de fidelitate si setarile contului.",
       "upcomingBookings": "Programari viitoare",
-      "noUpcoming": "Nu ai programari viitoare.",
-      "bookNow": "Programeaza acum",
-      "loyaltyBalance": "Puncte fidelitate",
-      "points": "puncte",
-      "value": "valoare",
-      "quickActions": "Actiuni rapide",
-      "newBooking": "Programare noua",
-      "viewLoyalty": "Vezi cardul de fidelitate"
+      "loyaltyPoints": "Puncte fidelitate",
+      "equivalentRon": "Echivalent RON",
+      "ronValue": "{value} RON",
+      "loyaltyCard": "Card de fidelitate",
+      "viewDetails": "Vezi detalii",
+      "stampsProgress": "{filled}/10 sedinte completate. La 10 sedinte primesti o surpriza!",
+      "bookSession": "Programeaza o sedinta",
+      "recentBookings": "Programari recente",
+      "viewAll": "Vezi toate",
+      "noBookings": "Nu ai inca nicio programare.",
+      "status": {
+        "new": "Noua",
+        "contacted": "Contactat",
+        "confirmed": "Confirmata",
+        "completed": "Finalizata",
+        "cancelled": "Anulata"
+      }
     },
     "bookings": {
       "title": "Programarile mele",
@@ -143,7 +166,8 @@
       "cancelling": "Se anuleaza...",
       "cancelConfirm": "Esti sigur ca vrei sa anulezi aceasta programare?",
       "cancelError": "Eroare la anulare. Incearca din nou.",
-      "cancelNote": "Anularea este posibila doar cu minimum 24h inainte de data programata."
+      "cancelNote": "Anularea este posibila doar cu minimum 24h inainte de data programata.",
+      "studioNotes": "Mesaj de la studio"
     },
     "loyalty": {
       "title": "Card de fidelitate",
@@ -172,6 +196,19 @@
         "pending": "In asteptare",
         "approved": "Aprobata",
         "hidden": "Ascunsa"
+      },
+      "form": {
+        "title": "Lasa o recenzie",
+        "forArtist": "Pentru artistul {artist}",
+        "ratingLabel": "Rating",
+        "ratingRequired": "Te rugam sa selectezi un rating",
+        "textLabel": "Recenzia ta (optional)",
+        "textPlaceholder": "Spune-ne despre experienta ta...",
+        "textHint": "Minim 10 caractere daca scrii o recenzie",
+        "cancel": "Anuleaza",
+        "submit": "Trimite recenzia",
+        "success": "Multumim pentru recenzie! Va fi vizibila dupa aprobare.",
+        "error": "A aparut o eroare. Te rugam sa incerci din nou."
       }
     },
     "settings": {
@@ -355,6 +392,15 @@
       "descriptionPlaceholder": "Descrie ideea ta pentru tatuaj... Ce iti doresti, ce semnificatie are, ce elemente vrei sa includa.",
       "references": "Imagini de referinta (optional)",
       "referencesHelp": "Maximum 3 imagini, format JPG/PNG, max 5MB fiecare",
+      "upload": {
+        "dragDrop": "Trage imaginile aici sau apasa pentru a selecta",
+        "hint": "Max {max} imagini, JPG/PNG/WebP, max {size}MB fiecare",
+        "uploading": "Se incarca...",
+        "maxReached": "Ai atins limita de {max} imagini",
+        "tooLarge": "Fisierul este prea mare (max {max}MB)",
+        "invalidType": "Format invalid. Acceptam doar JPG, PNG si WebP",
+        "uploadError": "Eroare la incarcare. Incearca din nou."
+      },
       "recommendation": "Recomandam pe"
     },
     "step3": {
@@ -561,6 +607,103 @@
       "sunday": "Duminica: Inchis"
     }
   },
+  "artist": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "bookings": "Programari",
+      "gallery": "Galerie",
+      "availability": "Disponibilitate",
+      "reviews": "Recenzii",
+      "profile": "Profil",
+      "logout": "Deconectare"
+    },
+    "dashboard": {
+      "welcome": "Bine ai revenit, {name}!",
+      "subtitle": "Iata un sumar al activitatii tale",
+      "stats": {
+        "monthBookings": "Programari luna aceasta",
+        "totalBookings": "Total programari",
+        "averageRating": "Rating mediu",
+        "totalReviews": "Total recenzii"
+      },
+      "upcoming": "Programari viitoare",
+      "noUpcoming": "Nu ai programari viitoare",
+      "recentReviews": "Recenzii recente",
+      "noReviews": "Nu ai recenzii inca"
+    },
+    "bookings": {
+      "title": "Programarile mele",
+      "noBookings": "Nu ai programari inca",
+      "client": "Client",
+      "date": "Data",
+      "time": "Ora",
+      "status": "Status",
+      "details": "Detalii",
+      "area": "Zona",
+      "size": "Dimensiune",
+      "style": "Stil",
+      "description": "Descriere",
+      "notes": "Note admin",
+      "addNotes": "Adauga note...",
+      "updateStatus": "Actualizeaza status",
+      "clientNotes": "Nota pentru client",
+      "clientNotesPlaceholder": "Ex: Te asteptam cu referinte printate",
+      "clientNotesHint": "Vizibila clientului in contul sau",
+      "statusLabels": {
+        "new": "Nou",
+        "contacted": "Contactat",
+        "confirmed": "Confirmat",
+        "completed": "Finalizat",
+        "cancelled": "Anulat",
+        "no_show": "Neprezentare"
+      },
+      "filter": {
+        "all": "Toate",
+        "upcoming": "Viitoare",
+        "past": "Trecute"
+      }
+    },
+    "gallery": {
+      "title": "Galeria mea",
+      "upload": "Incarca imagini",
+      "noImages": "Nu ai imagini in galerie",
+      "editCaption": "Editeaza legenda",
+      "delete": "Sterge",
+      "confirmDelete": "Esti sigur ca vrei sa stergi aceasta imagine?",
+      "visibility": "Vizibilitate",
+      "visible": "Vizibil",
+      "hidden": "Ascuns"
+    },
+    "availability": {
+      "title": "Disponibilitatea mea",
+      "subtitle": "Seteaza programul tau de lucru"
+    },
+    "reviews": {
+      "title": "Recenziile mele",
+      "noReviews": "Nu ai recenzii inca",
+      "averageRating": "Rating mediu",
+      "totalReviews": "Total",
+      "distribution": "Distributie",
+      "status": {
+        "approved": "Aprobat",
+        "pending": "In asteptare"
+      }
+    },
+    "profile": {
+      "title": "Profilul meu",
+      "bioRo": "Bio (Romana)",
+      "bioEn": "Bio (Engleza)",
+      "specialtyRo": "Specialitate (Romana)",
+      "specialtyEn": "Specialitate (Engleza)",
+      "instagram": "Instagram URL",
+      "tiktok": "TikTok URL",
+      "profileImage": "Poza de profil",
+      "save": "Salveaza",
+      "saving": "Se salveaza...",
+      "saved": "Profil salvat!",
+      "error": "Eroare la salvare"
+    }
+  },
   "admin": {
     "login": {
       "title": "Admin Login",
@@ -579,7 +722,61 @@
       "loyalty": "Fidelitate",
       "settings": "Setari",
       "pwa": "PWA",
+      "users": "Utilizatori",
+      "content": "Continut",
+      "auditLog": "Jurnal actiuni",
       "logout": "Deconectare"
+    },
+    "content": {
+      "title": "Gestionare continut",
+      "description": "Editeaza textele de pe paginile publice ale site-ului. Modificarile se aplica imediat.",
+      "save": "Salveaza",
+      "saved": "Continut salvat cu succes!",
+      "saveError": "Eroare la salvare. Incearca din nou.",
+      "loadError": "Eroare la incarcarea continutului.",
+      "sections": {
+        "hero": "Hero (Prima pagina)",
+        "about": "Despre noi",
+        "aftercare": "Aftercare",
+        "faq": "FAQ",
+        "footer": "Footer"
+      },
+      "fields": {
+        "heroTitleRo": "Titlu Hero (RO)",
+        "heroTitleEn": "Titlu Hero (EN)",
+        "heroSubtitleRo": "Subtitlu Hero (RO)",
+        "heroSubtitleEn": "Subtitlu Hero (EN)",
+        "aboutTitleRo": "Titlu Despre Noi (RO)",
+        "aboutTitleEn": "Titlu About (EN)",
+        "aboutStoryRo": "Povestea noastra (RO)",
+        "aboutStoryEn": "Our Story (EN)",
+        "aboutMissionRo": "Misiunea noastra (RO)",
+        "aboutMissionEn": "Our Mission (EN)",
+        "aftercareIntroRo": "Introducere Aftercare (RO)",
+        "aftercareIntroEn": "Aftercare Intro (EN)",
+        "faqIntroRo": "Introducere FAQ (RO)",
+        "faqIntroEn": "FAQ Intro (EN)",
+        "footerTaglineRo": "Tagline Footer (RO)",
+        "footerTaglineEn": "Footer Tagline (EN)"
+      }
+    },
+    "users": {
+      "title": "Utilizatori",
+      "total": "{count} utilizatori inregistrati",
+      "search": "Cauta dupa nume, email sau telefon...",
+      "filter": {
+        "all": "Toti"
+      },
+      "table": {
+        "name": "Nume",
+        "email": "Email",
+        "role": "Rol",
+        "bookings": "Programari",
+        "reviews": "Recenzii",
+        "lastLogin": "Ultima logare",
+        "joined": "Inregistrat"
+      },
+      "inactive": "Inactiv"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -651,7 +848,9 @@
         "consultationDate": "Data consultatie",
         "source": "Sursa"
       },
-      "adminNotes": "Note admin",
+      "adminNotes": "Note admin (interne)",
+      "clientNotes": "Nota pentru client",
+      "clientNotesHint": "Aceasta nota va fi vizibila clientului in contul sau.",
       "noBookings": "Nu exista programari.",
       "exportBookings": "Export programari",
       "exportClients": "Export clienti"

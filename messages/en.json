@@ -46,6 +46,11 @@
       "description": "Sorry, the page you are looking for does not exist or has been moved.",
       "backHome": "Back to home",
       "bookConsultation": "Book a consultation"
+    },
+    "push": {
+      "enable": "Enable notifications",
+      "enabled": "Notifications enabled",
+      "loading": "Processing..."
     }
   },
   "auth": {
@@ -102,20 +107,38 @@
       "bookings": "My Bookings",
       "loyalty": "Loyalty Card",
       "reviews": "My Reviews",
+      "favorites": "Favorites",
       "settings": "Settings"
+    },
+    "favorites": {
+      "title": "Favorite Works",
+      "empty": "You haven't added any works to favorites yet.",
+      "browseGallery": "Browse gallery",
+      "tattooBy": "Tattoo by",
+      "remove": "Remove from favorites"
     },
     "dashboard": {
       "title": "My Account",
-      "welcome": "Welcome, {name}!",
+      "welcome": "Welcome back, {name}!",
+      "subtitle": "Here you can view your bookings, loyalty points, and account settings.",
       "upcomingBookings": "Upcoming bookings",
-      "noUpcoming": "No upcoming bookings.",
-      "bookNow": "Book now",
-      "loyaltyBalance": "Loyalty points",
-      "points": "points",
-      "value": "value",
-      "quickActions": "Quick actions",
-      "newBooking": "New booking",
-      "viewLoyalty": "View loyalty card"
+      "loyaltyPoints": "Loyalty points",
+      "equivalentRon": "RON equivalent",
+      "ronValue": "{value} RON",
+      "loyaltyCard": "Loyalty card",
+      "viewDetails": "View details",
+      "stampsProgress": "{filled}/10 sessions completed. At 10 sessions you get a surprise!",
+      "bookSession": "Book a session",
+      "recentBookings": "Recent bookings",
+      "viewAll": "View all",
+      "noBookings": "You don't have any bookings yet.",
+      "status": {
+        "new": "New",
+        "contacted": "Contacted",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
     },
     "bookings": {
       "title": "My Bookings",
@@ -143,7 +166,8 @@
       "cancelling": "Cancelling...",
       "cancelConfirm": "Are you sure you want to cancel this booking?",
       "cancelError": "Cancellation failed. Please try again.",
-      "cancelNote": "Cancellation is only possible at least 24 hours before the scheduled date."
+      "cancelNote": "Cancellation is only possible at least 24 hours before the scheduled date.",
+      "studioNotes": "Message from studio"
     },
     "loyalty": {
       "title": "Loyalty Card",
@@ -172,6 +196,19 @@
         "pending": "Pending",
         "approved": "Approved",
         "hidden": "Hidden"
+      },
+      "form": {
+        "title": "Leave a Review",
+        "forArtist": "For artist {artist}",
+        "ratingLabel": "Rating",
+        "ratingRequired": "Please select a rating",
+        "textLabel": "Your review (optional)",
+        "textPlaceholder": "Tell us about your experience...",
+        "textHint": "Minimum 10 characters if writing a review",
+        "cancel": "Cancel",
+        "submit": "Submit Review",
+        "success": "Thank you for your review! It will be visible after approval.",
+        "error": "An error occurred. Please try again."
       }
     },
     "settings": {
@@ -355,6 +392,15 @@
       "descriptionPlaceholder": "Describe your tattoo idea... What do you want, what does it mean to you, what elements should it include.",
       "references": "Reference images (optional)",
       "referencesHelp": "Maximum 3 images, JPG/PNG format, max 5MB each",
+      "upload": {
+        "dragDrop": "Drag images here or click to browse",
+        "hint": "Max {max} images, JPG/PNG/WebP, max {size}MB each",
+        "uploading": "Uploading...",
+        "maxReached": "You've reached the limit of {max} images",
+        "tooLarge": "File is too large (max {max}MB)",
+        "invalidType": "Invalid format. We only accept JPG, PNG and WebP",
+        "uploadError": "Upload failed. Please try again."
+      },
       "recommendation": "We recommend"
     },
     "step3": {
@@ -561,6 +607,103 @@
       "sunday": "Sunday: Closed"
     }
   },
+  "artist": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "bookings": "Bookings",
+      "gallery": "Gallery",
+      "availability": "Availability",
+      "reviews": "Reviews",
+      "profile": "Profile",
+      "logout": "Logout"
+    },
+    "dashboard": {
+      "welcome": "Welcome back, {name}!",
+      "subtitle": "Here's a summary of your activity",
+      "stats": {
+        "monthBookings": "Bookings this month",
+        "totalBookings": "Total bookings",
+        "averageRating": "Average rating",
+        "totalReviews": "Total reviews"
+      },
+      "upcoming": "Upcoming bookings",
+      "noUpcoming": "No upcoming bookings",
+      "recentReviews": "Recent reviews",
+      "noReviews": "No reviews yet"
+    },
+    "bookings": {
+      "title": "My Bookings",
+      "noBookings": "No bookings yet",
+      "client": "Client",
+      "date": "Date",
+      "time": "Time",
+      "status": "Status",
+      "details": "Details",
+      "area": "Area",
+      "size": "Size",
+      "style": "Style",
+      "description": "Description",
+      "notes": "Admin notes",
+      "addNotes": "Add notes...",
+      "updateStatus": "Update status",
+      "clientNotes": "Note for client",
+      "clientNotesPlaceholder": "E.g., Please bring printed references",
+      "clientNotesHint": "Visible to the client in their account",
+      "statusLabels": {
+        "new": "New",
+        "contacted": "Contacted",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "no_show": "No show"
+      },
+      "filter": {
+        "all": "All",
+        "upcoming": "Upcoming",
+        "past": "Past"
+      }
+    },
+    "gallery": {
+      "title": "My Gallery",
+      "upload": "Upload images",
+      "noImages": "No images in your gallery",
+      "editCaption": "Edit caption",
+      "delete": "Delete",
+      "confirmDelete": "Are you sure you want to delete this image?",
+      "visibility": "Visibility",
+      "visible": "Visible",
+      "hidden": "Hidden"
+    },
+    "availability": {
+      "title": "My Availability",
+      "subtitle": "Set your work schedule"
+    },
+    "reviews": {
+      "title": "My Reviews",
+      "noReviews": "No reviews yet",
+      "averageRating": "Average rating",
+      "totalReviews": "Total",
+      "distribution": "Distribution",
+      "status": {
+        "approved": "Approved",
+        "pending": "Pending"
+      }
+    },
+    "profile": {
+      "title": "My Profile",
+      "bioRo": "Bio (Romanian)",
+      "bioEn": "Bio (English)",
+      "specialtyRo": "Specialty (Romanian)",
+      "specialtyEn": "Specialty (English)",
+      "instagram": "Instagram URL",
+      "tiktok": "TikTok URL",
+      "profileImage": "Profile photo",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Profile saved!",
+      "error": "Error saving"
+    }
+  },
   "admin": {
     "login": {
       "title": "Admin Login",
@@ -579,7 +722,61 @@
       "loyalty": "Loyalty",
       "settings": "Settings",
       "pwa": "PWA",
+      "users": "Users",
+      "content": "Content",
+      "auditLog": "Audit Log",
       "logout": "Sign out"
+    },
+    "content": {
+      "title": "Content Management",
+      "description": "Edit texts on the public pages of the website. Changes apply immediately.",
+      "save": "Save",
+      "saved": "Content saved successfully!",
+      "saveError": "Save failed. Please try again.",
+      "loadError": "Failed to load content.",
+      "sections": {
+        "hero": "Hero (Homepage)",
+        "about": "About Us",
+        "aftercare": "Aftercare",
+        "faq": "FAQ",
+        "footer": "Footer"
+      },
+      "fields": {
+        "heroTitleRo": "Hero Title (RO)",
+        "heroTitleEn": "Hero Title (EN)",
+        "heroSubtitleRo": "Hero Subtitle (RO)",
+        "heroSubtitleEn": "Hero Subtitle (EN)",
+        "aboutTitleRo": "About Title (RO)",
+        "aboutTitleEn": "About Title (EN)",
+        "aboutStoryRo": "Our Story (RO)",
+        "aboutStoryEn": "Our Story (EN)",
+        "aboutMissionRo": "Our Mission (RO)",
+        "aboutMissionEn": "Our Mission (EN)",
+        "aftercareIntroRo": "Aftercare Intro (RO)",
+        "aftercareIntroEn": "Aftercare Intro (EN)",
+        "faqIntroRo": "FAQ Intro (RO)",
+        "faqIntroEn": "FAQ Intro (EN)",
+        "footerTaglineRo": "Footer Tagline (RO)",
+        "footerTaglineEn": "Footer Tagline (EN)"
+      }
+    },
+    "users": {
+      "title": "Users",
+      "total": "{count} registered users",
+      "search": "Search by name, email or phone...",
+      "filter": {
+        "all": "All"
+      },
+      "table": {
+        "name": "Name",
+        "email": "Email",
+        "role": "Role",
+        "bookings": "Bookings",
+        "reviews": "Reviews",
+        "lastLogin": "Last login",
+        "joined": "Joined"
+      },
+      "inactive": "Inactive"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -651,7 +848,9 @@
         "consultationDate": "Consultation date",
         "source": "Source"
       },
-      "adminNotes": "Admin notes",
+      "adminNotes": "Admin notes (internal)",
+      "clientNotes": "Note for client",
+      "clientNotesHint": "This note will be visible to the client in their account.",
       "noBookings": "No bookings found.",
       "exportBookings": "Export bookings",
       "exportClients": "Export clients"

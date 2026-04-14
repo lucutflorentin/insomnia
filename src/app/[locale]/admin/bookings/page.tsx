@@ -23,6 +23,7 @@ interface Booking {
   source: string;
   status: string;
   adminNotes: string | null;
+  clientNotes: string | null;
   language: string;
   createdAt: string;
   artist: { id: number; name: string; slug: string };
@@ -40,6 +41,7 @@ export default function AdminBookingsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selected, setSelected] = useState<Booking | null>(null);
   const [notes, setNotes] = useState('');
+  const [clientNotes, setClientNotes] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
@@ -77,7 +79,7 @@ export default function AdminBookingsPage() {
       const res = await fetch(`/api/bookings/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, adminNotes: notes || undefined }),
+        body: JSON.stringify({ status, adminNotes: notes || undefined, clientNotes: clientNotes || undefined }),
       });
       if (res.ok) {
         showToast(t(`status.${status}`), 'success');
@@ -183,7 +185,7 @@ export default function AdminBookingsPage() {
                   {bookings.map((b) => (
                     <tr
                       key={b.id}
-                      onClick={() => { setSelected(b); setNotes(b.adminNotes || ''); }}
+                      onClick={() => { setSelected(b); setNotes(b.adminNotes || ''); setClientNotes(b.clientNotes || ''); }}
                       className={`cursor-pointer border-b border-white/5 text-sm transition-colors hover:bg-white/5 ${
                         selected?.id === b.id ? 'bg-white/5' : ''
                       }`}
@@ -293,7 +295,7 @@ export default function AdminBookingsPage() {
               </div>
             </div>
 
-            {/* Admin notes */}
+            {/* Admin notes (internal, not visible to client) */}
             <div className="mt-4">
               <Textarea
                 label={t('adminNotes')}
@@ -301,6 +303,17 @@ export default function AdminBookingsPage() {
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
               />
+            </div>
+
+            {/* Client-facing notes */}
+            <div className="mt-3">
+              <Textarea
+                label={t('clientNotes')}
+                value={clientNotes}
+                onChange={(e) => setClientNotes(e.target.value)}
+                rows={2}
+              />
+              <p className="mt-1 text-xs text-text-muted">{t('clientNotesHint')}</p>
             </div>
 
             {/* Status actions */}

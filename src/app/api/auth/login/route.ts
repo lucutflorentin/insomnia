@@ -44,12 +44,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Account lockout check
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const minutesLeft = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+      return NextResponse.json(
+        { success: false, error: `Account locked. Try again in ${minutesLeft} minutes.` },
+        { status: 423 },
+      );
+    }
+
     const validPassword = await comparePassword(
       parsed.data.password,
       user.passwordHash,
     );
 
     if (!validPassword) {
+      const attempts = user.failedLoginAttempts + 1;
+      const MAX_ATTEMPTS = 5;
+      const LOCKOUT_MINUTES = 15;
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: attempts,
+          ...(attempts >= MAX_ATTEMPTS
+            ? { lockedUntil: new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000) }
+            : {}),
+        },
+      });
+
       return NextResponse.json(
         { success: false, error: 'Invalid credentials' },
         { status: 401 },
@@ -71,10 +94,10 @@ export async function POST(request: NextRequest) {
 
     await setAuthCookies(accessToken, refreshToken);
 
-    // Update last login
+    // Reset failed attempts and update last login
     await prisma.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() },
+      data: { lastLoginAt: new Date(), failedLoginAttempts: 0, lockedUntil: null },
     });
 
     return NextResponse.json({

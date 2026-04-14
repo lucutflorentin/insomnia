@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useLocale } from 'next-intl';
 import Hero from '@/components/sections/Hero';
 import ArtistCards from '@/components/sections/ArtistCards';
 import ArtistModal from '@/components/sections/ArtistModal';
@@ -40,6 +41,8 @@ interface HomePageClientProps {
 }
 
 export default function HomePageClient({ artists }: HomePageClientProps) {
+  const locale = useLocale();
+  const [dynamicContent, setDynamicContent] = useState<Record<string, string>>({});
   const [artistModalOpen, setArtistModalOpen] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<HomeArtist | null>(null);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
@@ -66,9 +69,26 @@ export default function HomePageClient({ artists }: HomePageClientProps) {
     setBookingModalOpen(true);
   }, []);
 
+  useEffect(() => {
+    const suffix = locale === 'en' ? 'en' : 'ro';
+    fetch(`/api/content?keys=hero_title_${suffix},hero_subtitle_${suffix}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setDynamicContent(data.data);
+      })
+      .catch(() => {});
+  }, [locale]);
+
+  const heroTitle = dynamicContent[`hero_title_${locale === 'en' ? 'en' : 'ro'}`];
+  const heroSubtitle = dynamicContent[`hero_subtitle_${locale === 'en' ? 'en' : 'ro'}`];
+
   return (
     <>
-      <Hero onBookingClick={handleOpenBooking} />
+      <Hero
+        onBookingClick={handleOpenBooking}
+        dynamicTitle={heroTitle || undefined}
+        dynamicSubtitle={heroSubtitle || undefined}
+      />
       <ArtistCards artists={artists} onArtistClick={handleArtistClick} />
       <GalleryHighlight />
       <SocialProof />

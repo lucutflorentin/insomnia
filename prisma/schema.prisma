@@ -30,9 +30,11 @@ model User {
   phone        String?   @db.VarChar(50)
   googleId     String?   @unique @map("google_id") @db.VarChar(255)
   avatarUrl    String?   @map("avatar_url") @db.VarChar(500)
-  isActive        Boolean   @default(true) @map("is_active")
-  emailVerifiedAt DateTime? @map("email_verified_at")
-  lastLoginAt     DateTime? @map("last_login_at")
+  isActive            Boolean   @default(true) @map("is_active")
+  emailVerifiedAt     DateTime? @map("email_verified_at")
+  lastLoginAt         DateTime? @map("last_login_at")
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -43,6 +45,10 @@ model User {
   sessions            Session[]
   passwordResets      PasswordResetToken[]
   emailVerifications  EmailVerificationToken[]
+  auditLogs           AuditLog[]
+  notifications       Notification[]
+  pushSubscriptions   PushSubscription[]
+  favorites           Favorite[]
 
   @@map("users")
 }
@@ -180,11 +186,16 @@ model Booking {
   // Tracking
   source     String  @default("other") @db.VarChar(20)
   status     String  @default("new") @db.VarChar(20)
-  adminNotes String? @map("admin_notes") @db.Text
+  adminNotes  String? @map("admin_notes") @db.Text
+  clientNotes String? @map("client_notes") @db.Text
 
   // GDPR
   gdprConsent Boolean @default(false) @map("gdpr_consent")
   language    String  @default("ro") @db.VarChar(2)
+
+  // Scheduled email tracking
+  aftercareSentAt      DateTime? @map("aftercare_sent_at")
+  reviewRequestSentAt  DateTime? @map("review_request_sent_at")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -227,12 +238,29 @@ model GalleryItem {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  artist Artist @relation(fields: [artistId], references: [id])
+  artist    Artist     @relation(fields: [artistId], references: [id])
+  favorites Favorite[]
 
   @@index([artistId])
   @@index([isFeatured])
   @@index([style])
   @@map("gallery")
+}
+
+// --- Favorites ---
+
+model Favorite {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  galleryItemId Int      @map("gallery_item_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  galleryItem GalleryItem @relation(fields: [galleryItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, galleryItemId], name: "unique_user_gallery_favorite")
+  @@index([userId])
+  @@map("favorites")
 }
 
 // --- Reviews & Ratings ---
@@ -277,6 +305,60 @@ model LoyaltyTransaction {
 
   @@index([userId])
   @@map("loyalty_transactions")
+}
+
+// --- Notifications ---
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  type      String   @db.VarChar(50) // booking_new, booking_status, review_new, review_approved, loyalty_earned, system
+  title     String   @db.VarChar(200)
+  message   String   @db.Text
+  link      String?  @db.VarChar(500)
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// --- Audit Log ---
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  action     String   @db.VarChar(100)
+  targetType String   @map("target_type") @db.VarChar(50)
+  targetId   String?  @map("target_id") @db.VarChar(50)
+  details    Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// --- Push Subscriptions ---
+
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  endpoint  String   @unique @db.VarChar(500)
+  p256dh    String   @db.VarChar(200)
+  auth      String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 // --- Settings ---

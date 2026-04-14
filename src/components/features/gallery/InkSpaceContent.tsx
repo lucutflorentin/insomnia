@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import FavoriteHeart from '@/components/ui/FavoriteHeart';
 import SlideUp from '@/components/animations/SlideUp';
 import StaggerChildren, { StaggerItem } from '@/components/animations/StaggerChildren';
 import { cn } from '@/lib/utils';
@@ -57,8 +58,10 @@ export interface ArtistSection {
 
 function ArtistPortfolioSection({
   artist,
+  favoriteIds,
 }: {
   artist: ArtistSection;
+  favoriteIds: Set<number>;
 }) {
   const t = useTranslations('inkSpace');
   const tStyles = useTranslations('artists.styles');
@@ -126,11 +129,17 @@ function ArtistPortfolioSection({
                 )}
               </div>
               {/* Hover overlay */}
-              <div className="absolute inset-0 flex items-end bg-gradient-to-t from-bg-primary/80 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <div className="absolute inset-0 flex items-end justify-between bg-gradient-to-t from-bg-primary/80 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                 <div className="p-3">
                   <Badge variant="accent" className="text-[10px]">
                     {tStyles(work.style)}
                   </Badge>
+                </div>
+                <div className="p-3">
+                  <FavoriteHeart
+                    galleryItemId={work.id}
+                    isFavorited={favoriteIds.has(work.id)}
+                  />
                 </div>
               </div>
             </div>
@@ -155,6 +164,19 @@ interface InkSpaceContentProps {
 export default function InkSpaceContent({ sections }: InkSpaceContentProps) {
   const t = useTranslations('inkSpace');
   const artistSections = sections && sections.length > 0 ? sections : defaultArtistSections;
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+
+  // Fetch user's favorites (silent fail if not logged in)
+  useEffect(() => {
+    fetch('/api/client/favorites')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.success) {
+          setFavoriteIds(new Set(data.data.map((f: { galleryItemId: number }) => f.galleryItemId)));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Handle anchor scroll on mount
   useEffect(() => {
@@ -184,7 +206,7 @@ export default function InkSpaceContent({ sections }: InkSpaceContentProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {artistSections.map((artist, index) => (
           <div key={artist.slug}>
-            <ArtistPortfolioSection artist={artist} />
+            <ArtistPortfolioSection artist={artist} favoriteIds={favoriteIds} />
             {index < artistSections.length - 1 && (
               <div className="my-16 flex items-center gap-4">
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-accent/30 to-transparent" />

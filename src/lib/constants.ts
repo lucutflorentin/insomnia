@@ -1,20 +1,19 @@
 export const SITE_CONFIG = {
   name: 'Insomnia Tattoo',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://insomniatattoo.ro',
-  email: 'contact@insomniatattoo.ro',
-  phone: '' as string, // TODO: Adauga numarul de telefon al studioului (ex: '+40 7XX XXX XXX')
+  email: process.env.NEXT_PUBLIC_STUDIO_EMAIL || 'contact@insomniatattoo.ro',
+  phone: process.env.NEXT_PUBLIC_STUDIO_PHONE || '',
   address: 'Mamaia Nord, Constanta, Romania',
   googleMapsUrl: process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_URL || '',
-} as const;
+};
 
-// TODO: Inlocuieste cu URL-urile reale ale studioului inainte de deploy
 export const SOCIAL_LINKS = {
-  instagram: 'https://instagram.com/insomniatattoo', // TODO: URL real
-  instagramMadalina: 'https://instagram.com/madalina.insomnia', // TODO: URL real
-  instagramFlorentin: 'https://instagram.com/florentin.insomnia', // TODO: URL real
-  tiktok: 'https://tiktok.com/@insomniatattoo', // TODO: URL real
-  facebook: 'https://facebook.com/insomniatattoo', // TODO: URL real
-} as const;
+  instagram: process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM || 'https://instagram.com/insomniatattoo',
+  instagramMadalina: process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM_MADALINA || 'https://instagram.com/madalina.insomnia',
+  instagramFlorentin: process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM_FLORENTIN || 'https://instagram.com/florentin.insomnia',
+  tiktok: process.env.NEXT_PUBLIC_SOCIAL_TIKTOK || 'https://tiktok.com/@insomniatattoo',
+  facebook: process.env.NEXT_PUBLIC_SOCIAL_FACEBOOK || 'https://facebook.com/insomniatattoo',
+};
 
 export const NAV_ITEMS = [
   { key: 'artists', href: '/' as const, scrollTo: 'artists' },

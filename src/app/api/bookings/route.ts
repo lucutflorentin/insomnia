@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { generateReferenceCode } from '@/lib/utils';
 import { bookingSchema, quickBookingSchema, sanitizeText } from '@/lib/validations';
 import { sendBookingConfirmation, sendBookingNotification } from '@/lib/email';
+import { createNotification } from '@/lib/notifications';
+import { sendPushToUser } from '@/lib/push';
 import { verifyAdminRequest, getCurrentUser } from '@/lib/auth';
 import { checkRateLimit, getClientIp, BOOKING_LIMIT } from '@/lib/rate-limit';
 
@@ -102,6 +104,11 @@ export async function POST(request: NextRequest) {
     if (description) description = sanitizeText(description);
     if (stylePreference) stylePreference = sanitizeText(stylePreference);
 
+    // Validate reference images (array of URL strings, max 3)
+    const referenceImages = Array.isArray(body.referenceImages)
+      ? body.referenceImages.filter((u: unknown) => typeof u === 'string' && u.startsWith('http')).slice(0, 3)
+      : null;
+
     // Lookup artist by slug (includes user for email)
     const artist = await prisma.artist.findUnique({
       where: { slug: artistSlug },
@@ -155,6 +162,7 @@ export async function POST(request: NextRequest) {
           status: 'new',
           gdprConsent,
           language,
+          referenceImages: referenceImages && referenceImages.length > 0 ? referenceImages : undefined,
         },
       });
     }, { isolationLevel: 'Serializable' });
@@ -179,6 +187,23 @@ export async function POST(request: NextRequest) {
 
     sendBookingConfirmation(emailData).catch(console.error);
     sendBookingNotification(emailData).catch(console.error);
+
+    // In-app + push notification to artist
+    if (artist.userId) {
+      createNotification({
+        userId: artist.userId,
+        type: 'booking_new',
+        title: `Booking nou de la ${clientName}`,
+        message: `Cerere noua de consultatie — ${bodyArea || 'nedefinit'}, ${sizeCategory}`,
+        link: '/artist/bookings',
+      });
+      sendPushToUser(artist.userId, {
+        title: `Booking nou de la ${clientName}`,
+        body: `Cerere noua de consultatie — ${bodyArea || 'nedefinit'}, ${sizeCategory}`,
+        url: '/artist/bookings',
+        tag: `booking-new-${booking.id}`,
+      });
+    }
 
     return NextResponse.json(
       {

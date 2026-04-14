@@ -9,6 +9,7 @@ import MobileMenu from './MobileMenu';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import NotificationBell from '@/components/ui/NotificationBell';
 
 export default function Header() {
   const t = useTranslations('common');
@@ -90,9 +91,11 @@ export default function Header() {
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
 
+            {user && <NotificationBell />}
+
             {user ? (
               <Link
-                href={user.role === 'CLIENT' ? '/account' : '/admin'}
+                href={user.role === 'CLIENT' ? '/account' : user.role === 'ARTIST' ? '/artist' : '/admin'}
                 className="hidden text-sm text-text-secondary transition-colors hover:text-accent sm:block"
               >
                 {t('nav.account')}

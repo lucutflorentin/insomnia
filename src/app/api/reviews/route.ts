@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { verifyRole } from '@/lib/auth';
 import { reviewSchema } from '@/lib/validations';
 import { checkRateLimit, getClientIp, PUBLIC_READ_LIMIT } from '@/lib/rate-limit';
+import { createNotification } from '@/lib/notifications';
 
 // POST /api/reviews — Client: create a review for a completed booking
 export async function POST(request: NextRequest) {
@@ -72,6 +73,22 @@ export async function POST(request: NextRequest) {
         isApproved: false,
       },
     });
+
+    // Notify all admins about the new review to moderate
+    prisma.user.findMany({
+      where: { role: 'SUPER_ADMIN', isActive: true },
+      select: { id: true },
+    }).then((admins) => {
+      for (const admin of admins) {
+        createNotification({
+          userId: admin.id,
+          type: 'review_new',
+          title: 'Review nou de moderat',
+          message: `${payload.name} a lasat un review cu ${rating} stele`,
+          link: '/admin/reviews',
+        });
+      }
+    }).catch(() => {});
 
     return NextResponse.json(
       { success: true, data: review },

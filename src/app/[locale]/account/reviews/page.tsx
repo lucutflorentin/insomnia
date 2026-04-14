@@ -23,20 +23,11 @@ export default function ReviewsPage() {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        // Fetch reviews via client bookings that have reviews
-        const res = await fetch('/api/client/bookings?limit=50');
+        const res = await fetch('/api/client/reviews');
         if (res.ok) {
           const json = await res.json();
           if (json.success) {
-            // For now, we'll show reviews from the public endpoint filtered by this user
-            // A dedicated endpoint would be better, but we can extract review data from bookings
-            const reviewRes = await fetch('/api/reviews?limit=50');
-            if (reviewRes.ok) {
-              const reviewJson = await reviewRes.json();
-              if (reviewJson.success) {
-                setReviews(reviewJson.data || []);
-              }
-            }
+            setReviews(json.data || []);
           }
         }
       } catch {

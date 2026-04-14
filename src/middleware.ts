@@ -10,7 +10,7 @@ const PUBLIC_ADMIN_PATHS = ['/admin/login'];
 const PUBLIC_AUTH_PATHS = ['/auth/login', '/auth/register'];
 
 // Admin paths restricted to SUPER_ADMIN only
-const SUPER_ADMIN_ONLY_PATHS = ['/admin/artists', '/admin/settings', '/admin/loyalty', '/admin/reviews'];
+const SUPER_ADMIN_ONLY_PATHS = ['/admin/artists', '/admin/settings', '/admin/loyalty', '/admin/reviews', '/admin/users', '/admin/content', '/admin/audit-log'];
 
 function stripLocale(pathname: string): string {
   return pathname.replace(/^\/(ro|en)/, '') || '/';
@@ -19,6 +19,11 @@ function stripLocale(pathname: string): string {
 function isAdminPath(pathname: string): boolean {
   const stripped = stripLocale(pathname);
   return stripped.startsWith('/admin');
+}
+
+function isArtistPath(pathname: string): boolean {
+  const stripped = stripLocale(pathname);
+  return stripped.startsWith('/artist');
 }
 
 function isAccountPath(pathname: string): boolean {
@@ -86,14 +91,40 @@ export default async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Only SUPER_ADMIN and ARTIST can access admin panel
-    if (payload.role !== 'SUPER_ADMIN' && payload.role !== 'ARTIST') {
+    // Only SUPER_ADMIN can access admin panel; ARTIST redirected to /artist
+    if (payload.role === 'ARTIST') {
+      return NextResponse.redirect(new URL('/artist', request.url));
+    }
+    if (payload.role !== 'SUPER_ADMIN') {
       return NextResponse.redirect(new URL('/', request.url));
     }
 
     // SUPER_ADMIN-only sections
     if (isSuperAdminOnlyPath(pathname) && payload.role !== 'SUPER_ADMIN') {
       return NextResponse.redirect(new URL('/admin', request.url));
+    }
+  }
+
+  // --- Artist panel routes protection ---
+  if (isArtistPath(pathname)) {
+    if (!token) {
+      const loginUrl = new URL('/admin/login', request.url);
+      const safeRedirect = sanitizeRedirect(pathname);
+      if (safeRedirect) loginUrl.searchParams.set('redirect', safeRedirect);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    const payload = await verifyJWT(token);
+    if (!payload) {
+      const loginUrl = new URL('/admin/login', request.url);
+      const safeRedirect = sanitizeRedirect(pathname);
+      if (safeRedirect) loginUrl.searchParams.set('redirect', safeRedirect);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Only ARTIST and SUPER_ADMIN can access artist panel
+    if (payload.role !== 'ARTIST' && payload.role !== 'SUPER_ADMIN') {
+      return NextResponse.redirect(new URL('/', request.url));
     }
   }
 
@@ -119,8 +150,11 @@ export default async function middleware(request: NextRequest) {
   if (isPublicAuthPath(pathname) && token) {
     const payload = await verifyJWT(token);
     if (payload) {
-      if (payload.role === 'SUPER_ADMIN' || payload.role === 'ARTIST') {
+      if (payload.role === 'SUPER_ADMIN') {
         return NextResponse.redirect(new URL('/admin', request.url));
+      }
+      if (payload.role === 'ARTIST') {
+        return NextResponse.redirect(new URL('/artist', request.url));
       }
       return NextResponse.redirect(new URL('/account', request.url));
     }

@@ -15,6 +15,9 @@ import {
   Gem,
   Settings,
   Smartphone,
+  Users,
+  FileText,
+  ScrollText,
   LogOut,
   type LucideIcon,
 } from 'lucide-react';
@@ -34,6 +37,9 @@ const navItems: NavItem[] = [
   { key: 'artists', href: '/admin/artists', icon: Palette, superAdminOnly: true },
   { key: 'reviews', href: '/admin/reviews', icon: Star, superAdminOnly: true },
   { key: 'loyalty', href: '/admin/loyalty', icon: Gem, superAdminOnly: true },
+  { key: 'users', href: '/admin/users', icon: Users, superAdminOnly: true },
+  { key: 'content', href: '/admin/content', icon: FileText, superAdminOnly: true },
+  { key: 'auditLog', href: '/admin/audit-log', icon: ScrollText, superAdminOnly: true },
   { key: 'settings', href: '/admin/settings', icon: Settings, superAdminOnly: true },
   { key: 'pwa', href: '/admin/pwa-settings', icon: Smartphone, superAdminOnly: true },
 ];

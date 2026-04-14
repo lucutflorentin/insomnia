@@ -93,6 +93,7 @@ export type ReviewFormData = z.infer<typeof reviewSchema>;
 export const bookingStatusSchema = z.object({
   status: z.enum(BOOKING_STATUSES),
   adminNotes: z.string().max(5000).optional(),
+  clientNotes: z.string().max(2000).optional(),
 });
 
 // Gallery item schema
