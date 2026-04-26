@@ -122,7 +122,7 @@ const ro: TermsContent = {
       heading: '3. Politica de anulare',
       paragraphs: [
         'Anularile sau reprogramarile trebuie comunicate cu cel putin 24 de ore inainte de data programarii.',
-        'Anularile facute cu mai putin de 24 de ore inainte pot atrage pierderea avansului (daca a fost solicitat) sau imposibilitatea de a reprograma pe termen scurt.',
+        'Reprogramarile pot fi facute direct din contul tau cu cel putin 48 de ore inainte. Pentru intervale mai scurte, te rugam sa contactezi artistul.',
         'In cazul in care nu te prezinti la programare fara o notificare prealabila, ne rezervam dreptul de a refuza programari viitoare.',
       ],
     },
@@ -157,9 +157,9 @@ const ro: TermsContent = {
     {
       heading: '7. Preturi',
       paragraphs: [
+        'Trimiterea formularului de programare este gratuita si reprezinta doar o solicitare de consultatie. Nu se solicita avans pentru rezervarea programarii.',
         'Preturile nu sunt afisate pe site. Fiecare tatuaj este unic, iar costul depinde de complexitate, dimensiune, zona corpului si timpul estimat.',
-        'Pretul va fi discutat si agreat in cadrul consultatiei, inainte de inceperea lucrului.',
-        'Studioul poate solicita un avans pentru confirmarea programarii, care se deduce din pretul final.',
+        'Pretul final va fi discutat si agreat in cadrul consultatiei, inainte de inceperea lucrului, si se achita la finalul sedintei la fata locului.',
       ],
     },
     {
@@ -195,7 +195,7 @@ const en: TermsContent = {
       heading: '3. Cancellation Policy',
       paragraphs: [
         'Cancellations or rescheduling must be communicated at least 24 hours before the appointment date.',
-        'Cancellations made less than 24 hours in advance may result in the loss of the deposit (if one was requested) or inability to reschedule in the short term.',
+        'Rescheduling can be done directly from your account at least 48 hours in advance. For shorter intervals, please contact the artist.',
         'If you fail to show up for your appointment without prior notice, we reserve the right to refuse future bookings.',
       ],
     },
@@ -230,9 +230,9 @@ const en: TermsContent = {
     {
       heading: '7. Pricing',
       paragraphs: [
+        'Submitting the booking form is free and only represents a consultation request. No deposit is required to reserve the appointment.',
         'Prices are not displayed on the website. Each tattoo is unique, and the cost depends on complexity, size, body area, and estimated time.',
-        'The price will be discussed and agreed upon during the consultation, before work begins.',
-        'The studio may request a deposit to confirm the booking, which is deducted from the final price.',
+        'The final price will be discussed and agreed upon during the consultation, before work begins, and is paid at the end of the session on-site.',
       ],
     },
     {

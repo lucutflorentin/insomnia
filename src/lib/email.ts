@@ -493,6 +493,7 @@ export async function sendBookingStatusUpdateEmail(data: {
     contacted: { ro: 'Te-am contactat', en: "We've reached out", emoji: '📞', color: '#3B82F6' },
     confirmed: { ro: 'Programare confirmata', en: 'Booking confirmed', emoji: '✅', color: '#22C55E' },
     completed: { ro: 'Sedinta finalizata', en: 'Session completed', emoji: '🖤', color: '#A855F7' },
+    rejected: { ro: 'Programare refuzata', en: 'Booking declined', emoji: '🚫', color: '#EF4444' },
     cancelled: { ro: 'Programare anulata', en: 'Booking cancelled', emoji: '❌', color: '#EF4444' },
     no_show: { ro: 'Nu te-ai prezentat', en: 'Missed appointment', emoji: '⚠️', color: '#F59E0B' },
   };
@@ -516,6 +517,10 @@ export async function sendBookingStatusUpdateEmail(data: {
     completed: {
       ro: `Sedinta ta cu <strong style="color: #B0B0B0;">${escapeHtml(data.artistName)}</strong> a fost finalizata! Multumim ca ai ales Insomnia Tattoo. Vei primi sfaturi de aftercare in curand.`,
       en: `Your session with <strong style="color: #B0B0B0;">${escapeHtml(data.artistName)}</strong> is complete! Thank you for choosing Insomnia Tattoo. You'll receive aftercare tips soon.`,
+    },
+    rejected: {
+      ro: `Din pacate, artistul nu a putut accepta aceasta solicitare. Detalii in nota de mai jos. Ne pare rau pentru disconfort si te invitam sa reincerci cu alt artist sau alta data.`,
+      en: `Unfortunately, the artist could not accept this request. Details below. We're sorry for the inconvenience — feel free to try with another artist or date.`,
     },
     cancelled: {
       ro: `Din pacate, programarea ta a fost anulata.`,

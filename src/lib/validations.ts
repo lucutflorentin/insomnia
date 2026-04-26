@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import DOMPurify from 'isomorphic-dompurify';
 import {
   BODY_AREAS,
   SIZE_CATEGORIES,
@@ -6,10 +7,22 @@ import {
   BOOKING_STATUSES,
 } from './constants';
 
-// Sanitize utility — strip HTML tags from user input
+// Sanitize utility — strip ALL HTML and dangerous content from user input
+// Defense-in-depth: even where React escapes output, this protects email templates,
+// PDF exports, and any future contexts where text is rendered as HTML.
 export function sanitizeText(text: string): string {
-  return text.replace(/<[^>]*>/g, '').trim();
+  if (typeof text !== 'string') return '';
+  return DOMPurify.sanitize(text, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).trim();
 }
+
+// Time of day validator: 00:00 .. 23:59
+const timeOfDay = z
+  .string()
+  .regex(/^\d{2}:\d{2}$/, 'Time must be HH:MM')
+  .refine((v) => {
+    const [h, m] = v.split(':').map(Number);
+    return h >= 0 && h <= 23 && m >= 0 && m <= 59;
+  }, 'Time must be a valid HH:MM (00:00 .. 23:59)');
 
 // Booking form schema
 export const bookingSchema = z.object({
@@ -20,7 +33,7 @@ export const bookingSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters').max(2000),
   referenceImages: z.array(z.string().max(500)).max(3).optional(),
   consultationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  consultationTime: z.string().regex(/^\d{2}:\d{2}$/),
+  consultationTime: timeOfDay,
   clientName: z.string().min(2, 'Name must be at least 2 characters').max(200),
   clientPhone: z.string().min(6, 'Phone must be at least 6 characters').max(20),
   clientEmail: z.string().email('Invalid email address').max(320),
@@ -114,9 +127,10 @@ export const galleryItemSchema = z.object({
 export const availabilitySchema = z.object({
   artistId: z.number().int().positive(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  startTime: z.string().regex(/^\d{2}:\d{2}$/),
-  endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  startTime: timeOfDay,
+  endTime: timeOfDay,
   slotDurationMinutes: z.number().int().min(15).max(480).default(60),
+  bufferMinutes: z.number().int().min(0).max(240).default(0),
   isAvailable: z.boolean().default(true),
 });
 
@@ -124,7 +138,9 @@ export const availabilitySchema = z.object({
 export const availabilityTemplateSchema = z.object({
   artistId: z.number().int().positive(),
   dayOfWeek: z.number().int().min(0).max(6),
-  startTime: z.string().regex(/^\d{2}:\d{2}$/),
-  endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  startTime: timeOfDay,
+  endTime: timeOfDay,
+  slotDurationMinutes: z.number().int().min(15).max(480).default(60),
+  bufferMinutes: z.number().int().min(0).max(240).default(0),
   isActive: z.boolean().default(true),
 });

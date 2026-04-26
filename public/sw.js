@@ -74,10 +74,11 @@ self.addEventListener('push', (event) => {
       body: data.body || '',
       icon: data.icon || '/icons/icon-192x192.png',
       badge: data.badge || '/icons/icon-72x72.png',
-      data: data.data || {},
+      data: { ...(data.data || {}), url: data.url, bookingId: data.bookingId },
       tag: data.tag || 'insomnia-notification',
       renotify: true,
       vibrate: [200, 100, 200],
+      actions: Array.isArray(data.actions) ? data.actions : undefined,
     };
 
     event.waitUntil(
@@ -88,22 +89,54 @@ self.addEventListener('push', (event) => {
   }
 });
 
-// Notification click: open URL or focus existing window
+// Notification click: handle action buttons OR open URL / focus existing window
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  const url = event.notification.data?.url || '/';
+  const data = event.notification.data || {};
+  const url = data.url || '/';
+  const bookingId = data.bookingId;
 
+  // Action handlers — call API directly with same-origin cookies (credentials).
+  if (event.action === 'confirm' && bookingId) {
+    event.waitUntil(
+      fetch(`/api/bookings/${bookingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: 'confirmed' }),
+      })
+        .then((res) =>
+          self.registration.showNotification(
+            res.ok ? 'Programare confirmata ✓' : 'Confirmare esuata',
+            {
+              body: res.ok
+                ? 'Booking-ul a fost confirmat. Clientul a fost notificat.'
+                : 'Deschide aplicatia pentru a finaliza confirmarea.',
+              icon: '/icons/icon-192x192.png',
+              tag: `confirm-result-${bookingId}`,
+            },
+          ),
+        )
+        .catch(() =>
+          self.registration.showNotification('Confirmare esuata', {
+            body: 'Conexiune indisponibila. Deschide aplicatia pentru a confirma.',
+            icon: '/icons/icon-192x192.png',
+          }),
+        ),
+    );
+    return;
+  }
+
+  // Default: open URL or focus existing tab
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-      // Focus existing window if available
       for (const client of clients) {
         if (client.url.includes(url) && 'focus' in client) {
           return client.focus();
         }
       }
-      // Open new window
       return self.clients.openWindow(url);
-    })
+    }),
   );
 });

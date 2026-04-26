@@ -1,15 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { Calendar, Clock } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 interface Booking {
-  id: string;
+  id: number | string;
   referenceCode: string;
-  artistName: string;
-  preferredDate: string;
+  artist?: { name: string; slug: string };
+  artistName?: string;
+  consultationDate: string | null;
+  consultationTime: string | null;
+  preferredDate?: string;
   status: string;
 }
 
@@ -20,6 +24,20 @@ interface LoyaltyData {
 
 interface User {
   name: string;
+}
+
+const STATUS_FLOW = ['new', 'contacted', 'confirmed', 'completed'] as const;
+
+function formatCountdown(target: Date, now: Date): { value: string; label: string } | null {
+  const diffMs = target.getTime() - now.getTime();
+  if (diffMs <= 0) return null;
+  const minutes = Math.floor(diffMs / 60000);
+  const days = Math.floor(minutes / (60 * 24));
+  const hours = Math.floor((minutes % (60 * 24)) / 60);
+  const mins = minutes % 60;
+  if (days > 0) return { value: `${days}z ${hours}h`, label: 'pana la consultatie' };
+  if (hours > 0) return { value: `${hours}h ${mins}m`, label: 'pana la consultatie' };
+  return { value: `${mins}m`, label: 'pana la consultatie' };
 }
 
 export default function AccountDashboard() {
@@ -72,6 +90,37 @@ export default function AccountDashboard() {
     (b) => b.status === 'confirmed' || b.status === 'new' || b.status === 'contacted'
   ).length;
 
+  // Live "next consultation" countdown (re-renders every 60s).
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const nextBooking = useMemo(() => {
+    const open = bookings
+      .filter(
+        (b) =>
+          b.consultationDate &&
+          ['new', 'contacted', 'confirmed'].includes(b.status),
+      )
+      .map((b) => ({
+        ...b,
+        sortKey: new Date(`${b.consultationDate}T${b.consultationTime || '00:00'}:00`).getTime(),
+      }))
+      .filter((b) => b.sortKey > Date.now() - 60_000)
+      .sort((a, b) => a.sortKey - b.sortKey);
+    return open[0] || null;
+  }, [bookings]);
+
+  const countdown = useMemo(() => {
+    if (!nextBooking?.consultationDate) return null;
+    const target = new Date(
+      `${nextBooking.consultationDate}T${nextBooking.consultationTime || '00:00'}:00`,
+    );
+    return formatCountdown(target, now);
+  }, [nextBooking, now]);
+
   const pointsInRON = loyalty.points * 50;
   const stampsFilled = Math.min(loyalty.totalSessions % 10, 10);
 
@@ -80,6 +129,7 @@ export default function AccountDashboard() {
     contacted: 'bg-yellow-500/20 text-yellow-400',
     confirmed: 'bg-green-500/20 text-green-400',
     completed: 'bg-accent/20 text-accent',
+    rejected: 'bg-red-500/20 text-red-400',
     cancelled: 'bg-red-500/20 text-red-400',
   };
 
@@ -102,6 +152,85 @@ export default function AccountDashboard() {
           {t('subtitle')}
         </p>
       </div>
+
+      {/* Next consultation hero card with live countdown */}
+      {nextBooking && (
+        <div className="mb-8 overflow-hidden rounded-sm border border-accent/30 bg-gradient-to-br from-accent/10 via-bg-secondary to-bg-secondary p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-accent">
+                <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                Următoarea consultație
+              </p>
+              <p className="mt-2 font-heading text-2xl text-text-primary">
+                {nextBooking.artist?.name || nextBooking.artistName || '—'}
+              </p>
+              <p className="mt-1 flex items-center gap-2 text-sm text-text-secondary">
+                <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                {nextBooking.consultationDate &&
+                  new Date(nextBooking.consultationDate).toLocaleDateString('ro-RO', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                  })}
+                {nextBooking.consultationTime && ` · ${nextBooking.consultationTime}`}
+              </p>
+            </div>
+            {countdown && (
+              <div className="text-right">
+                <p
+                  className="font-heading text-3xl font-bold text-accent"
+                  aria-live="polite"
+                  aria-label={`${countdown.value} ${countdown.label}`}
+                >
+                  {countdown.value}
+                </p>
+                <p className="text-xs text-text-muted">{countdown.label}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Status timeline */}
+          <div className="mt-5 flex items-center gap-1">
+            {STATUS_FLOW.map((step, i) => {
+              const currentIdx = STATUS_FLOW.indexOf(nextBooking.status as (typeof STATUS_FLOW)[number]);
+              const isCurrent = currentIdx === i;
+              const isReached = currentIdx >= i;
+              return (
+                <div key={step} className="flex flex-1 items-center gap-1">
+                  <div
+                    className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${
+                      isCurrent
+                        ? 'bg-accent text-bg-primary'
+                        : isReached
+                          ? 'bg-accent/30 text-accent'
+                          : 'bg-bg-tertiary text-text-muted'
+                    }`}
+                    aria-current={isCurrent ? 'step' : undefined}
+                  >
+                    {isReached && !isCurrent ? '✓' : i + 1}
+                  </div>
+                  {i < STATUS_FLOW.length - 1 && (
+                    <div
+                      className={`h-0.5 flex-1 ${
+                        isReached && i < currentIdx ? 'bg-accent/30' : 'bg-bg-tertiary'
+                      }`}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link href="/account/bookings">
+              <Button size="sm" variant="secondary">
+                Detalii & reprogramare
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -185,8 +314,10 @@ export default function AccountDashboard() {
                 <div>
                   <p className="font-mono text-sm text-accent">{booking.referenceCode}</p>
                   <p className="mt-0.5 text-xs text-text-muted">
-                    {booking.artistName} &middot;{' '}
-                    {new Date(booking.preferredDate).toLocaleDateString('ro-RO')}
+                    {booking.artist?.name || booking.artistName || '—'} &middot;{' '}
+                    {booking.consultationDate
+                      ? new Date(booking.consultationDate).toLocaleDateString('ro-RO')
+                      : 'de stabilit'}
                   </p>
                 </div>
                 <span

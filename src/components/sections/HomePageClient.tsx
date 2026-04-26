@@ -89,7 +89,11 @@ export default function HomePageClient({ artists }: HomePageClientProps) {
         dynamicTitle={heroTitle || undefined}
         dynamicSubtitle={heroSubtitle || undefined}
       />
-      <ArtistCards artists={artists} onArtistClick={handleArtistClick} />
+      <ArtistCards
+        artists={artists}
+        onArtistClick={handleArtistClick}
+        onQuickBook={handleBookingFromArtist}
+      />
       <GalleryHighlight />
       <SocialProof />
       <CTABanner onBookingClick={handleOpenBooking} />

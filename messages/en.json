@@ -1,6 +1,7 @@
 {
   "common": {
     "nav": {
+      "home": "Home",
       "artists": "Artists",
       "inkSpace": "Ink Space",
       "booking": "Booking",
@@ -137,6 +138,7 @@
         "contacted": "Contacted",
         "confirmed": "Confirmed",
         "completed": "Completed",
+        "rejected": "Declined",
         "cancelled": "Cancelled"
       }
     },
@@ -149,6 +151,7 @@
         "contacted": "Contacted",
         "confirmed": "Confirmed",
         "completed": "Completed",
+        "rejected": "Declined",
         "cancelled": "Cancelled",
         "no_show": "No show"
       },
@@ -167,7 +170,23 @@
       "cancelConfirm": "Are you sure you want to cancel this booking?",
       "cancelError": "Cancellation failed. Please try again.",
       "cancelNote": "Cancellation is only possible at least 24 hours before the scheduled date.",
-      "studioNotes": "Message from studio"
+      "studioNotes": "Message from studio",
+      "pendingDate": "Date: to be confirmed",
+      "reschedule": {
+        "cta": "Reschedule",
+        "notice": "Rescheduling is allowed at least 48h before the current date.",
+        "title": "Reschedule booking",
+        "subtitle": "Booking {ref} with {artist}. Pick a new date and time.",
+        "loading": "Loading calendar...",
+        "pickTime": "Pick a time",
+        "pickSlot": "Select a date and time.",
+        "prevMonth": "Previous month",
+        "nextMonth": "Next month",
+        "cancel": "Cancel",
+        "confirm": "Confirm reschedule",
+        "success": "Booking rescheduled successfully!",
+        "error": "Reschedule failed. Try a different slot."
+      }
     },
     "loyalty": {
       "title": "Loyalty Card",
@@ -243,6 +262,7 @@
       "title": "Our Artists",
       "subtitle": "Two artists, two visions, one passion",
       "viewPortfolio": "View portfolio",
+      "bookDirect": "Book direct",
       "madalina": {
         "specialty": "Realism & Portraits",
         "description": "Specialized in realism, portraits and color work with exceptional detail."
@@ -649,11 +669,13 @@
       "clientNotes": "Note for client",
       "clientNotesPlaceholder": "E.g., Please bring printed references",
       "clientNotesHint": "Visible to the client in their account",
+      "pendingDate": "Date: to be confirmed",
       "statusLabels": {
         "new": "New",
         "contacted": "Contacted",
         "confirmed": "Confirmed",
         "completed": "Completed",
+        "rejected": "Declined",
         "cancelled": "Cancelled",
         "no_show": "No show"
       },
@@ -821,6 +843,7 @@
         "contacted": "Contacted",
         "confirmed": "Confirmed",
         "completed": "Completed",
+        "rejected": "Declined",
         "cancelled": "Cancelled",
         "no_show": "No show"
       },
@@ -851,6 +874,7 @@
       "adminNotes": "Admin notes (internal)",
       "clientNotes": "Note for client",
       "clientNotesHint": "This note will be visible to the client in their account.",
+      "rejectReasonRequired": "Please add a reason of at least 10 characters in 'Admin notes' before rejecting. It will be sent to the client by email.",
       "noBookings": "No bookings found.",
       "exportBookings": "Export bookings",
       "exportClients": "Export clients"

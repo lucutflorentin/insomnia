@@ -11,9 +11,10 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, error, id, ...props }, ref) => {
     const textareaId = id || label?.toLowerCase().replace(/\s+/g, '-');
+    const errorId = error ? `${textareaId}-error` : undefined;
 
     return (
-      <div className="w-full">
+      <div className={cn('w-full', error && 'animate-shake')}>
         {label && (
           <label
             htmlFor={textareaId}
@@ -25,16 +26,20 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           id={textareaId}
+          aria-invalid={!!error || undefined}
+          aria-describedby={errorId}
           className={cn(
-            'w-full rounded-sm border border-border bg-bg-secondary px-4 py-3 text-text-primary placeholder:text-text-muted transition-colors duration-200 resize-y min-h-[120px]',
+            'w-full min-h-[120px] resize-y rounded-sm border border-border bg-bg-secondary px-4 py-3 text-text-primary placeholder:text-text-muted transition-all duration-200',
             'focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50',
-            error && 'border-error focus:border-error focus:ring-error/50',
+            error && 'border-error shadow-[0_0_0_3px_rgba(217,79,79,0.15)] focus:border-error focus:ring-error/50',
             className,
           )}
           {...props}
         />
         {error && (
-          <p className="mt-1 text-sm text-error">{error}</p>
+          <p id={errorId} role="alert" aria-live="polite" className="mt-1 text-sm text-error">
+            {error}
+          </p>
         )}
       </div>
     );

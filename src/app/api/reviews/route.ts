@@ -22,22 +22,15 @@ export async function POST(request: NextRequest) {
 
     const { bookingId, rating, reviewTextRo, reviewTextEn } = parsed.data;
 
-    // Verify the booking exists, belongs to the user, and is completed
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
+    // IDOR-safe: ownership baked into query (uniform 404 prevents enumeration)
+    const booking = await prisma.booking.findFirst({
+      where: { id: bookingId, clientId: userId },
     });
 
     if (!booking) {
       return NextResponse.json(
         { success: false, error: 'Booking not found' },
         { status: 404 },
-      );
-    }
-
-    if (booking.clientId !== userId) {
-      return NextResponse.json(
-        { success: false, error: 'This booking does not belong to you' },
-        { status: 403 },
       );
     }
 

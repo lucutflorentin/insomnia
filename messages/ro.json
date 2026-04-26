@@ -1,6 +1,7 @@
 {
   "common": {
     "nav": {
+      "home": "Acasa",
       "artists": "Artisti",
       "inkSpace": "Spatiul Ink",
       "booking": "Booking",
@@ -137,6 +138,7 @@
         "contacted": "Contactat",
         "confirmed": "Confirmata",
         "completed": "Finalizata",
+        "rejected": "Respinsa",
         "cancelled": "Anulata"
       }
     },
@@ -149,6 +151,7 @@
         "contacted": "Contactat",
         "confirmed": "Confirmata",
         "completed": "Finalizata",
+        "rejected": "Respinsa",
         "cancelled": "Anulata",
         "no_show": "Neprezentare"
       },
@@ -167,7 +170,23 @@
       "cancelConfirm": "Esti sigur ca vrei sa anulezi aceasta programare?",
       "cancelError": "Eroare la anulare. Incearca din nou.",
       "cancelNote": "Anularea este posibila doar cu minimum 24h inainte de data programata.",
-      "studioNotes": "Mesaj de la studio"
+      "studioNotes": "Mesaj de la studio",
+      "pendingDate": "Data: de stabilit",
+      "reschedule": {
+        "cta": "Reprogrameaza",
+        "notice": "Reprogramarea este posibila cu minimum 48h inainte de data curenta.",
+        "title": "Reprogrameaza programarea",
+        "subtitle": "Programarea {ref} cu {artist}. Alege o noua data si ora.",
+        "loading": "Se incarca calendarul...",
+        "pickTime": "Alege o ora",
+        "pickSlot": "Selecteaza o data si o ora.",
+        "prevMonth": "Luna anterioara",
+        "nextMonth": "Luna urmatoare",
+        "cancel": "Renunta",
+        "confirm": "Confirma reprogramarea",
+        "success": "Programare reprogramata cu succes!",
+        "error": "Reprogramarea a esuat. Incearca alt slot."
+      }
     },
     "loyalty": {
       "title": "Card de fidelitate",
@@ -243,6 +262,7 @@
       "title": "Artistii nostri",
       "subtitle": "Doi artisti, doua viziuni, o singura pasiune",
       "viewPortfolio": "Vezi portofoliul",
+      "bookDirect": "Programeaza direct",
       "madalina": {
         "specialty": "Realism & Portrete",
         "description": "Specializata in realism, portrete si lucrari color cu detalii exceptionale."
@@ -649,11 +669,13 @@
       "clientNotes": "Nota pentru client",
       "clientNotesPlaceholder": "Ex: Te asteptam cu referinte printate",
       "clientNotesHint": "Vizibila clientului in contul sau",
+      "pendingDate": "Data: de stabilit",
       "statusLabels": {
         "new": "Nou",
         "contacted": "Contactat",
         "confirmed": "Confirmat",
         "completed": "Finalizat",
+        "rejected": "Respins",
         "cancelled": "Anulat",
         "no_show": "Neprezentare"
       },
@@ -821,6 +843,7 @@
         "contacted": "Contactat",
         "confirmed": "Confirmata",
         "completed": "Finalizata",
+        "rejected": "Respinsa",
         "cancelled": "Anulata",
         "no_show": "Neprezentare"
       },
@@ -851,6 +874,7 @@
       "adminNotes": "Note admin (interne)",
       "clientNotes": "Nota pentru client",
       "clientNotesHint": "Aceasta nota va fi vizibila clientului in contul sau.",
+      "rejectReasonRequired": "Te rugam sa adaugi un motiv de minim 10 caractere in 'Note admin' inainte de respingere. Acesta va fi trimis clientului prin email.",
       "noBookings": "Nu exista programari.",
       "exportBookings": "Export programari",
       "exportClients": "Export clienti"

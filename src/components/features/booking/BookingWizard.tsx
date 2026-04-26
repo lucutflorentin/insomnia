@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -14,6 +15,10 @@ import { BODY_AREAS, SIZE_CATEGORIES, BOOKING_SOURCES, TATTOO_STYLES } from '@/l
 import ImageUpload from '@/components/ui/ImageUpload';
 import { trackEvent } from '@/components/seo/Analytics';
 import { useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/contexts/AuthContext';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[+\d][\d\s().-]{5,}$/;
 
 interface DayAvailability {
   date: string;
@@ -33,6 +38,7 @@ export default function BookingWizard() {
 
   const { showToast } = useToast();
   const tStyles = useTranslations('artists.styles');
+  const { user } = useAuth();
   const [artists, setArtists] = useState<{ slug: string; name: string; specialtyRo: string | null; specialtyEn: string | null; specialties: string[] }[]>([]);
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,12 +78,56 @@ export default function BookingWizard() {
     referenceImages: [] as string[],
   });
 
+  // Prefill contact fields from authenticated user (no auto-tick GDPR — user must consent each time)
+  useEffect(() => {
+    if (!user) return;
+    setForm((prev) => ({
+      ...prev,
+      name: prev.name || user.name || '',
+      email: prev.email || user.email || '',
+      phone: prev.phone || user.phone || '',
+    }));
+  }, [user]);
+
+  const selectedArtist = useMemo(
+    () => artists.find((a) => a.slug === form.artist) || null,
+    [artists, form.artist],
+  );
+
   const updateForm = (key: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS));
-  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
+  const canAdvance = useCallback(
+    (s: number): boolean => {
+      if (s === 1) return !!form.artist;
+      if (s === 2) return !!form.bodyArea && !!form.size;
+      if (s === 3) {
+        if (form.artist === 'unsure') return true;
+        return !!form.date && !!form.time;
+      }
+      if (s === 4) {
+        return (
+          form.name.trim().length >= 2 &&
+          PHONE_REGEX.test(form.phone) &&
+          EMAIL_REGEX.test(form.email) &&
+          form.gdpr
+        );
+      }
+      return true;
+    },
+    [form],
+  );
+
+  const [direction, setDirection] = useState(1);
+  const nextStep = () => {
+    setDirection(1);
+    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+  };
+  const prevStep = () => {
+    setDirection(-1);
+    setStep((s) => Math.max(s - 1, 1));
+  };
 
   // Fetch availability when artist is selected and we're on step 3
   const fetchAvailability = useCallback(async (artistSlug: string, month: string) => {
@@ -117,6 +167,23 @@ export default function BookingWizard() {
         setReferenceCode(data.referenceCode || 'INS-2024-0001');
         setIsSuccess(true);
         trackEvent('Lead', { content_name: 'booking', value: form.artist });
+        // Skip confetti when the user prefers reduced motion.
+        const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        if (!reduce) {
+          import('canvas-confetti')
+            .then((mod) => {
+              const confetti = mod.default;
+              confetti({
+                particleCount: 80,
+                spread: 75,
+                origin: { y: 0.4 },
+                colors: ['#B0B0B0', '#D0D0D0', '#F5F5F5', '#8A8A8A'],
+                scalar: 0.9,
+              });
+            })
+            .catch(() => {});
+        }
+        showToast(t('success.message'), 'celebration');
       } else {
         showToast(data.error || t('error'), 'error');
       }
@@ -153,28 +220,89 @@ export default function BookingWizard() {
     );
   }
 
+  const stepLabels = [
+    t('step1.title'),
+    t('step2.title'),
+    t('step3.title'),
+    t('step4.title'),
+    t('step5.title'),
+  ];
+
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-      {/* Header */}
-      <SlideUp>
-        <h1 className="font-heading text-3xl font-bold sm:text-4xl">{t('title')}</h1>
-        <p className="mt-2 text-text-secondary">{t('subtitle')}</p>
-        <div className="mt-4 h-px w-12 bg-accent" />
-      </SlideUp>
-
-      {/* Progress bar */}
-      <div className="mt-8 mb-10">
-        <div className="flex items-center justify-between text-xs text-text-muted mb-2">
-          <span>{t('navigation.step', { current: step, total: TOTAL_STEPS })}</span>
+    <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:grid lg:grid-cols-[240px_1fr] lg:gap-12">
+      {/* Desktop step rail (sticky) */}
+      <aside className="hidden lg:block">
+        <div className="sticky top-24">
+          <p className="mb-4 text-xs uppercase tracking-wider text-text-muted">
+            {t('navigation.step', { current: step, total: TOTAL_STEPS })}
+          </p>
+          <ol className="space-y-3" aria-label="Wizard progress">
+            {stepLabels.map((label, idx) => {
+              const n = idx + 1;
+              const isCurrent = step === n;
+              const isDone = step > n;
+              const isPending = step < n;
+              return (
+                <li
+                  key={n}
+                  className={cn(
+                    'flex items-center gap-3 rounded-sm border-l-2 py-2 pl-3 transition-colors',
+                    isCurrent && 'border-accent bg-accent/5',
+                    isDone && 'border-accent/40 text-text-secondary',
+                    isPending && 'border-border text-text-muted',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                      isCurrent && 'bg-accent text-bg-primary',
+                      isDone && 'bg-accent/30 text-accent',
+                      isPending && 'bg-bg-secondary text-text-muted',
+                    )}
+                    aria-hidden="true"
+                  >
+                    {isDone ? '✓' : n}
+                  </span>
+                  <span className={cn('text-sm', isCurrent && 'font-medium text-text-primary')}>
+                    {label}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
         </div>
-        <div className="h-1 w-full rounded-full bg-bg-secondary">
-          <div
-            className="h-1 rounded-full bg-accent transition-all duration-500"
-            style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
-          />
-        </div>
-      </div>
+      </aside>
 
+      <div className="mx-auto w-full max-w-2xl">
+        {/* Header */}
+        <SlideUp>
+          <h1 className="font-heading text-3xl font-bold sm:text-4xl">{t('title')}</h1>
+          <p className="mt-2 text-text-secondary">{t('subtitle')}</p>
+          <div className="mt-4 h-px w-12 bg-accent" />
+        </SlideUp>
+
+        {/* Progress bar (mobile + tablet only — desktop uses the rail above) */}
+        <div className="mb-10 mt-8 lg:hidden">
+          <div className="mb-2 flex items-center justify-between text-xs text-text-muted">
+            <span>{t('navigation.step', { current: step, total: TOTAL_STEPS })}</span>
+          </div>
+          <div className="h-1 w-full rounded-full bg-bg-secondary">
+            <div
+              className="h-1 rounded-full bg-accent transition-all duration-500"
+              style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+            />
+          </div>
+        </div>
+
+      <AnimatePresence mode="wait" custom={direction}>
+        <motion.div
+          key={step}
+          custom={direction}
+          initial={{ x: direction * 60, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: direction * -60, opacity: 0 }}
+          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+        >
       {/* Step 1: Choose artist */}
       {step === 1 && (
         <SlideUp>
@@ -458,7 +586,9 @@ export default function BookingWizard() {
           <div className="rounded-sm border border-border bg-bg-secondary p-6 space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-text-muted">{t('step5.artist')}</span>
-              <span className="font-medium capitalize">{form.artist}</span>
+              <span className="font-medium">
+                {selectedArtist?.name || (form.artist === 'unsure' ? t('step1.notSure') : '—')}
+              </span>
             </div>
             {form.bodyArea && (
               <div className="flex justify-between text-sm">
@@ -476,6 +606,12 @@ export default function BookingWizard() {
               <div className="flex justify-between text-sm">
                 <span className="text-text-muted">{t('step5.date')}</span>
                 <span className="font-medium">{form.date}</span>
+              </div>
+            )}
+            {form.time && (
+              <div className="flex justify-between text-sm">
+                <span className="text-text-muted">{t('step5.time')}</span>
+                <span className="font-medium">{form.time}</span>
               </div>
             )}
             <div className="border-t border-border pt-3 mt-3">
@@ -500,25 +636,28 @@ export default function BookingWizard() {
           </div>
         </SlideUp>
       )}
+        </motion.div>
+      </AnimatePresence>
 
-      {/* Navigation buttons */}
-      <div className="mt-8 flex items-center justify-between">
-        {step > 1 ? (
-          <Button variant="ghost" onClick={prevStep}>
-            {t('navigation.back')}
-          </Button>
-        ) : (
-          <div />
-        )}
-        {step < TOTAL_STEPS ? (
-          <Button onClick={nextStep} disabled={step === 1 && !form.artist}>
-            {t('navigation.next')}
-          </Button>
-        ) : (
-          <Button onClick={handleSubmit} isLoading={isSubmitting}>
-            {t('step5.submit')}
-          </Button>
-        )}
+        {/* Navigation buttons */}
+        <div className="mt-8 flex items-center justify-between">
+          {step > 1 ? (
+            <Button variant="ghost" onClick={prevStep}>
+              {t('navigation.back')}
+            </Button>
+          ) : (
+            <div />
+          )}
+          {step < TOTAL_STEPS ? (
+            <Button onClick={nextStep} disabled={!canAdvance(step)}>
+              {t('navigation.next')}
+            </Button>
+          ) : (
+            <Button onClick={handleSubmit} isLoading={isSubmitting} disabled={!canAdvance(4)}>
+              {t('step5.submit')}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

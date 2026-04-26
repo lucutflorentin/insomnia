@@ -7,6 +7,7 @@ import { createNotification } from '@/lib/notifications';
 import { sendPushToUser } from '@/lib/push';
 import { verifyAdminRequest, getCurrentUser } from '@/lib/auth';
 import { checkRateLimit, getClientIp, BOOKING_LIMIT } from '@/lib/rate-limit';
+import { logSafe } from '@/lib/log';
 
 // POST /api/bookings — Public: create a new booking
 export async function POST(request: NextRequest) {
@@ -131,14 +132,32 @@ export async function POST(request: NextRequest) {
         const existingBooking = await tx.booking.findFirst({
           where: {
             artistId: artist.id,
-            consultationDate: new Date(consultationDate),
+            consultationDate: new Date(`${consultationDate}T00:00:00.000Z`),
             consultationTime,
-            status: { notIn: ['cancelled', 'no_show'] },
+            status: { notIn: ['cancelled', 'no_show', 'rejected'] },
           },
         });
 
         if (existingBooking) {
           throw new Error('SLOT_TAKEN');
+        }
+      }
+
+      // Quick-form deduplication: same email + same artist + open status within 5 min
+      // shields the artist's queue from accidental double-submits.
+      if (isQuickForm) {
+        const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const recent = await tx.booking.findFirst({
+          where: {
+            artistId: artist.id,
+            clientEmail,
+            isQuickRequest: true,
+            status: { in: ['new', 'contacted'] },
+            createdAt: { gte: fiveMinAgo },
+          },
+        });
+        if (recent) {
+          throw new Error('DUPLICATE_QUICK_REQUEST');
         }
       }
 
@@ -154,10 +173,14 @@ export async function POST(request: NextRequest) {
           sizeCategory,
           stylePreference: stylePreference || null,
           description: description || null,
+          // Quick-form requests carry no scheduled slot — artist proposes one
+          // during follow-up. Force UTC midnight on full bookings so the DB
+          // DATE column is timezone-agnostic regardless of server TZ.
           consultationDate: consultationDate
-            ? new Date(consultationDate)
-            : new Date(),
-          consultationTime: consultationTime || '00:00',
+            ? new Date(`${consultationDate}T00:00:00.000Z`)
+            : null,
+          consultationTime: consultationTime || null,
+          isQuickRequest: isQuickForm,
           source,
           status: 'new',
           gdprConsent,
@@ -185,8 +208,8 @@ export async function POST(request: NextRequest) {
       language: language as 'ro' | 'en',
     };
 
-    sendBookingConfirmation(emailData).catch(console.error);
-    sendBookingNotification(emailData).catch(console.error);
+    sendBookingConfirmation(emailData).catch((err) => logSafe('email.bookingConfirmation', err));
+    sendBookingNotification(emailData).catch((err) => logSafe('email.bookingNotification', err));
 
     // In-app + push notification to artist
     if (artist.userId) {
@@ -202,6 +225,11 @@ export async function POST(request: NextRequest) {
         body: `Cerere noua de consultatie — ${bodyArea || 'nedefinit'}, ${sizeCategory}`,
         url: '/artist/bookings',
         tag: `booking-new-${booking.id}`,
+        bookingId: booking.id,
+        actions: [
+          { action: 'confirm', title: 'Confirma' },
+          { action: 'view', title: 'Vezi' },
+        ],
       });
     }
 
@@ -220,7 +248,16 @@ export async function POST(request: NextRequest) {
         { status: 409 },
       );
     }
-    console.error('Booking creation error:', error);
+    if (error instanceof Error && error.message === 'DUPLICATE_QUICK_REQUEST') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'You already submitted a request to this artist a moment ago. The artist will reach out shortly.',
+        },
+        { status: 409 },
+      );
+    }
+    logSafe('booking.create', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 },
