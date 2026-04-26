@@ -9,6 +9,12 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 }
 
+export interface PushAction {
+  action: string;
+  title: string;
+  icon?: string;
+}
+
 interface PushPayload {
   title: string;
   body: string;
@@ -16,6 +22,10 @@ interface PushPayload {
   badge?: string;
   url?: string;
   tag?: string;
+  /** Optional bookingId — used by SW action handlers (e.g. confirm) */
+  bookingId?: number;
+  /** Web Push action buttons (max 2 supported on most platforms) */
+  actions?: PushAction[];
 }
 
 /**
@@ -35,8 +45,11 @@ export async function sendPushToUser(userId: number, payload: PushPayload): Prom
       body: payload.body,
       icon: payload.icon || '/icons/icon-192x192.png',
       badge: payload.badge || '/icons/icon-72x72.png',
-      data: { url: payload.url || '/' },
+      url: payload.url || '/',
+      bookingId: payload.bookingId,
+      data: { url: payload.url || '/', bookingId: payload.bookingId },
       tag: payload.tag,
+      actions: payload.actions,
     });
 
     const results = await Promise.allSettled(

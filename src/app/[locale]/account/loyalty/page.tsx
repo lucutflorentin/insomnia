@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AnimatedNumber from '@/components/ui/AnimatedNumber';
 
 interface LoyaltyData {
   points: number;
@@ -81,8 +82,13 @@ export default function LoyaltyPage() {
       <div className="mb-8 rounded-sm border border-border bg-bg-secondary p-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <p className="text-sm text-text-secondary">Balanta ta</p>
-          <p className="text-4xl font-bold text-accent">{data.points}</p>
-          <p className="text-sm text-text-muted">puncte ({pointsInRON} RON)</p>
+          <AnimatedNumber
+            value={data.points}
+            className="text-4xl font-bold text-accent"
+          />
+          <p className="text-sm text-text-muted">
+            puncte (<AnimatedNumber value={pointsInRON} suffix=" RON" />)
+          </p>
         </div>
       </div>
 

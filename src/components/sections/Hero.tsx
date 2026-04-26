@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
+import InkBloom from '@/components/effects/InkBloom';
 
 interface HeroProps {
   onBookingClick: () => void;
@@ -17,9 +18,13 @@ export default function Hero({ onBookingClick, dynamicTitle, dynamicSubtitle }: 
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-bg-primary/60 via-bg-primary/40 to-bg-primary z-10" />
+      <div className="absolute inset-0 z-10 bg-gradient-to-b from-bg-primary/60 via-bg-primary/40 to-bg-primary" />
       <div className="absolute inset-0 bg-bg-tertiary">
         <div className="h-full w-full bg-gradient-to-br from-bg-primary via-bg-tertiary to-bg-secondary" />
+      </div>
+      {/* Decorative ink bloom — sits above gradient, below content */}
+      <div className="absolute inset-0 z-[11]">
+        <InkBloom />
       </div>
 
       {/* Content */}

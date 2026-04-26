@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAuthRequest } from '@/lib/auth';
-import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { logSafe } from '@/lib/log';
 
-const CANCEL_LIMIT = { max: 5, windowSec: 60 };
+// Rate limits scoped to userId (preferred) — prevents IDOR brute-force enumeration.
+const CANCEL_PER_MINUTE = { max: 3, windowSec: 60 };
+const CANCEL_PER_DAY = { max: 10, windowSec: 24 * 60 * 60 };
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -15,13 +18,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const payload = await verifyAuthRequest(request);
     const userId = Number(payload.sub);
 
-    // Rate limit
-    const ip = getClientIp(request);
-    const rl = checkRateLimit(`cancel-booking:${ip}`, CANCEL_LIMIT);
-    if (!rl.allowed) {
+    // Rate limit per userId (not IP) — tighter window on cancel actions
+    const minute = checkRateLimit(`cancel:user:${userId}:min`, CANCEL_PER_MINUTE);
+    if (!minute.allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many requests. Please wait.' },
-        { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
+        { status: 429, headers: { 'Retry-After': String(minute.retryAfterSec) } },
+      );
+    }
+    const day = checkRateLimit(`cancel:user:${userId}:day`, CANCEL_PER_DAY);
+    if (!day.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Daily cancellation limit reached.' },
+        { status: 429, headers: { 'Retry-After': String(day.retryAfterSec) } },
       );
     }
 
@@ -35,9 +44,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Fetch booking with artist info (email is on the artist's User record)
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
+    // IDOR-safe: ownership baked into the query — uniform 404 response on
+    // non-existent or non-owned IDs prevents enumeration.
+    const booking = await prisma.booking.findFirst({
+      where: { id: bookingId, clientId: userId },
       include: {
         artist: {
           select: {
@@ -56,14 +66,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Verify ownership
-    if (booking.clientId !== userId) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 403 },
-      );
-    }
-
     // Only allow cancellation of new or contacted bookings
     if (!['new', 'contacted'].includes(booking.status)) {
       return NextResponse.json(
@@ -72,16 +74,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Check if the preferred date is at least 24 hours away
-    const consultationDate = new Date(booking.consultationDate);
+    // Check if the preferred date is at least 24 hours away.
+    // For quick-form requests with no consultationDate, allow cancellation anytime.
     const now = new Date();
-    const hoursUntilBooking = (consultationDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-    if (hoursUntilBooking < 24) {
-      return NextResponse.json(
-        { success: false, error: 'Bookings can only be cancelled at least 24 hours before the scheduled date.' },
-        { status: 400 },
-      );
+    if (booking.consultationDate) {
+      const consultationDate = new Date(booking.consultationDate);
+      const hoursUntilBooking = (consultationDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+      if (hoursUntilBooking < 24) {
+        return NextResponse.json(
+          { success: false, error: 'Bookings can only be cancelled at least 24 hours before the scheduled date.' },
+          { status: 400 },
+        );
+      }
     }
 
     // Cancel the booking
@@ -101,17 +105,20 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Send cancellation notification email to artist (non-blocking)
     try {
       const { sendBookingCancellationEmail } = await import('@/lib/email');
+      const formattedDate = booking.consultationDate
+        ? new Date(booking.consultationDate).toLocaleDateString('ro-RO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        : 'De stabilit';
       sendBookingCancellationEmail({
         artistName: booking.artist.name,
         artistEmail: booking.artist.user?.email || '',
         clientName: booking.clientName,
         referenceCode: booking.referenceCode,
-        consultationDate: consultationDate.toLocaleDateString('ro-RO', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }),
-      }).catch((err) => console.error('Failed to send cancellation email:', err));
+        consultationDate: formattedDate,
+      }).catch((err) => logSafe('email.cancel', err));
     } catch {
       // Email import/send failure shouldn't block the response
     }
@@ -122,7 +129,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       message: 'Booking cancelled successfully.',
     });
   } catch (error) {
-    console.error('Cancel booking error:', error);
+    logSafe('booking.cancel', error);
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 401 },

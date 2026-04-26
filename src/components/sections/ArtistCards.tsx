@@ -9,9 +9,10 @@ import type { HomeArtist } from '@/components/sections/HomePageClient';
 interface ArtistCardsProps {
   artists: HomeArtist[];
   onArtistClick: (slug: string) => void;
+  onQuickBook?: (slug: string) => void;
 }
 
-export default function ArtistCards({ artists, onArtistClick }: ArtistCardsProps) {
+export default function ArtistCards({ artists, onArtistClick, onQuickBook }: ArtistCardsProps) {
   const t = useTranslations('home.artists');
   const locale = useLocale();
 
@@ -64,6 +65,21 @@ export default function ArtistCards({ artists, onArtistClick }: ArtistCardsProps
                   </div>
 
                   <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/20 to-transparent" />
+
+                  {/* Quick Book floating CTA — visible on mobile, fades in on desktop hover */}
+                  {onQuickBook && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onQuickBook(artist.slug);
+                      }}
+                      className="absolute right-4 top-4 z-10 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-bg-primary shadow-lg transition-all duration-300 hover:scale-105 hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent/50 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+                      aria-label={`${t('bookDirect')} — ${artist.name}`}
+                    >
+                      {t('bookDirect')}
+                    </button>
+                  )}
 
                   <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
                     <h3 className="font-heading text-2xl font-semibold sm:text-3xl">

@@ -2,9 +2,10 @@
 
 import { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2, AlertCircle, Info, PartyPopper } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type ToastType = 'success' | 'error' | 'info';
+type ToastType = 'success' | 'error' | 'info' | 'celebration';
 
 interface Toast {
   id: number;
@@ -45,16 +46,29 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     success: 'border-success/30 bg-success/10',
     error: 'border-error/30 bg-error/10',
     info: 'border-accent/30 bg-accent/10',
+    celebration: 'border-accent/40 bg-gradient-to-r from-accent/15 to-success/10',
+  };
+
+  const typeIcons: Record<ToastType, React.ReactNode> = {
+    success: <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />,
+    error: <AlertCircle className="h-5 w-5 text-error" aria-hidden="true" />,
+    info: <Info className="h-5 w-5 text-accent" aria-hidden="true" />,
+    celebration: <PartyPopper className="h-5 w-5 text-accent" aria-hidden="true" />,
   };
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+      <div
+        className="fixed bottom-6 right-6 z-50 flex flex-col gap-2"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         <AnimatePresence>
           {toasts.map((toast) => (
             <motion.div
               key={toast.id}
+              role={toast.type === 'error' ? 'alert' : 'status'}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -64,10 +78,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 typeStyles[toast.type],
               )}
             >
+              {typeIcons[toast.type]}
               <p className="text-sm text-text-primary">{toast.message}</p>
               <button
                 onClick={() => removeToast(toast.id)}
                 className="text-text-muted hover:text-text-primary"
+                aria-label="Dismiss notification"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

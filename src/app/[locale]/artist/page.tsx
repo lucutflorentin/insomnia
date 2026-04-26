@@ -14,8 +14,8 @@ interface Stats {
   upcomingBookings: {
     id: number;
     clientName: string;
-    consultationDate: string;
-    consultationTime: string;
+    consultationDate: string | null;
+    consultationTime: string | null;
     status: string;
     sizeCategory: string;
     bodyArea: string | null;
@@ -125,7 +125,9 @@ export default function ArtistDashboardPage() {
                       {booking.clientName}
                     </p>
                     <p className="text-xs text-text-muted">
-                      {new Date(booking.consultationDate).toLocaleDateString('ro-RO')} — {booking.consultationTime}
+                      {booking.consultationDate
+                        ? `${new Date(booking.consultationDate).toLocaleDateString('ro-RO')}${booking.consultationTime ? ` — ${booking.consultationTime}` : ''}`
+                        : 'Programare in curs de stabilire'}
                     </p>
                   </div>
                   <span

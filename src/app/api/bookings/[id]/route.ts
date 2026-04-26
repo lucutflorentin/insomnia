@@ -4,6 +4,7 @@ import { verifyAdminRequest } from '@/lib/auth';
 import { bookingStatusSchema } from '@/lib/validations';
 import { sendBookingStatusUpdateEmail } from '@/lib/email';
 import { logAuditEvent } from '@/lib/audit';
+import { logSafe } from '@/lib/log';
 import { createNotification } from '@/lib/notifications';
 import { sendPushToUser } from '@/lib/push';
 
@@ -17,8 +18,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const admin = await verifyAdminRequest(request);
 
     const { id } = await params;
-    const booking = await prisma.booking.findUnique({
-      where: { id: parseInt(id) },
+    // ARTIST role: scope ownership in the query for IDOR-safe 404 on others' bookings
+    const where: Record<string, unknown> = { id: parseInt(id) };
+    if (admin.role === 'ARTIST' && admin.artistId) {
+      where.artistId = admin.artistId;
+    }
+
+    const booking = await prisma.booking.findFirst({
+      where,
       include: {
         artist: { select: { id: true, name: true, slug: true } },
       },
@@ -31,16 +38,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // ARTIST role: can only see own bookings
-    if (admin.role === 'ARTIST' && admin.artistId !== booking.artistId) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 403 },
-      );
-    }
-
     return NextResponse.json({ success: true, data: booking });
-  } catch {
+  } catch (error) {
+    logSafe('booking.detail.get', error);
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 401 },
@@ -64,9 +64,28 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Fetch current booking to check previous status and ownership
-    const current = await prisma.booking.findUnique({
-      where: { id: parseInt(id) },
+    // Rejected bookings require an explanatory adminNotes — clients deserve a reason.
+    if (
+      parsed.data.status === 'rejected' &&
+      (!parsed.data.adminNotes || parsed.data.adminNotes.trim().length < 10)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'A reason (adminNotes, min 10 chars) is required when rejecting a booking.',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Fetch current booking, scoped to ARTIST ownership where applicable.
+    // findFirst with ownership baked in returns null on others' bookings → uniform 404.
+    const whereCurrent: Record<string, unknown> = { id: parseInt(id) };
+    if (admin.role === 'ARTIST' && admin.artistId) {
+      whereCurrent.artistId = admin.artistId;
+    }
+    const current = await prisma.booking.findFirst({
+      where: whereCurrent,
       select: { status: true, artistId: true, clientId: true },
     });
 
@@ -74,14 +93,6 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         { success: false, error: 'Booking not found' },
         { status: 404 },
-      );
-    }
-
-    // ARTIST role: can only update own bookings
-    if (admin.role === 'ARTIST' && admin.artistId !== current.artistId) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 403 },
       );
     }
 
@@ -170,7 +181,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
             }).catch(() => {});
           }
         } catch (loyaltyError) {
-          console.error('Loyalty point award failed:', loyaltyError);
+          logSafe('loyalty.award', loyaltyError);
         }
       }
     }
@@ -181,6 +192,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         contacted: 'Te-am contactat',
         confirmed: 'Programare confirmata',
         completed: 'Sedinta finalizata',
+        rejected: 'Programare refuzata',
         cancelled: 'Programare anulata',
       };
       const label = statusLabels[parsed.data.status];
@@ -213,7 +225,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json({ success: true, data: booking });
-  } catch {
+  } catch (error) {
+    logSafe('booking.detail.put', error);
     return NextResponse.json(
       { success: false, error: 'Unauthorized or booking not found' },
       { status: 401 },

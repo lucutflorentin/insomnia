@@ -18,8 +18,9 @@ interface Booking {
   sizeCategory: string;
   stylePreference: string | null;
   description: string | null;
-  consultationDate: string;
-  consultationTime: string;
+  consultationDate: string | null;
+  consultationTime: string | null;
+  isQuickRequest?: boolean;
   source: string;
   status: string;
   adminNotes: string | null;
@@ -29,7 +30,7 @@ interface Booking {
   artist: { id: number; name: string; slug: string };
 }
 
-const STATUSES = ['all', 'new', 'contacted', 'confirmed', 'completed', 'cancelled', 'no_show'];
+const STATUSES = ['all', 'new', 'contacted', 'confirmed', 'completed', 'rejected', 'cancelled', 'no_show'];
 
 export default function AdminBookingsPage() {
   const t = useTranslations('admin.bookings');
@@ -99,6 +100,7 @@ export default function AdminBookingsPage() {
   };
 
   const statusColors: Record<string, string> = {
+    rejected: 'bg-red-500/20 text-red-400',
     new: 'bg-blue-500/20 text-blue-400',
     contacted: 'bg-yellow-500/20 text-yellow-400',
     confirmed: 'bg-green-500/20 text-green-400',
@@ -196,7 +198,9 @@ export default function AdminBookingsPage() {
                       <td className="px-4 py-3 text-text-primary">{b.clientName}</td>
                       <td className="px-4 py-3 text-text-secondary">{b.artist.name}</td>
                       <td className="px-4 py-3 text-text-secondary">
-                        {new Date(b.consultationDate).toLocaleDateString(dateLocale)}
+                        {b.consultationDate
+                          ? new Date(b.consultationDate).toLocaleDateString(dateLocale)
+                          : '—'}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[b.status] || ''}`}>
@@ -286,7 +290,9 @@ export default function AdminBookingsPage() {
               <div>
                 <span className="text-text-muted">{t('details.consultationDate')}:</span>
                 <p className="text-text-primary">
-                  {new Date(selected.consultationDate).toLocaleDateString(dateLocale)} — {selected.consultationTime}
+                  {selected.consultationDate
+                    ? `${new Date(selected.consultationDate).toLocaleDateString(dateLocale)} — ${selected.consultationTime ?? '—'}`
+                    : '—'}
                 </p>
               </div>
               <div>
@@ -374,10 +380,16 @@ export default function AdminBookingsPage() {
                 <Button
                   size="sm"
                   variant="danger"
-                  onClick={() => updateStatus(selected.id, 'cancelled')}
+                  onClick={() => {
+                    if (!notes || notes.trim().length < 10) {
+                      showToast(t('rejectReasonRequired'), 'error');
+                      return;
+                    }
+                    updateStatus(selected.id, 'rejected');
+                  }}
                   disabled={updatingStatus !== null}
                 >
-                  {updatingStatus === `${selected.id}-cancelled` ? (
+                  {updatingStatus === `${selected.id}-rejected` ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     t('actions.reject')

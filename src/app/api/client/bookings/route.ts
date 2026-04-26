@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAuthRequest } from '@/lib/auth';
+import { logSafe } from '@/lib/log';
 
 // GET /api/client/bookings — Authenticated: get own booking history
 export async function GET(request: NextRequest) {
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Client bookings error:', error);
+    logSafe('client.bookings.list', error);
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 401 },

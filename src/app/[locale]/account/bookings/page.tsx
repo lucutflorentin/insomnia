@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
 import ReviewFormModal from '@/components/features/reviews/ReviewFormModal';
+import RescheduleModal from '@/components/features/booking/RescheduleModal';
 
 interface Booking {
   id: number;
@@ -17,8 +18,9 @@ interface Booking {
   stylePreference: string | null;
   description: string | null;
   clientNotes: string | null;
-  consultationDate: string;
-  consultationTime: string;
+  consultationDate: string | null;
+  consultationTime: string | null;
+  isQuickRequest?: boolean;
   status: string;
   hasReview: boolean;
   createdAt: string;
@@ -33,6 +35,7 @@ export default function BookingsPage() {
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [cancelError, setCancelError] = useState('');
   const [reviewBookingId, setReviewBookingId] = useState<number | null>(null);
+  const [rescheduleBooking, setRescheduleBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -55,9 +58,19 @@ export default function BookingsPage() {
 
   const canCancel = (booking: Booking): boolean => {
     if (!['new', 'contacted'].includes(booking.status)) return false;
+    // Quick-form requests with no date can be cancelled anytime.
+    if (!booking.consultationDate) return true;
     const consultDate = new Date(booking.consultationDate);
     const hoursUntil = (consultDate.getTime() - Date.now()) / (1000 * 60 * 60);
     return hoursUntil >= 24;
+  };
+
+  const canReschedule = (booking: Booking): boolean => {
+    if (!['new', 'contacted', 'confirmed'].includes(booking.status)) return false;
+    if (!booking.consultationDate) return true; // Quick form: any future slot OK
+    const consultDate = new Date(booking.consultationDate);
+    const hoursUntil = (consultDate.getTime() - Date.now()) / (1000 * 60 * 60);
+    return hoursUntil >= 48;
   };
 
   const handleCancel = async (booking: Booking) => {
@@ -154,11 +167,13 @@ export default function BookingsPage() {
                       {booking.artist?.name || t('artist')}
                     </p>
                     <p className="mt-0.5 text-xs text-text-muted">
-                      {new Date(booking.consultationDate).toLocaleDateString('ro-RO', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
+                      {booking.consultationDate
+                        ? new Date(booking.consultationDate).toLocaleDateString('ro-RO', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })
+                        : t('pendingDate')}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2">
@@ -205,11 +220,13 @@ export default function BookingsPage() {
                 <div>
                   <p className="text-xs text-text-muted">{t('date')}</p>
                   <p className="text-sm text-text-primary">
-                    {new Date(selectedBooking.consultationDate).toLocaleDateString('ro-RO', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
+                    {selectedBooking.consultationDate
+                      ? new Date(selectedBooking.consultationDate).toLocaleDateString('ro-RO', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : t('pendingDate')}
                     {selectedBooking.consultationTime &&
                       ` - ${selectedBooking.consultationTime}`}
                   </p>
@@ -290,6 +307,21 @@ export default function BookingsPage() {
                   </p>
                 </div>
 
+                {/* Reschedule button */}
+                {canReschedule(selectedBooking) && (
+                  <div className="pt-2">
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      size="sm"
+                      onClick={() => setRescheduleBooking(selectedBooking)}
+                    >
+                      {t('reschedule.cta')}
+                    </Button>
+                    <p className="mt-2 text-xs text-text-muted">{t('reschedule.notice')}</p>
+                  </div>
+                )}
+
                 {/* Cancel button */}
                 {canCancel(selectedBooking) && (
                   <div className="pt-2">
@@ -327,6 +359,36 @@ export default function BookingsPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Reschedule Modal */}
+      {rescheduleBooking && (
+        <RescheduleModal
+          isOpen={rescheduleBooking !== null}
+          onClose={() => setRescheduleBooking(null)}
+          booking={{
+            id: rescheduleBooking.id,
+            referenceCode: rescheduleBooking.referenceCode,
+            artist: { slug: rescheduleBooking.artist.slug, name: rescheduleBooking.artist.name },
+          }}
+          onSuccess={(newDate, newTime) => {
+            setBookings((prev) =>
+              prev.map((b) =>
+                b.id === rescheduleBooking.id
+                  ? { ...b, consultationDate: newDate, consultationTime: newTime, isQuickRequest: false }
+                  : b,
+              ),
+            );
+            if (selectedBooking?.id === rescheduleBooking.id) {
+              setSelectedBooking({
+                ...selectedBooking,
+                consultationDate: newDate,
+                consultationTime: newTime,
+                isQuickRequest: false,
+              });
+            }
+          }}
+        />
       )}
 
       {/* Review Form Modal */}

@@ -67,8 +67,9 @@ export interface Booking {
   stylePreference: string | null;
   description: string | null;
   referenceImages: string[] | null;
-  consultationDate: string;
-  consultationTime: string;
+  consultationDate: string | null;
+  consultationTime: string | null;
+  isQuickRequest?: boolean;
   source: string;
   status: BookingStatus;
   adminNotes: string | null;
@@ -85,6 +86,7 @@ export type BookingStatus =
   | 'contacted'
   | 'confirmed'
   | 'completed'
+  | 'rejected'
   | 'cancelled'
   | 'no_show';
 
@@ -103,6 +105,8 @@ export interface AvailabilityTemplate {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
+  slotDurationMinutes?: number;
+  bufferMinutes?: number;
   isActive: boolean;
 }
 

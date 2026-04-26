@@ -14,21 +14,23 @@ interface Booking {
   sizeCategory: string;
   stylePreference: string | null;
   description: string | null;
-  consultationDate: string;
-  consultationTime: string;
+  consultationDate: string | null;
+  consultationTime: string | null;
+  isQuickRequest?: boolean;
   status: string;
   adminNotes: string | null;
   clientNotes: string | null;
   createdAt: string;
 }
 
-const STATUSES = ['new', 'contacted', 'confirmed', 'completed', 'cancelled', 'no_show'];
+const STATUSES = ['new', 'contacted', 'confirmed', 'completed', 'rejected', 'cancelled', 'no_show'];
 
 const statusColors: Record<string, string> = {
   new: 'bg-blue-500/20 text-blue-400',
   contacted: 'bg-yellow-500/20 text-yellow-400',
   confirmed: 'bg-green-500/20 text-green-400',
   completed: 'bg-purple-500/20 text-purple-400',
+  rejected: 'bg-red-500/20 text-red-400',
   cancelled: 'bg-red-500/20 text-red-400',
   no_show: 'bg-gray-500/20 text-gray-400',
 };
@@ -141,7 +143,9 @@ export default function ArtistBookingsPage() {
                   <div>
                     <p className="font-medium text-text-primary">{booking.clientName}</p>
                     <p className="text-xs text-text-muted">
-                      {new Date(booking.consultationDate).toLocaleDateString('ro-RO')} — {booking.consultationTime}
+                      {booking.consultationDate
+                        ? `${new Date(booking.consultationDate).toLocaleDateString('ro-RO')}${booking.consultationTime ? ` — ${booking.consultationTime}` : ''}`
+                        : t('pendingDate')}
                     </p>
                   </div>
                   <span
@@ -163,7 +167,11 @@ export default function ArtistBookingsPage() {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-text-muted">{t('date')}</span>
-                  <span>{new Date(selected.consultationDate).toLocaleDateString('ro-RO')}</span>
+                  <span>
+                    {selected.consultationDate
+                      ? new Date(selected.consultationDate).toLocaleDateString('ro-RO')
+                      : t('pendingDate')}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-text-muted">{t('time')}</span>

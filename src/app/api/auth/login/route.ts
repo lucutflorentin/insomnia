@@ -9,6 +9,8 @@ import {
 } from '@/lib/auth';
 import type { JWTPayload } from '@/lib/auth';
 import { checkRateLimit, getClientIp, AUTH_LIMIT } from '@/lib/rate-limit';
+import { logAuthFailure } from '@/lib/audit';
+import { logSafe } from '@/lib/log';
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,6 +40,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user || !user.passwordHash || !user.isActive) {
+      logAuthFailure({
+        emailKey: parsed.data.email,
+        reason: !user ? 'unknown_user' : !user.passwordHash ? 'no_password' : 'inactive',
+        ip,
+      }).catch(() => {});
       return NextResponse.json(
         { success: false, error: 'Invalid credentials' },
         { status: 401 },
@@ -72,6 +79,12 @@ export async function POST(request: NextRequest) {
             : {}),
         },
       });
+
+      logAuthFailure({
+        emailKey: parsed.data.email,
+        reason: attempts >= MAX_ATTEMPTS ? 'wrong_password_lockout' : 'wrong_password',
+        ip,
+      }).catch(() => {});
 
       return NextResponse.json(
         { success: false, error: 'Invalid credentials' },
@@ -113,7 +126,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
+    logSafe('auth.login', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 },
