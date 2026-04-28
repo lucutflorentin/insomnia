@@ -45,6 +45,7 @@ export interface ArtistSection {
   slug: string;
   name: string;
   specialty: string;
+  profileImage?: string | null;
   filters: string[];
   works: Array<{
     id: number;
@@ -65,16 +66,31 @@ function ArtistPortfolioSection({
   favoriteIds: Set<number>;
 }) {
   const t = useTranslations('inkSpace');
+  const tGallery = useTranslations('gallery');
   const tStyles = useTranslations('artists.styles');
+  const [activeFilter, setActiveFilter] = useState('all');
+  const filteredWorks =
+    activeFilter === 'all'
+      ? artist.works
+      : artist.works.filter((work) => work.style === activeFilter);
 
   return (
     <section id={artist.slug} className="scroll-mt-24">
       {/* Artist header */}
       <SlideUp>
         <div className="flex items-center gap-4 mb-6">
-          {/* Mini portrait placeholder */}
-          <div className="h-16 w-16 shrink-0 rounded-full bg-bg-secondary border border-border flex items-center justify-center">
-            <span className="font-heading text-2xl text-accent/50">{artist.name[0]}</span>
+          <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-bg-secondary">
+            {artist.profileImage ? (
+              <Image
+                src={artist.profileImage}
+                alt={artist.name}
+                fill
+                sizes="64px"
+                className="object-cover"
+              />
+            ) : (
+              <span className="font-heading text-2xl text-accent/50">{artist.name[0]}</span>
+            )}
           </div>
           <div>
             <h2 className="font-heading text-2xl font-bold sm:text-3xl">
@@ -91,63 +107,70 @@ function ArtistPortfolioSection({
           {artist.filters.map((filter) => (
             <button
               key={filter}
+              onClick={() => setActiveFilter(filter)}
               className={cn(
                 'rounded-full px-4 py-1.5 text-sm transition-all duration-200',
-                filter === 'all'
+                activeFilter === filter
                   ? 'bg-accent text-bg-primary font-medium'
                   : 'border border-border text-text-secondary hover:border-accent/50 hover:text-text-primary',
               )}
             >
-              {filter === 'all' ? 'Toate' : tStyles(filter)}
+              {filter === 'all' ? tGallery('filters.all') : tStyles(filter)}
             </button>
           ))}
         </div>
       </SlideUp>
 
       {/* Masonry grid */}
-      <StaggerChildren
-        staggerDelay={0.05}
-        className="columns-2 gap-3 sm:columns-3 lg:columns-4"
-      >
-        {artist.works.map((work) => (
-          <StaggerItem key={work.id} className="mb-3 break-inside-avoid">
-            <div className="group relative overflow-hidden rounded-sm bg-bg-secondary cursor-pointer">
-              <div
-                style={{ paddingBottom: `${(work.aspectRatio || 1) * 100}%` }}
-                className="relative"
-              >
-                {work.imagePath ? (
-                  <Image
-                    src={work.thumbnailPath || work.imagePath}
-                    alt={work.titleRo || work.titleEn || `Tatuaj ${work.style} de ${artist.name} — Insomnia Tattoo`}
-                    fill
-                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-bg-tertiary to-bg-secondary transition-transform duration-300 group-hover:scale-105">
-                    <span className="text-xs text-text-muted capitalize">{work.style}</span>
+      {filteredWorks.length > 0 ? (
+        <StaggerChildren
+          staggerDelay={0.05}
+          className="columns-2 gap-3 sm:columns-3 lg:columns-4"
+        >
+          {filteredWorks.map((work) => (
+            <StaggerItem key={work.id} className="mb-3 break-inside-avoid">
+              <div className="group relative cursor-pointer overflow-hidden rounded-sm bg-bg-secondary">
+                <div
+                  style={{ paddingBottom: `${(work.aspectRatio || 1) * 100}%` }}
+                  className="relative"
+                >
+                  {work.imagePath ? (
+                    <Image
+                      src={work.thumbnailPath || work.imagePath}
+                      alt={work.titleRo || work.titleEn || `Tatuaj ${work.style} de ${artist.name} - Insomnia Tattoo`}
+                      fill
+                      sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-bg-tertiary to-bg-secondary transition-transform duration-300 group-hover:scale-105">
+                      <span className="text-xs capitalize text-text-muted">{work.style}</span>
+                    </div>
+                  )}
+                </div>
+                {/* Hover overlay */}
+                <div className="absolute inset-0 flex items-end justify-between bg-gradient-to-t from-bg-primary/80 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <div className="p-3">
+                    <Badge variant="accent" className="text-[10px]">
+                      {work.style ? tStyles(work.style) : artist.name}
+                    </Badge>
                   </div>
-                )}
-              </div>
-              {/* Hover overlay */}
-              <div className="absolute inset-0 flex items-end justify-between bg-gradient-to-t from-bg-primary/80 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <div className="p-3">
-                  <Badge variant="accent" className="text-[10px]">
-                    {tStyles(work.style)}
-                  </Badge>
-                </div>
-                <div className="p-3">
-                  <FavoriteHeart
-                    galleryItemId={work.id}
-                    isFavorited={favoriteIds.has(work.id)}
-                  />
+                  <div className="p-3">
+                    <FavoriteHeart
+                      galleryItemId={work.id}
+                      isFavorited={favoriteIds.has(work.id)}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </StaggerItem>
-        ))}
-      </StaggerChildren>
+            </StaggerItem>
+          ))}
+        </StaggerChildren>
+      ) : (
+        <div className="rounded-sm border border-border bg-bg-secondary p-8 text-center text-sm text-text-muted">
+          {tGallery('noResults')}
+        </div>
+      )}
 
       {/* CTA */}
       <SlideUp className="mt-8 text-center">

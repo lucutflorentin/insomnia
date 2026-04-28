@@ -254,8 +254,9 @@
     },
     "gallery": {
       "title": "Lucrarile noastre",
-      "subtitle": "Fiecare tatuaj spune o poveste",
+      "subtitle": "Selectii recente din portofoliile artistilor",
       "viewAll": "Exploreaza Spatiul Ink",
+      "empty": "Portofoliul public se va actualiza aici dupa ce artistii publica lucrari vizibile.",
       "filters": {
         "all": "Toate",
         "realism": "Realism",
@@ -615,6 +616,7 @@
       "availability": "Disponibilitate",
       "reviews": "Recenzii",
       "profile": "Profil",
+      "site": "Site principal",
       "logout": "Deconectare"
     },
     "dashboard": {
@@ -771,6 +773,10 @@
       "instagram": "Instagram URL",
       "tiktok": "TikTok URL",
       "profileImage": "Poza de profil",
+      "changePhoto": "Schimba poza",
+      "invalidImageType": "Format invalid. Foloseste JPG, PNG sau WebP.",
+      "imageTooLarge": "Imagine prea mare. Maxim 15MB.",
+      "imageUploadFailed": "Nu s-a putut incarca poza de profil.",
       "save": "Salveaza",
       "saving": "Se salveaza...",
       "saved": "Profil salvat!",

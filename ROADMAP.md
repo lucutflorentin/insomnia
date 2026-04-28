@@ -144,6 +144,48 @@ Focus: problema raportata de artist in `/artist/gallery`, unde uploadul afisa do
    - portrete reale premium;
    - Health Center cat mai aproape de 100%.
 
+### Sesiunea 17 (28 Aprilie 2026) — Fixuri public portfolio, profil artist si incredere client
+
+Pornita din QA live dupa ce uploadul Blob a fost reparat/configurat.
+
+#### Probleme identificate
+
+- Artistul putea edita bio/social links, dar nu isi putea schimba poza de profil din dashboard.
+- Dashboardul artistului nu avea scurtatura clara inapoi catre site-ul principal.
+- Homepage-ul nu afisa lucrarile incarcate deoarece `GalleryHighlight` nu primea date din DB.
+- Homepage, Ink Space si profilul public de artist riscau sa ramana cu date prerandate/cache-uite dupa uploaduri noi.
+- Taburile de stil din Ink Space erau doar vizuale si nu filtrau lucrarile.
+- JSON-LD pentru profil artist putea genera URL invalid cand `profileImage` era deja URL absolut de Vercel Blob.
+
+#### Implementat
+
+- Profil artist:
+  - artistul poate incarca/schimba poza de profil din `/artist/profile`;
+  - poza este uploadata prin acelasi pipeline securizat Vercel Blob + WebP;
+  - API-ul `/api/artist/profile` permite acum update controlat pentru `profileImage`.
+- Dashboard artist:
+  - adaugata scurtatura catre site-ul principal in sidebar desktop si topbar mobil.
+- Homepage `Lucrarile noastre`:
+  - conectat la lucrarile reale vizibile din DB;
+  - prioritizare lucrari featured, apoi sort order si cele mai noi;
+  - UI imbunatatit cu grid responsive, overlay, artist, stil si CTA catre Ink Space;
+  - stare goala profesionala cand nu exista lucrari publice.
+- Ink Space:
+  - taburile de stil functioneaza si filtreaza per artist;
+  - headerul artistului foloseste poza de profil cand exista;
+  - stare goala pentru filtre fara rezultate.
+- Date publice dinamice:
+  - homepage, Ink Space si profilul public artist folosesc `noStore()` pentru ca portofoliile urcate din dashboard sa se reflecte live fara rebuild manual.
+- SEO/Trust:
+  - schema Person pentru profil artist foloseste corect URL absolut pentru imaginile Blob.
+
+#### Ramane de testat live
+
+- Schimbare poza profil artist din dashboard.
+- Upload lucrare noua si verificare imediata in homepage, Ink Space si profil public artist.
+- Filtrare stiluri in Ink Space pe fiecare artist.
+- Click din dashboard artist catre site-ul principal.
+
 ### Sesiunea 15 (27-28 Aprilie 2026) — Audit P0/P1 local, stabilizare pre-live
 
 Audit dur al starii reale dupa Sesiunile 13-14. Site-ul este live, dar regula operationala ramane: orice schimbare se valideaza local inainte de update live.

@@ -1,9 +1,14 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import JsonLd from '@/components/seo/JsonLd';
 import { SITE_CONFIG } from '@/lib/constants';
 import ArtistProfileContent from './ArtistProfileContent';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 interface Props {
   params: Promise<{ locale: string; slug: string }>;
@@ -80,7 +85,9 @@ function getPersonSchema(artist: {
   };
 
   if (artist.profileImage) {
-    schema.image = `${SITE_CONFIG.url}${artist.profileImage}`;
+    schema.image = artist.profileImage.startsWith('http')
+      ? artist.profileImage
+      : `${SITE_CONFIG.url}${artist.profileImage}`;
   }
 
   if (reviewCount > 0) {
@@ -97,6 +104,7 @@ function getPersonSchema(artist: {
 }
 
 export default async function ArtistPage({ params }: Props) {
+  await connection();
   const { locale, slug } = await params;
 
   const artist = await prisma.artist.findFirst({

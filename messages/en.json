@@ -254,8 +254,9 @@
     },
     "gallery": {
       "title": "Our Work",
-      "subtitle": "Every tattoo tells a story",
+      "subtitle": "Recent selections from the artists' portfolios",
       "viewAll": "Explore the Ink Space",
+      "empty": "The public portfolio will update here after artists publish visible works.",
       "filters": {
         "all": "All",
         "realism": "Realism",
@@ -615,6 +616,7 @@
       "availability": "Availability",
       "reviews": "Reviews",
       "profile": "Profile",
+      "site": "Main site",
       "logout": "Logout"
     },
     "dashboard": {
@@ -771,6 +773,10 @@
       "instagram": "Instagram URL",
       "tiktok": "TikTok URL",
       "profileImage": "Profile photo",
+      "changePhoto": "Change photo",
+      "invalidImageType": "Invalid format. Use JPG, PNG, or WebP.",
+      "imageTooLarge": "Image too large. Maximum 15MB.",
+      "imageUploadFailed": "Could not upload profile photo.",
       "save": "Save",
       "saving": "Saving...",
       "saved": "Profile saved!",

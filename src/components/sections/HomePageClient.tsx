@@ -38,9 +38,19 @@ export interface HomeArtist {
 
 interface HomePageClientProps {
   artists: HomeArtist[];
+  galleryItems: Array<{
+    id: number;
+    style: string;
+    titleRo: string | null;
+    titleEn: string | null;
+    imagePath: string;
+    thumbnailPath: string;
+    artistName: string;
+    artistSlug: string;
+  }>;
 }
 
-export default function HomePageClient({ artists }: HomePageClientProps) {
+export default function HomePageClient({ artists, galleryItems }: HomePageClientProps) {
   const locale = useLocale();
   const [dynamicContent, setDynamicContent] = useState<Record<string, string>>({});
   const [artistModalOpen, setArtistModalOpen] = useState(false);
@@ -90,7 +100,7 @@ export default function HomePageClient({ artists }: HomePageClientProps) {
         dynamicSubtitle={heroSubtitle || undefined}
       />
       <ArtistCards artists={artists} onArtistClick={handleArtistClick} />
-      <GalleryHighlight />
+      <GalleryHighlight items={galleryItems} />
       <SocialProof />
       <CTABanner onBookingClick={handleOpenBooking} />
       <MapSection />

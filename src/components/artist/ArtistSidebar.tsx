@@ -14,6 +14,7 @@ import {
   Star,
   UserCircle,
   LogOut,
+  Home,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -49,7 +50,16 @@ export default function ArtistSidebar() {
           <h1 className="font-heading text-lg text-accent">Insomnia Tattoo</h1>
           <p className="text-[11px] text-text-muted">{user?.name || 'Artist Panel'}</p>
         </div>
-        <NotificationBell />
+        <div className="flex items-center gap-1">
+          <Link
+            href="/"
+            className="rounded-lg p-2 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
+            title={t('site')}
+          >
+            <Home className="h-5 w-5" />
+          </Link>
+          <NotificationBell />
+        </div>
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg-tertiary px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden">
@@ -126,6 +136,13 @@ export default function ArtistSidebar() {
         </nav>
 
         <div className="border-t border-border p-4">
+          <Link
+            href="/"
+            className="mb-2 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
+          >
+            <Home className="h-4 w-4 shrink-0" />
+            <span>{t('site')}</span>
+          </Link>
           <button
             onClick={handleLogout}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"

@@ -1,8 +1,13 @@
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import InkSpaceContent from '@/components/features/gallery/InkSpaceContent';
 import type { ArtistSection } from '@/components/features/gallery/InkSpaceContent';
 import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 export async function generateMetadata({
   params,
@@ -22,6 +27,7 @@ export default async function InkSpacePage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
+  await connection();
   const { locale } = await params;
   // Fetch artists and their gallery items from DB
   let sections: ArtistSection[] = [];
@@ -55,6 +61,7 @@ export default async function InkSpacePage({
           titleEn: g.titleEn,
           aspectRatio: 1,
         })),
+        profileImage: artist.profileImage,
       };
     });
   } catch {

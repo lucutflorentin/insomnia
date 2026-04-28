@@ -1,8 +1,14 @@
 import { prisma } from '@/lib/prisma';
+import { connection } from 'next/server';
 import HomePageClient from '@/components/sections/HomePageClient';
 import JsonLd, { getAggregateRatingSchema } from '@/components/seo/JsonLd';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export default async function HomePage() {
+  await connection();
   // Fetch artists with their featured works and ratings from DB
   const artistsRaw = await prisma.artist.findMany({
     where: { isActive: true },
@@ -39,6 +45,30 @@ export default async function HomePage() {
     })),
   }));
 
+  const galleryRaw = await prisma.galleryItem.findMany({
+    where: { isVisible: true },
+    include: {
+      artist: {
+        select: { name: true, slug: true, isActive: true },
+      },
+    },
+    orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'desc' }],
+    take: 12,
+  });
+
+  const galleryItems = galleryRaw
+    .filter((item) => item.artist.isActive)
+    .map((item) => ({
+      id: item.id,
+      style: item.style || 'tattoo',
+      titleRo: item.titleRo,
+      titleEn: item.titleEn,
+      imagePath: item.imagePath,
+      thumbnailPath: item.thumbnailPath || item.imagePath,
+      artistName: item.artist.name,
+      artistSlug: item.artist.slug,
+    }));
+
   // Calculate aggregate rating across all artists
   const allReviews = artistsRaw.flatMap((a) => a.reviews);
   const totalReviewCount = allReviews.length;
@@ -50,7 +80,7 @@ export default async function HomePage() {
   return (
     <>
       {aggregateRatingSchema && <JsonLd data={aggregateRatingSchema} />}
-      <HomePageClient artists={artists} />
+      <HomePageClient artists={artists} galleryItems={galleryItems} />
     </>
   );
 }

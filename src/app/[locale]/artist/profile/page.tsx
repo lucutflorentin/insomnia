@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { Camera, Loader2, UserCircle } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
+import { GALLERY_UPLOAD_CONFIG } from '@/lib/constants';
 
 interface ArtistProfile {
   id: number;
@@ -28,6 +30,8 @@ export default function ArtistProfilePage() {
   const [profile, setProfile] = useState<ArtistProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     bioRo: '',
@@ -36,6 +40,7 @@ export default function ArtistProfilePage() {
     specialtyEn: '',
     instagramUrl: '',
     tiktokUrl: '',
+    profileImage: '',
   });
 
   useEffect(() => {
@@ -52,6 +57,7 @@ export default function ArtistProfilePage() {
             specialtyEn: p.specialtyEn || '',
             instagramUrl: p.instagramUrl || '',
             tiktokUrl: p.tiktokUrl || '',
+            profileImage: p.profileImage || '',
           });
         }
       })
@@ -62,14 +68,45 @@ export default function ArtistProfilePage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      let profileImage = form.profileImage;
+
+      if (profileImageFile) {
+        if (!(GALLERY_UPLOAD_CONFIG.allowedFileTypes as readonly string[]).includes(profileImageFile.type)) {
+          showToast(t('invalidImageType'), 'error');
+          setIsSaving(false);
+          return;
+        }
+        if (profileImageFile.size > GALLERY_UPLOAD_CONFIG.maxFileSize) {
+          showToast(t('imageTooLarge'), 'error');
+          setIsSaving(false);
+          return;
+        }
+
+        const uploadForm = new FormData();
+        uploadForm.append('file', profileImageFile);
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadForm,
+        });
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok || !uploadData.success) {
+          showToast(uploadData.error || t('imageUploadFailed'), 'error');
+          setIsSaving(false);
+          return;
+        }
+        profileImage = uploadData.data.imagePath;
+      }
+
       const res = await fetch('/api/artist/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, profileImage }),
       });
       const data = await res.json();
       if (data.success) {
         setProfile(data.data);
+        setProfileImageFile(null);
+        setForm((f) => ({ ...f, profileImage: data.data.profileImage || '' }));
         showToast(t('saved'), 'success');
       } else {
         showToast(data.error || t('error'), 'error');
@@ -93,24 +130,55 @@ export default function ArtistProfilePage() {
     <div className="mx-auto max-w-2xl">
       <h1 className="mb-6 font-heading text-2xl text-text-primary">{t('title')}</h1>
 
-      {/* Profile image preview */}
-      {profile?.profileImage && (
-        <div className="mb-6 flex items-center gap-4">
-          <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-accent/30">
-            <Image
-              src={profile.profileImage}
-              alt={profile.name}
-              fill
-              sizes="80px"
-              className="object-cover"
-            />
+      <div className="mb-6 rounded-sm border border-border bg-bg-secondary p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border-2 border-accent/30 bg-bg-tertiary">
+            {form.profileImage ? (
+              <Image
+                src={form.profileImage}
+                alt={profile?.name || t('profileImage')}
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <UserCircle className="h-12 w-12 text-text-muted" />
+              </div>
+            )}
           </div>
-          <div>
-            <p className="font-heading text-lg text-text-primary">{profile.name}</p>
-            <p className="text-sm text-text-muted">@{profile.slug}</p>
+          <div className="min-w-0 flex-1">
+            <p className="font-heading text-lg text-text-primary">{profile?.name}</p>
+            <p className="text-sm text-text-muted">@{profile?.slug}</p>
+            {profileImageFile && (
+              <p className="mt-1 truncate text-xs text-accent">{profileImageFile.name}</p>
+            )}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSaving}
+              >
+                {isSaving && profileImageFile ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Camera className="mr-2 h-4 w-4" />
+                )}
+                {t('changePhoto')}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => setProfileImageFile(e.target.files?.[0] || null)}
+              />
+            </div>
           </div>
         </div>
-      )}
+      </div>
 
       <div className="space-y-5 rounded-sm border border-border bg-bg-secondary p-6">
         <Textarea

@@ -69,7 +69,15 @@ export async function PATCH(request: NextRequest) {
 
     // Only allow updating these fields
     const updateData: Record<string, string | null> = {};
-    const allowedFields = ['bioRo', 'bioEn', 'specialtyRo', 'specialtyEn', 'instagramUrl', 'tiktokUrl'];
+    const allowedFields = [
+      'bioRo',
+      'bioEn',
+      'specialtyRo',
+      'specialtyEn',
+      'instagramUrl',
+      'tiktokUrl',
+      'profileImage',
+    ];
 
     for (const field of allowedFields) {
       if (field in body) {
@@ -81,7 +89,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Validate URL fields
-    for (const urlField of ['instagramUrl', 'tiktokUrl']) {
+    for (const urlField of ['instagramUrl', 'tiktokUrl', 'profileImage']) {
       if (updateData[urlField] && !updateData[urlField]!.startsWith('http')) {
         return NextResponse.json(
           { success: false, error: `Invalid URL for ${urlField}` },
