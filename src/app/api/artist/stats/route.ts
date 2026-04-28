@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
       reviews,
       upcomingBookings,
       recentReviews,
+      galleryItems,
+      artistProfile,
     ] = await Promise.all([
       prisma.booking.count({
         where: {
@@ -68,6 +70,31 @@ export async function GET(request: NextRequest) {
           user: { select: { name: true } },
         },
       }),
+      prisma.galleryItem.findMany({
+        where: { artistId },
+        select: {
+          id: true,
+          titleRo: true,
+          titleEn: true,
+          style: true,
+          bodyArea: true,
+          isFeatured: true,
+          isVisible: true,
+        },
+      }),
+      prisma.artist.findUnique({
+        where: { id: artistId },
+        select: {
+          slug: true,
+          bioRo: true,
+          bioEn: true,
+          specialtyRo: true,
+          specialtyEn: true,
+          profileImage: true,
+          instagramUrl: true,
+          tiktokUrl: true,
+        },
+      }),
     ]);
 
     const totalReviews = reviews.length;
@@ -75,6 +102,50 @@ export async function GET(request: NextRequest) {
       totalReviews > 0
         ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews) * 10) / 10
         : 0;
+    const visibleWorks = galleryItems.filter((item) => item.isVisible).length;
+    const featuredWorks = galleryItems.filter((item) => item.isFeatured).length;
+    const worksMissingMetadata = galleryItems.filter(
+      (item) => !item.titleRo && !item.titleEn && (!item.style || !item.bodyArea),
+    ).length;
+    const checklist = [
+      {
+        key: 'profileImage',
+        done: Boolean(artistProfile?.profileImage),
+        href: '/artist/profile',
+      },
+      {
+        key: 'bio',
+        done: Boolean(artistProfile?.bioRo && artistProfile?.bioEn),
+        href: '/artist/profile',
+      },
+      {
+        key: 'specialty',
+        done: Boolean(artistProfile?.specialtyRo && artistProfile?.specialtyEn),
+        href: '/artist/profile',
+      },
+      {
+        key: 'social',
+        done: Boolean(artistProfile?.instagramUrl || artistProfile?.tiktokUrl),
+        href: '/artist/profile',
+      },
+      {
+        key: 'visibleWorks',
+        done: visibleWorks >= 12,
+        href: '/artist/gallery',
+      },
+      {
+        key: 'featuredWorks',
+        done: featuredWorks >= 4,
+        href: '/artist/gallery',
+      },
+      {
+        key: 'metadata',
+        done: worksMissingMetadata === 0 && galleryItems.length > 0,
+        href: '/artist/gallery',
+      },
+    ];
+    const completedChecklistItems = checklist.filter((item) => item.done).length;
+    const readinessScore = Math.round((completedChecklistItems / checklist.length) * 100);
 
     return NextResponse.json({
       success: true,
@@ -85,6 +156,15 @@ export async function GET(request: NextRequest) {
         averageRating,
         upcomingBookings,
         recentReviews,
+        portfolio: {
+          slug: artistProfile?.slug,
+          readinessScore,
+          visibleWorks,
+          featuredWorks,
+          totalWorks: galleryItems.length,
+          worksMissingMetadata,
+          checklist,
+        },
       },
     });
   } catch (error) {

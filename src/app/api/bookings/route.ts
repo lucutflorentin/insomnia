@@ -138,25 +138,36 @@ export async function POST(request: NextRequest) {
       language: language as 'ro' | 'en',
     };
 
-    sendBookingConfirmation(emailData).catch(console.error);
-    sendBookingNotification(emailData).catch(console.error);
+    const deliveryTasks: Promise<unknown>[] = [
+      sendBookingConfirmation(emailData),
+      sendBookingNotification(emailData),
+    ];
 
     // In-app + push notification to artist
     if (artist.userId) {
-      createNotification({
-        userId: artist.userId,
-        type: 'booking_new',
-        title: `Booking nou de la ${clientName}`,
-        message: `Cerere noua de consultatie — ${bodyArea || 'nedefinit'}, ${sizeCategory}`,
-        link: '/artist/bookings',
-      });
-      sendPushToUser(artist.userId, {
-        title: `Booking nou de la ${clientName}`,
-        body: `Cerere noua de consultatie — ${bodyArea || 'nedefinit'}, ${sizeCategory}`,
-        url: '/artist/bookings',
-        tag: `booking-new-${booking.id}`,
-      });
+      deliveryTasks.push(
+        createNotification({
+          userId: artist.userId,
+          type: 'booking_new',
+          title: `Booking nou de la ${clientName}`,
+          message: `Cerere noua de consultatie — ${bodyArea || 'nedefinit'}, ${sizeCategory}`,
+          link: '/artist/bookings',
+        }),
+        sendPushToUser(artist.userId, {
+          title: `Booking nou de la ${clientName}`,
+          body: `Cerere noua de consultatie — ${bodyArea || 'nedefinit'}, ${sizeCategory}`,
+          url: '/artist/bookings',
+          tag: `booking-new-${booking.id}`,
+        }),
+      );
     }
+
+    const deliveryResults = await Promise.allSettled(deliveryTasks);
+    deliveryResults.forEach((result) => {
+      if (result.status === 'rejected') {
+        console.error('Booking delivery task failed:', result.reason);
+      }
+    });
 
     return NextResponse.json(
       {

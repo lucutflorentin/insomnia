@@ -6,6 +6,144 @@
 
 ## JURNAL TEHNIC — Ce s-a implementat
 
+### Sesiunea 16 (28 Aprilie 2026) — Portofoliu artist, upload diagnostics, plan 9+
+
+Focus: problema raportata de artist in `/artist/gallery`, unde uploadul afisa doar `"Upload failed. Please try again."` si nu era clar daca eroarea vine din fisier, autentificare, baza de date sau storage.
+
+#### Buguri identificate si rezolvate local
+
+- Endpointul `POST /api/upload` ascundea erorile critice sub un mesaj generic. Acum returneaza coduri si mesaje actionabile:
+  - `STORAGE_NOT_CONFIGURED` cand `BLOB_READ_WRITE_TOKEN` lipseste.
+  - `STORAGE_UPLOAD_FAILED` cand Vercel Blob refuza uploadul.
+  - `UNAUTHORIZED` pentru sesiuni invalide/lipsa.
+- In mediul local verificat, `BLOB_READ_WRITE_TOKEN` este gol in `.env.local`, deci uploadul real in local nu poate functiona pana nu se seteaza tokenul Blob. In productie trebuie verificata aceeasi variabila in Vercel.
+- Dashboardul artistului folosea un flux prea simplu pentru portofoliu: upload/delete/visibility, fara metadata si fara feedback profesional.
+
+#### Imbunatatiri implementate pentru artist gallery
+
+- Pagina `/artist/gallery` a devenit manager de portofoliu:
+  - upload multiplu cu progress per fisier;
+  - validare client-side pentru tip fisier si limita de marime;
+  - mesaje reale de eroare primite de la API;
+  - statistici rapide: total, vizibile, evidentiate, completate cu metadata;
+  - editare titlu RO/EN, stil, zona corpului si ordine;
+  - toggle pentru vizibilitate si featured;
+  - confirmare la stergere;
+  - suport mai clar pentru poze facute cu telefonul, optimizate server-side in WebP si thumbnail.
+
+#### Verificari trecute local
+
+- `npm run test`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build`
+
+#### Nota de lansare estimata dupa aceasta sesiune
+
+- Stabilitate tehnica locala: 8.2/10.
+- Experienta artist portofoliu: 7.8/10, crescuta de la aproximativ 6/10.
+- Pregatire pentru live premium: 8/10, blocata in continuare de QA real pe productie, imagini reale premium, Sentry live si e2e complet.
+
+#### Plan pentru nota 9+
+
+1. P0 inainte de live:
+   - verifica `BLOB_READ_WRITE_TOKEN` in Vercel Production si Preview;
+   - test manual cu cont ARTIST real: upload JPG/PNG/WebP de telefon, editare metadata, ascundere, featured, stergere;
+   - test manual cu SUPER_ADMIN: upload galerie pentru fiecare artist si editare artist;
+   - inlocuire completa placeholder images cu lucrari reale si portrete premium;
+   - activare si verificare Sentry production cu o eroare controlata non-publica.
+
+2. Artist dashboard 9+:
+   - profil public preview in dashboard, cu status "publicat / incomplet";
+   - checklist de profil: poza, bio RO/EN, specialitati, Instagram/TikTok, minimum 12 lucrari vizibile;
+   - batch edit pentru stil/zona/vizibilitate/featured;
+   - drag-and-drop reorder pentru sortarea portofoliului;
+   - filtre in galeria artistului dupa vizibilitate, featured, stil, zona si metadata lipsa;
+   - recomandari automate: imagini fara titlu, fara stil, prea putine featured, portofoliu dezechilibrat pe stiluri;
+   - import/attach din booking references catre portofoliu dupa finalizarea lucrarii, cu aprobare artist.
+
+3. Admin dashboard 9+:
+   - health center: storage configurat, email configurat, Sentry activ, cron activ, ultimele erori;
+   - CRM client: timeline client cu programari, note, loyalty, reviews, preferinte, consimtamant GDPR;
+   - artist performance: conversie booking, venit estimat, rating, no-show, workload, lucrari publicate;
+   - moderation queue pentru imagini/reviews/content inainte de publicare;
+   - exporturi si rapoarte pe perioade: clienti, programari, surse, stiluri, artisti;
+   - audit log filtrabil si alertare pentru actiuni sensibile;
+   - data quality dashboard: artisti incompleti, imagini lipsa metadata, setari SEO lipsa, linkuri sociale invalide.
+
+4. QA si automatizare:
+   - Playwright e2e pentru auth, booking complet, artist gallery, admin gallery si profil public artist;
+   - teste API pentru upload failure modes si permisiuni artist/admin;
+   - smoke production dupa deploy cu conturi de test;
+   - checklist vizual mobil/desktop pentru homepage, booking, artist profile, dashboard artist/admin.
+
+#### Extensie 9+ implementata in aceeasi sesiune
+
+- Dashboard artist:
+  - adaugat "Portfolio health" cu scor procentual de pregatire publica;
+  - checklist actionabil pentru poza profil, bio RO/EN, specialitate RO/EN, social links, minimum 12 lucrari vizibile, minimum 4 featured si metadata completa;
+  - statistici clare pentru lucrari vizibile, featured, total si fara metadata.
+- Galerie artist:
+  - adaugate filtre dupa status: toate, vizibile, ascunse, featured, metadata lipsa;
+  - adaugat filtru dupa stil si cautare dupa titlu/stil/zona;
+  - adaugate selectare filtrate si bulk actions pentru show/hide/featured/delete;
+  - fix defensiv: bulk delete elimina local doar lucrarile sterse cu succes.
+- Dashboard admin:
+  - adaugat Health Center in dashboardul principal;
+  - scor de launch readiness bazat pe storage imagini, SMTP, Sentry, cron, portofoliu public si metadata galerie;
+  - metrici data quality: lucrari vizibile, featured, metadata lipsa, utilizatori inactivi;
+  - lista artistilor care necesita completari de profil sau portofoliu.
+
+#### Probleme ramase pentru 9+ real, nu doar local
+
+- `BLOB_READ_WRITE_TOKEN` trebuie setat in `.env.local` pentru test local complet si verificat in Vercel Production/Preview.
+- `NEXT_PUBLIC_SENTRY_DSN`, `CRON_SECRET` si SMTP trebuie confirmate in Vercel; Health Center le va semnala cand lipsesc.
+- Urmatorul salt mare este e2e Playwright pentru upload real, booking complet, dashboard artist/admin si profil public artist.
+
+#### Hardening suplimentar dupa verificarea Vercel env vars
+
+- Dashboard artist mobile:
+  - layoutul privat nu mai forteaza sidebar desktop pe telefon;
+  - adaugat top bar mobil si bottom navigation cu toate sectiunile artistului;
+  - adaugat clopotel notificari in dashboardul artistului, inclusiv pe mobil;
+  - dropdown-ul de notificari este limitat la latimea viewportului ca sa nu iasa din ecran.
+- Booking notifications:
+  - emailurile si notificarile create dupa booking sunt rulate prin `Promise.allSettled`;
+  - booking-ul nu pica daca email/push esueaza, dar serverless-ul nu mai abandoneaza prematur taskurile de livrare;
+  - notificarea in-app ramane sursa de baza, push-ul depinde de VAPID + subscription activa pe device-ul artistului.
+- Upload poze telefon:
+  - introdus `GALLERY_UPLOAD_CONFIG`;
+  - uploadul de galerie accepta acum imagini pana la 15MB, mai potrivit pentru poze facute direct cu telefonul;
+  - uploadul de referinte din booking ramane la 5MB pentru formular public mai usor.
+
+#### Checklist Vercel/live ramas inainte de nota 9+
+
+1. Redeploy dupa orice schimbare de environment variables.
+2. Verificare in Vercel Production si Preview:
+   - `BLOB_READ_WRITE_TOKEN`
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+   - `CRON_SECRET`
+   - `NEXT_PUBLIC_SENTRY_DSN`
+3. Test live cu artist pe telefon:
+   - login artist;
+   - enable notifications;
+   - upload poza reala de telefon 8-15MB;
+   - editare metadata, featured, hide/show, delete;
+   - verificare Portfolio Health.
+4. Test booking live:
+   - booking public pentru artist;
+   - apare in `/artist/bookings`;
+   - apare in clopotelul artistului;
+   - se primeste email client + artist;
+   - push notification apare pe device-ul unde artistul a permis notificarile.
+5. Curatare continut pentru lansare premium:
+   - minimum 12 lucrari vizibile per artist;
+   - minimum 4 featured per artist;
+   - bio RO/EN si specialitati RO/EN complete;
+   - portrete reale premium;
+   - Health Center cat mai aproape de 100%.
+
 ### Sesiunea 15 (27-28 Aprilie 2026) — Audit P0/P1 local, stabilizare pre-live
 
 Audit dur al starii reale dupa Sesiunile 13-14. Site-ul este live, dar regula operationala ramane: orice schimbare se valideaza local inainte de update live.

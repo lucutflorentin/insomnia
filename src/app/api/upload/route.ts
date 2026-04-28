@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 import sharp from 'sharp';
-import { BOOKING_CONFIG } from '@/lib/constants';
+import { GALLERY_UPLOAD_CONFIG } from '@/lib/constants';
 import { verifyRole } from '@/lib/auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 const UPLOAD_LIMIT = { max: 20, windowSec: 60 };
 const MAX_IMAGE_DIMENSION = 8000;
+const MAX_UPLOAD_MB = Math.round(GALLERY_UPLOAD_CONFIG.maxFileSize / 1024 / 1024);
 
 // Magic bytes signatures for allowed image types
 const MAGIC_BYTES: Record<string, number[][]> = {
@@ -24,10 +25,57 @@ function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
   );
 }
 
+function uploadErrorResponse(error: unknown) {
+  const message = error instanceof Error ? error.message : '';
+  const normalizedMessage = message.toLowerCase();
+
+  if (
+    normalizedMessage.includes('authentication') ||
+    normalizedMessage.includes('access token') ||
+    normalizedMessage.includes('permissions')
+  ) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' },
+      { status: 401 },
+    );
+  }
+
+  if (!process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN.trim() === '') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Image storage is not configured. Please set BLOB_READ_WRITE_TOKEN.',
+        code: 'STORAGE_NOT_CONFIGURED',
+      },
+      { status: 503 },
+    );
+  }
+
+  if (normalizedMessage.includes('blob')) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Image storage rejected the upload. Please check Vercel Blob configuration.',
+        code: 'STORAGE_UPLOAD_FAILED',
+      },
+      { status: 502 },
+    );
+  }
+
+  return NextResponse.json(
+    { success: false, error: 'Upload failed. Please try again.', code: 'UPLOAD_FAILED' },
+    { status: 500 },
+  );
+}
+
 // POST /api/upload — Upload image with processing (SUPER_ADMIN or ARTIST only)
 export async function POST(request: NextRequest) {
   try {
     await verifyRole(request, ['SUPER_ADMIN', 'ARTIST']);
+
+    if (!process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN.trim() === '') {
+      return uploadErrorResponse(new Error('BLOB_READ_WRITE_TOKEN is missing'));
+    }
 
     // Rate limit
     const ip = getClientIp(request);
@@ -50,7 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate MIME type
-    if (!(BOOKING_CONFIG.allowedFileTypes as readonly string[]).includes(file.type)) {
+    if (!(GALLERY_UPLOAD_CONFIG.allowedFileTypes as readonly string[]).includes(file.type)) {
       return NextResponse.json(
         { success: false, error: 'Invalid file type. Allowed: JPEG, PNG, WebP' },
         { status: 400 },
@@ -58,9 +106,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file size
-    if (file.size > BOOKING_CONFIG.maxFileSize) {
+    if (file.size > GALLERY_UPLOAD_CONFIG.maxFileSize) {
       return NextResponse.json(
-        { success: false, error: 'File too large. Maximum 5MB.' },
+        { success: false, error: `File too large. Maximum ${MAX_UPLOAD_MB}MB.` },
         { status: 400 },
       );
     }
@@ -134,9 +182,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error('Upload error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Upload failed. Please try again.' },
-      { status: 500 },
-    );
+    return uploadErrorResponse(error);
   }
 }

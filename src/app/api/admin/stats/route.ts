@@ -24,6 +24,11 @@ export async function GET(request: NextRequest) {
       recentReviews,
       bookingsPerArtist,
       styleCounts,
+      activeArtists,
+      visibleGalleryItems,
+      galleryMissingMetadata,
+      featuredGalleryItems,
+      inactiveUsers,
     ] = await Promise.all([
       // New bookings
       prisma.booking.count({ where: { status: 'new' } }),
@@ -86,6 +91,42 @@ export async function GET(request: NextRequest) {
         _count: { id: true },
         where: { stylePreference: { not: null } },
       }),
+      prisma.artist.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          name: true,
+          bioRo: true,
+          bioEn: true,
+          specialtyRo: true,
+          specialtyEn: true,
+          profileImage: true,
+          instagramUrl: true,
+          tiktokUrl: true,
+          gallery: {
+            select: {
+              isVisible: true,
+              isFeatured: true,
+              titleRo: true,
+              titleEn: true,
+              style: true,
+              bodyArea: true,
+            },
+          },
+        },
+      }),
+      prisma.galleryItem.count({ where: { isVisible: true } }),
+      prisma.galleryItem.count({
+        where: {
+          OR: [
+            { style: null },
+            { bodyArea: null },
+            { AND: [{ titleRo: null }, { titleEn: null }] },
+          ],
+        },
+      }),
+      prisma.galleryItem.count({ where: { isFeatured: true, isVisible: true } }),
+      prisma.user.count({ where: { isActive: false } }),
     ]);
 
     // Monthly trend (last 6 months) — separate query for clean types
@@ -126,6 +167,48 @@ export async function GET(request: NextRequest) {
       const monthIdx = (now.getMonth() - 5 + i + 12) % 12;
       return { month: monthNames[monthIdx], bookings: count };
     });
+    const storageConfigured = Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
+    const smtpConfigured = Boolean(
+      process.env.SMTP_HOST?.trim() &&
+        process.env.SMTP_USER?.trim() &&
+        process.env.SMTP_PASS?.trim(),
+    );
+    const sentryConfigured = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN?.trim());
+    const cronConfigured = Boolean(process.env.CRON_SECRET?.trim());
+    const artistsNeedingAttention = activeArtists
+      .map((artist) => {
+        const visibleWorks = artist.gallery.filter((item) => item.isVisible).length;
+        const featuredWorks = artist.gallery.filter((item) => item.isVisible && item.isFeatured).length;
+        const missingProfile =
+          !artist.profileImage ||
+          !artist.bioRo ||
+          !artist.bioEn ||
+          !artist.specialtyRo ||
+          !artist.specialtyEn ||
+          (!artist.instagramUrl && !artist.tiktokUrl);
+        const missingPortfolio = visibleWorks < 12 || featuredWorks < 4;
+
+        return {
+          id: artist.id,
+          name: artist.name,
+          visibleWorks,
+          featuredWorks,
+          missingProfile,
+          missingPortfolio,
+        };
+      })
+      .filter((artist) => artist.missingProfile || artist.missingPortfolio);
+    const healthChecks = [
+      { key: 'storage', ok: storageConfigured },
+      { key: 'email', ok: smtpConfigured },
+      { key: 'sentry', ok: sentryConfigured },
+      { key: 'cron', ok: cronConfigured },
+      { key: 'gallery', ok: visibleGalleryItems >= activeArtists.length * 12 && activeArtists.length > 0 },
+      { key: 'metadata', ok: galleryMissingMetadata === 0 },
+    ];
+    const healthScore = Math.round(
+      (healthChecks.filter((check) => check.ok).length / healthChecks.length) * 100,
+    );
 
     return NextResponse.json({
       success: true,
@@ -169,6 +252,15 @@ export async function GET(request: NextRequest) {
           rating: r.rating,
           text: r.reviewTextRo || r.reviewTextEn || '',
         })),
+        health: {
+          score: healthScore,
+          checks: healthChecks,
+          visibleGalleryItems,
+          featuredGalleryItems,
+          galleryMissingMetadata,
+          inactiveUsers,
+          artistsNeedingAttention,
+        },
       },
     });
   } catch {

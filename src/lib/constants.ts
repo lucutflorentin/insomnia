@@ -34,6 +34,11 @@ export const BOOKING_CONFIG = {
   advanceDays: 30,
 } as const;
 
+export const GALLERY_UPLOAD_CONFIG = {
+  maxFileSize: 15 * 1024 * 1024, // 15MB, friendlier for modern phone photos
+  allowedFileTypes: BOOKING_CONFIG.allowedFileTypes,
+} as const;
+
 export const BODY_AREAS = [
   'arm',
   'forearm',

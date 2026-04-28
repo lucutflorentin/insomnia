@@ -19,6 +19,9 @@ import {
   Clock,
   RefreshCw,
   ArrowRight,
+  AlertTriangle,
+  Server,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -59,6 +62,22 @@ interface DashboardData {
     rating: number;
     text: string;
   }[];
+  health: {
+    score: number;
+    checks: { key: string; ok: boolean }[];
+    visibleGalleryItems: number;
+    featuredGalleryItems: number;
+    galleryMissingMetadata: number;
+    inactiveUsers: number;
+    artistsNeedingAttention: {
+      id: number;
+      name: string;
+      visibleWorks: number;
+      featuredWorks: number;
+      missingProfile: boolean;
+      missingPortfolio: boolean;
+    }[];
+  };
 }
 
 const PIE_COLORS = ['#60A5FA', '#34D399', '#FBBF24', '#F87171', '#A78BFA', '#F472B6', '#38BDF8', '#4ADE80'];
@@ -192,6 +211,77 @@ export default function AdminDashboardPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* Health Center */}
+      <div className="rounded-xl border border-border bg-bg-secondary p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-medium text-text-primary">
+              <Server className="h-5 w-5 text-accent" />
+              {t('healthCenter')}
+            </h2>
+            <p className="mt-1 text-sm text-text-muted">{t('healthCenterDesc')}</p>
+          </div>
+          <div className="rounded-lg bg-bg-tertiary px-4 py-3 text-right">
+            <p className="text-2xl font-bold text-text-primary">{data.health.score}%</p>
+            <p className="text-xs text-text-muted">{t('launchReadiness')}</p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {data.health.checks.map((check) => (
+            <div key={check.key} className="flex items-center gap-3 rounded-lg bg-bg-tertiary p-3">
+              {check.ok ? (
+                <ShieldCheck className="h-5 w-5 text-green-400" />
+              ) : (
+                <AlertTriangle className="h-5 w-5 text-yellow-400" />
+              )}
+              <div>
+                <p className="text-sm font-medium text-text-primary">
+                  {t(`healthChecks.${check.key}`)}
+                </p>
+                <p className="text-xs text-text-muted">
+                  {check.ok ? t('healthOk') : t('healthNeedsWork')}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-4">
+          {[
+            { label: t('healthMetrics.visibleGallery'), value: data.health.visibleGalleryItems },
+            { label: t('healthMetrics.featuredGallery'), value: data.health.featuredGalleryItems },
+            { label: t('healthMetrics.missingMetadata'), value: data.health.galleryMissingMetadata },
+            { label: t('healthMetrics.inactiveUsers'), value: data.health.inactiveUsers },
+          ].map((metric) => (
+            <div key={metric.label} className="rounded-lg bg-bg-tertiary p-3">
+              <p className="text-xl font-semibold text-text-primary">{metric.value}</p>
+              <p className="text-xs text-text-muted">{metric.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {data.health.artistsNeedingAttention.length > 0 && (
+          <div className="mt-5 rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-4">
+            <p className="mb-3 text-sm font-medium text-yellow-300">{t('artistsNeedAttention')}</p>
+            <div className="grid gap-2 md:grid-cols-2">
+              {data.health.artistsNeedingAttention.map((artist) => (
+                <Link
+                  key={artist.id}
+                  href="/admin/artists"
+                  className="flex items-center justify-between rounded-sm bg-bg-primary px-3 py-2 text-sm transition-colors hover:bg-bg-tertiary"
+                >
+                  <span className="text-text-primary">{artist.name}</span>
+                  <span className="text-xs text-text-muted">
+                    {artist.visibleWorks} / {artist.featuredWorks}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Charts */}

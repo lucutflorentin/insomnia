@@ -3,7 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
-import { CalendarDays, Users, Star, MessageSquare } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
+import {
+  AlertTriangle,
+  ArrowRight,
+  CalendarDays,
+  CheckCircle,
+  ImageIcon,
+  MessageSquare,
+  Star,
+  Users,
+} from 'lucide-react';
 import PushToggle from '@/components/ui/PushToggle';
 
 interface Stats {
@@ -29,6 +39,19 @@ interface Stats {
     createdAt: string;
     user: { name: string } | null;
   }[];
+  portfolio: {
+    slug: string;
+    readinessScore: number;
+    visibleWorks: number;
+    featuredWorks: number;
+    totalWorks: number;
+    worksMissingMetadata: number;
+    checklist: {
+      key: string;
+      done: boolean;
+      href: '/artist/profile' | '/artist/gallery';
+    }[];
+  };
 }
 
 const statusColors: Record<string, string> = {
@@ -105,6 +128,62 @@ export default function ArtistDashboardPage() {
           );
         })}
       </div>
+
+      {stats?.portfolio && (
+        <div className="mt-8 rounded-sm border border-border bg-bg-secondary p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h2 className="font-heading text-lg text-text-primary">{t('portfolioHealth')}</h2>
+              <p className="mt-1 text-sm text-text-muted">{t('portfolioHealthHint')}</p>
+            </div>
+            <div className="flex items-center gap-3 rounded-sm bg-bg-tertiary px-4 py-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-accent/10 text-accent">
+                <ImageIcon className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold text-text-primary">
+                  {stats.portfolio.readinessScore}%
+                </p>
+                <p className="text-xs text-text-muted">{t('readyForPublic')}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-4">
+            {[
+              { label: t('portfolioStats.visible'), value: stats.portfolio.visibleWorks },
+              { label: t('portfolioStats.featured'), value: stats.portfolio.featuredWorks },
+              { label: t('portfolioStats.total'), value: stats.portfolio.totalWorks },
+              { label: t('portfolioStats.missing'), value: stats.portfolio.worksMissingMetadata },
+            ].map((item) => (
+              <div key={item.label} className="rounded-sm bg-bg-tertiary p-3">
+                <p className="text-xl font-semibold text-text-primary">{item.value}</p>
+                <p className="text-xs text-text-muted">{item.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 grid gap-2 md:grid-cols-2">
+            {stats.portfolio.checklist.map((item) => (
+              <Link
+                key={item.key}
+                href={item.href}
+                className="flex items-center justify-between rounded-sm bg-bg-tertiary px-3 py-2 transition-colors hover:bg-bg-primary"
+              >
+                <span className="flex items-center gap-2 text-sm text-text-secondary">
+                  {item.done ? (
+                    <CheckCircle className="h-4 w-4 text-green-400" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4 text-yellow-400" />
+                  )}
+                  {t(`checklist.${item.key}`)}
+                </span>
+                <ArrowRight className="h-4 w-4 text-text-muted" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Two columns: upcoming bookings + recent reviews */}
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
