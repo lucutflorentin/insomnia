@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
@@ -89,12 +90,13 @@ export default function GalleryHighlight({ items }: GalleryHighlightProps) {
                   style={{ paddingBottom: `${(item.aspectRatio || 1) * 100}%` }}
                   className="relative"
                 >
-                  {'imagePath' in item && item.imagePath ? (
-                    <img
-                      src={('thumbnailPath' in item && item.thumbnailPath) || item.imagePath}
+                  {item.imagePath ? (
+                    <Image
+                      src={item.thumbnailPath || item.imagePath}
                       alt={`Tatuaj ${item.style} de ${item.artist} — Insomnia Tattoo`}
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
+                      fill
+                      sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-bg-tertiary to-bg-secondary">

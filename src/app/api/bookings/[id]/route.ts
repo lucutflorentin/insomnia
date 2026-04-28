@@ -6,6 +6,7 @@ import { sendBookingStatusUpdateEmail } from '@/lib/email';
 import { logAuditEvent } from '@/lib/audit';
 import { createNotification } from '@/lib/notifications';
 import { sendPushToUser } from '@/lib/push';
+import { formatLocalDateKey } from '@/lib/utils';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -105,7 +106,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         artistName: booking.artist.name,
         referenceCode: booking.referenceCode,
         newStatus: parsed.data.status,
-        consultationDate: booking.consultationDate?.toISOString().split('T')[0],
+        consultationDate: booking.consultationDate
+          ? formatLocalDateKey(booking.consultationDate)
+          : undefined,
         consultationTime: booking.consultationTime || undefined,
         adminNotes: parsed.data.adminNotes || undefined,
         language: (booking.language as 'ro' | 'en') || 'ro',

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -76,11 +77,7 @@ export default function AdminArtistsPage() {
   const [formError, setFormError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    fetchArtists();
-  }, []);
-
-  const fetchArtists = async () => {
+  const fetchArtists = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/artists');
       if (res.ok) {
@@ -93,7 +90,11 @@ export default function AdminArtistsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchArtists();
+  }, [fetchArtists]);
 
   const resetForm = () => {
     setFormName('');
@@ -289,11 +290,15 @@ export default function AdminArtistsPage() {
             >
               <div className="mb-4 flex items-center gap-4">
                 {artist.profileImage ? (
-                  <img
-                    src={artist.profileImage}
-                    alt={artist.name}
-                    className="h-14 w-14 rounded-full object-cover"
-                  />
+                  <div className="relative h-14 w-14 overflow-hidden rounded-full">
+                    <Image
+                      src={artist.profileImage}
+                      alt={artist.name}
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent/20 text-lg font-bold text-accent">
                     {artist.name.charAt(0).toUpperCase()}

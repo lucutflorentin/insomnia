@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
       include: {
         galleryItem: {
           select: {
-            id: true,
             imagePath: true,
             thumbnailPath: true,
             titleRo: true,
@@ -30,12 +29,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: favorites.map((f) => {
-        const { id: _itemId, ...item } = f.galleryItem;
         return {
           id: f.id,
           galleryItemId: f.galleryItemId,
           createdAt: f.createdAt,
-          ...item,
+          ...f.galleryItem,
         };
       }),
     });

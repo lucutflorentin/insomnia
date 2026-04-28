@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/components/ui/Toast';
 import { Upload, Trash2, Eye, EyeOff } from 'lucide-react';
 
 interface GalleryItem {
   id: number;
-  imageUrl: string;
-  captionRo: string | null;
-  captionEn: string | null;
+  imagePath: string;
+  thumbnailPath: string | null;
+  titleRo: string | null;
+  titleEn: string | null;
   isVisible: boolean;
   sortOrder: number;
 }
@@ -50,7 +52,10 @@ export default function ArtistGalleryPage() {
           const createRes = await fetch('/api/gallery', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageUrl: data.data.url }),
+            body: JSON.stringify({
+              imagePath: data.data.imagePath,
+              thumbnailPath: data.data.thumbnailPath,
+            }),
           });
           const createData = await createRes.json();
           if (createData.success) {
@@ -141,11 +146,13 @@ export default function ArtistGalleryPage() {
               key={item.id}
               className="group relative overflow-hidden rounded-sm border border-border bg-bg-secondary"
             >
-              <div className="aspect-square">
-                <img
-                  src={item.imageUrl}
-                  alt={item.captionRo || item.captionEn || ''}
-                  className={`h-full w-full object-cover transition-opacity ${!item.isVisible ? 'opacity-40' : ''}`}
+              <div className="relative aspect-square">
+                <Image
+                  src={item.thumbnailPath || item.imagePath}
+                  alt={item.titleRo || item.titleEn || ''}
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                  className={`object-cover transition-opacity ${!item.isVisible ? 'opacity-40' : ''}`}
                 />
               </div>
               {/* Overlay actions */}

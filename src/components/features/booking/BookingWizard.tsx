@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+import Image from 'next/image';
+import { useLocale, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
@@ -14,6 +15,7 @@ import { BODY_AREAS, SIZE_CATEGORIES, BOOKING_SOURCES, TATTOO_STYLES } from '@/l
 import ImageUpload from '@/components/ui/ImageUpload';
 import { trackEvent } from '@/components/seo/Analytics';
 import { useToast } from '@/components/ui/Toast';
+import { formatLocalDateKey } from '@/lib/utils';
 
 interface DayAvailability {
   date: string;
@@ -28,6 +30,7 @@ export default function BookingWizard() {
   const tAreas = useTranslations('booking.step2.bodyAreas');
   const tSizes = useTranslations('booking.step2.sizes');
   const tSources = useTranslations('booking.step4.sources');
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const preselectedArtist = searchParams.get('artist');
 
@@ -110,7 +113,7 @@ export default function BookingWizard() {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, language: locale }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -350,7 +353,7 @@ export default function BookingWizard() {
                       const avail = availability.find((a) => a.date === dateStr);
                       const isAvailable = avail?.isAvailable ?? false;
                       const isSelected = form.date === dateStr;
-                      const today = new Date().toISOString().split('T')[0];
+                      const today = formatLocalDateKey(new Date());
                       const isPast = dateStr < today;
 
                       cells.push(
@@ -490,8 +493,15 @@ export default function BookingWizard() {
                 <p className="text-xs text-text-muted mb-2">{t('step2.references')}</p>
                 <div className="flex gap-2">
                   {form.referenceImages.map((url) => (
-                    <div key={url} className="h-16 w-16 overflow-hidden rounded-sm border border-border">
-                      <img src={url} alt="" className="h-full w-full object-cover" />
+                    <div key={url} className="relative h-16 w-16 overflow-hidden rounded-sm border border-border">
+                      <Image
+                        src={url}
+                        alt=""
+                        fill
+                        sizes="64px"
+                        unoptimized
+                        className="object-cover"
+                      />
                     </div>
                   ))}
                 </div>
@@ -511,7 +521,23 @@ export default function BookingWizard() {
           <div />
         )}
         {step < TOTAL_STEPS ? (
-          <Button onClick={nextStep} disabled={step === 1 && !form.artist}>
+          <Button
+            onClick={nextStep}
+            disabled={
+              (step === 1 && !form.artist) ||
+              (step === 2 &&
+                (!form.bodyArea ||
+                  !form.size ||
+                  form.description.trim().length < 10 ||
+                  form.artist === 'unsure')) ||
+              (step === 3 && (!form.date || !form.time)) ||
+              (step === 4 &&
+                (!form.name.trim() ||
+                  !form.phone.trim() ||
+                  !form.email.trim() ||
+                  !form.gdpr))
+            }
+          >
             {t('navigation.next')}
           </Button>
         ) : (

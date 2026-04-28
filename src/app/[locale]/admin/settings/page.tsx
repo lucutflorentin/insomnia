@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Settings, Globe, Bell, Search as SearchIcon, Save, SendHorizontal } from 'lucide-react';
+import { Settings, Bell, Search as SearchIcon, Save, SendHorizontal } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';

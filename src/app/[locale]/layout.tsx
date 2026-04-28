@@ -9,7 +9,7 @@ import JsonLd, { getLocalBusinessSchema } from '@/components/seo/JsonLd';
 import Analytics from '@/components/seo/Analytics';
 import CookieConsent from '@/components/ui/CookieConsent';
 import CursorGlow from '@/components/effects/CursorGlow';
-import WhatsAppButton from '@/components/ui/WhatsAppButton';
+import QuickBookButton from '@/components/ui/QuickBookButton';
 import PublicOnlyComponents from '@/components/layout/PublicOnlyComponents';
 import PWAInstallBanner from '@/components/ui/PWAInstallBanner';
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
@@ -110,7 +110,7 @@ export default async function LocaleLayout({
             </PublicOnlyComponents>
             {children}
             <PublicOnlyComponents>
-              <WhatsAppButton />
+              <QuickBookButton />
               <CookieConsent />
               <PWAInstallBanner />
             </PublicOnlyComponents>

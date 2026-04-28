@@ -10,13 +10,38 @@ interface RouteParams {
 // PUT /api/gallery/[id] — Admin: update gallery item
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    await verifyAdminRequest(request);
+    const admin = await verifyAdminRequest(request);
 
     const { id } = await params;
     const body = await request.json();
+    const itemId = parseInt(id);
+    const requestedArtistId = body.artistId ? parseInt(body.artistId) : undefined;
+
+    const existing = await prisma.galleryItem.findUnique({
+      where: { id: itemId },
+      select: { artistId: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: 'Item not found' },
+        { status: 404 },
+      );
+    }
+
+    if (
+      admin.role === 'ARTIST' &&
+      (admin.artistId !== existing.artistId ||
+        (requestedArtistId !== undefined && requestedArtistId !== admin.artistId))
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 403 },
+      );
+    }
 
     const item = await prisma.galleryItem.update({
-      where: { id: parseInt(id) },
+      where: { id: itemId },
       data: {
         titleRo: body.titleRo,
         titleEn: body.titleEn,
@@ -25,7 +50,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         isFeatured: body.isFeatured,
         isVisible: body.isVisible,
         sortOrder: body.sortOrder,
-        ...(body.artistId ? { artistId: parseInt(body.artistId) } : {}),
+        ...(requestedArtistId ? { artistId: requestedArtistId } : {}),
       },
       include: {
         artist: { select: { id: true, name: true, slug: true } },
@@ -44,7 +69,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/gallery/[id] — Admin: delete gallery item and files
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    await verifyAdminRequest(request);
+    const admin = await verifyAdminRequest(request);
 
     const { id } = await params;
     const item = await prisma.galleryItem.findUnique({
@@ -55,6 +80,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         { success: false, error: 'Item not found' },
         { status: 404 },
+      );
+    }
+
+    if (admin.role === 'ARTIST' && admin.artistId !== item.artistId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 403 },
       );
     }
 

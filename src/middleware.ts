@@ -2,6 +2,7 @@ import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import { routing } from './i18n/routing';
+import { matchesPathSection, stripLocale } from './lib/routes';
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -12,23 +13,16 @@ const PUBLIC_AUTH_PATHS = ['/auth/login', '/auth/register'];
 // Admin paths restricted to SUPER_ADMIN only
 const SUPER_ADMIN_ONLY_PATHS = ['/admin/artists', '/admin/settings', '/admin/loyalty', '/admin/reviews', '/admin/users', '/admin/content', '/admin/audit-log'];
 
-function stripLocale(pathname: string): string {
-  return pathname.replace(/^\/(ro|en)/, '') || '/';
-}
-
 function isAdminPath(pathname: string): boolean {
-  const stripped = stripLocale(pathname);
-  return stripped.startsWith('/admin');
+  return matchesPathSection(pathname, '/admin');
 }
 
 function isArtistPath(pathname: string): boolean {
-  const stripped = stripLocale(pathname);
-  return stripped.startsWith('/artist');
+  return matchesPathSection(pathname, '/artist');
 }
 
 function isAccountPath(pathname: string): boolean {
-  const stripped = stripLocale(pathname);
-  return stripped.startsWith('/account');
+  return matchesPathSection(pathname, '/account');
 }
 
 function isPublicAdminPath(pathname: string): boolean {
@@ -42,8 +36,7 @@ function isPublicAuthPath(pathname: string): boolean {
 }
 
 function isSuperAdminOnlyPath(pathname: string): boolean {
-  const stripped = stripLocale(pathname);
-  return SUPER_ADMIN_ONLY_PATHS.some((path) => stripped.startsWith(path));
+  return SUPER_ADMIN_ONLY_PATHS.some((path) => matchesPathSection(pathname, path));
 }
 
 /** Validate redirect target is a safe internal path */

@@ -1,10 +1,59 @@
 # Insomnia Tattoo — Roadmap & Strategie
 
-> Ultima actualizare: 12 Aprilie 2026
+> Ultima actualizare: 28 Aprilie 2026
 
 ---
 
 ## JURNAL TEHNIC — Ce s-a implementat
+
+### Sesiunea 15 (27-28 Aprilie 2026) — Audit P0/P1 local, stabilizare pre-live
+
+Audit dur al starii reale dupa Sesiunile 13-14. Site-ul este live, dar regula operationala ramane: orice schimbare se valideaza local inainte de update live.
+
+#### P0 rezolvat local
+
+- Booking wizard trimite acum contractul corect catre API: `artistSlug`, nu `artistId: 0`.
+- Datele de disponibilitate folosesc calendar local, nu `toISOString().split('T')[0]`, deci nu mai apare drift UTC.
+- QuickBook foloseste traducerile corecte si nu mai expune chei brute `nav.booking`.
+- Permisiunile ARTIST au fost restranse pe disponibilitate, galerie si statistici admin.
+- Placeholder-ele text din `public/images` au fost inlocuite cu fisiere PNG/JPEG valide.
+- Middleware-ul nu mai confunda ruta publica `/artists/...` cu dashboard-ul privat `/artist/...`.
+
+#### P1 rezolvat local
+
+- `npm audit --omit=dev` este la 0 vulnerabilitati.
+- `nodemailer` actualizat la 8.0.7.
+- `postcss` actualizat/fortat la 8.5.12 inclusiv pentru Next.
+- Sentry mutat pe `instrumentation.ts` si `instrumentation-client.ts`; warning-urile vechi au disparut.
+- Lint-ul este curat: 0 erori, 0 warning-uri.
+- Adaugate teste unitare pentru normalizare booking, date locale si rutele public/private.
+- Adaugat smoke script local: `npm run smoke`.
+- Adaugat preflight local: `npm run prelive`.
+- Adaugat baseline Prisma migration in `prisma/migrations/20260428000000_baseline/migration.sql`.
+- Adaugat documentatie migrations in `docs/MIGRATIONS.md`.
+- Adaugat repo hygiene check: `npm run hygiene`.
+- Adaugat audit production check: `npm run audit:prod`.
+- Eliminat din working tree artefacte locale trackuite: `deploy.tar.gz` si `.claude/launch.json`.
+- Adaugat checklist pre-live in `docs/PRELIVE_CHECKLIST.md`.
+- Roadmap actualizat cu statusul P0/P1 si pregatit pentru commit/push GitHub.
+
+#### Verificari trecute local
+
+- `npm run test`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build`
+- `npm run audit:prod`
+- `npm run hygiene`
+- Smoke local pe server production la `127.0.0.1:3010`
+
+#### Ramane critic inainte de nota 9/10
+
+- Inlocuire placeholder images cu portofoliu si portrete reale premium.
+- Prisma baseline este versionat local; in productie trebuie aplicat/rezolvat controlat conform `docs/MIGRATIONS.md`, apoi toate deploy-urile trebuie sa ruleze strict prin migrations.
+- Teste e2e reale pe booking complet, auth, admin gallery si artist dashboard.
+- QA vizual pe mobil/desktop in browser inainte de orice push live.
+- Conectare Sentry production si verificare alerte reale dupa deploy.
 
 ### Sesiunea 12 (12 Aprilie 2026) — Deploy & Configurare Productie
 

@@ -6,7 +6,7 @@ import { availabilityTemplateSchema } from '@/lib/validations';
 // GET /api/availability/templates?artistId=X — Admin
 export async function GET(request: NextRequest) {
   try {
-    await verifyAdminRequest(request);
+    const admin = await verifyAdminRequest(request);
 
     const { searchParams } = new URL(request.url);
     const artistId = parseInt(searchParams.get('artistId') || '0');
@@ -15,6 +15,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'artistId is required' },
         { status: 400 },
+      );
+    }
+
+    if (admin.role === 'ARTIST' && admin.artistId !== artistId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 403 },
       );
     }
 
@@ -35,7 +42,7 @@ export async function GET(request: NextRequest) {
 // POST /api/availability/templates — Admin: upsert weekly template
 export async function POST(request: NextRequest) {
   try {
-    await verifyAdminRequest(request);
+    const admin = await verifyAdminRequest(request);
 
     const body = await request.json();
     const parsed = availabilityTemplateSchema.safeParse(body);
@@ -43,6 +50,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Validation failed', details: parsed.error.flatten() },
         { status: 400 },
+      );
+    }
+
+    if (admin.role === 'ARTIST' && admin.artistId !== parsed.data.artistId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 403 },
       );
     }
 

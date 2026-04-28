@@ -13,7 +13,7 @@ export function sanitizeText(text: string): string {
 
 // Booking form schema
 export const bookingSchema = z.object({
-  artistId: z.number().int().positive(),
+  artistSlug: z.string().min(1).max(100),
   bodyArea: z.enum(BODY_AREAS),
   sizeCategory: z.enum(SIZE_CATEGORIES),
   stylePreference: z.string().max(100).optional(),

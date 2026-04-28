@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getTimeSlots } from '@/lib/utils';
+import { formatLocalDateKey, getTimeSlots, parseLocalDate } from '@/lib/utils';
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -41,8 +41,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Don't show past dates
-    if (startDate < now) {
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (startDate < today) {
+      startDate = today;
     }
 
     // Fetch availability overrides for date range
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Build a map of booked slots: "YYYY-MM-DD" -> Set of times
     const bookedSlots = new Map<string, Set<string>>();
     for (const b of bookings) {
-      const dateKey = b.consultationDate.toISOString().split('T')[0];
+      const dateKey = formatLocalDateKey(b.consultationDate);
       if (!bookedSlots.has(dateKey)) bookedSlots.set(dateKey, new Set());
       bookedSlots.get(dateKey)!.add(b.consultationTime);
     }
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Build override map: "YYYY-MM-DD" -> override
     const overrideMap = new Map<string, typeof overrides[0]>();
     for (const o of overrides) {
-      overrideMap.set(o.date.toISOString().split('T')[0], o);
+      overrideMap.set(formatLocalDateKey(o.date), o);
     }
 
     // Template map: dayOfWeek -> template
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const current = new Date(startDate);
     while (current <= endDate) {
-      const dateKey = current.toISOString().split('T')[0];
+      const dateKey = formatLocalDateKey(current);
       const dayOfWeek = current.getDay(); // 0=Sun, 1=Mon, ...
 
       const override = overrideMap.get(dateKey);
@@ -130,7 +131,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
 
       days.push({ date: dateKey, isAvailable, slots });
-      current.setDate(current.getDate() + 1);
+      const next = parseLocalDate(dateKey);
+      next.setDate(next.getDate() + 1);
+      current.setTime(next.getTime());
     }
 
     return NextResponse.json({ success: true, data: days });

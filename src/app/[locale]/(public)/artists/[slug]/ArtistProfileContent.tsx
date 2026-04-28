@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
@@ -87,10 +88,12 @@ export default function ArtistProfileContent({
             {/* Portrait */}
             <div className="relative h-64 w-64 shrink-0 overflow-hidden rounded-lg border border-border bg-bg-secondary md:h-80 md:w-80">
               {artist.profileImage ? (
-                <img
+                <Image
                   src={artist.profileImage}
                   alt={`${artist.name} — Tattoo Artist la Insomnia Tattoo`}
-                  className="h-full w-full object-cover"
+                  fill
+                  sizes="(min-width: 768px) 320px, 256px"
+                  className="object-cover"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
@@ -198,11 +201,13 @@ export default function ArtistProfileContent({
               {gallery.map((work) => (
                 <StaggerItem key={work.id} className="mb-3 break-inside-avoid">
                   <div className="group relative overflow-hidden rounded-sm bg-bg-secondary">
-                    <img
+                    <Image
                       src={work.thumbnailPath || work.imagePath}
                       alt={work.title || `Tatuaj ${work.style} de ${artist.name} — Insomnia Tattoo`}
-                      className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
+                      width={800}
+                      height={1000}
+                      sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                      className="h-auto w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 flex items-end bg-gradient-to-t from-bg-primary/80 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                       <div className="p-3">

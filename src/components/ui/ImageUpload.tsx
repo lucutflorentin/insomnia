@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
@@ -115,10 +116,13 @@ export default function ImageUpload({
               key={url}
               className="group relative h-20 w-20 overflow-hidden rounded-sm border border-border bg-bg-secondary"
             >
-              <img
+              <Image
                 src={url}
                 alt={`Reference ${index + 1}`}
-                className="h-full w-full object-cover"
+                fill
+                sizes="80px"
+                unoptimized
+                className="object-cover"
               />
               <button
                 type="button"

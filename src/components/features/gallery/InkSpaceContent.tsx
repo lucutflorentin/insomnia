@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
@@ -116,11 +117,12 @@ function ArtistPortfolioSection({
                 className="relative"
               >
                 {work.imagePath ? (
-                  <img
+                  <Image
                     src={work.thumbnailPath || work.imagePath}
                     alt={work.titleRo || work.titleEn || `Tatuaj ${work.style} de ${artist.name} — Insomnia Tattoo`}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
+                    fill
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-bg-tertiary to-bg-secondary transition-transform duration-300 group-hover:scale-105">

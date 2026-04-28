@@ -17,10 +17,13 @@
 
 # production
 /build
+*.tar.gz
 
 # misc
 .DS_Store
 *.pem
+backup-*.sql
+.claude/
 
 # debug
 npm-debug.log*
@@ -42,8 +45,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma
-prisma/migrations/
+# prisma migrations are deploy history and should be committed when generated
 
 # uploads
 public/uploads/*

@@ -127,6 +127,7 @@ export async function POST(request: NextRequest) {
         data: {
           imagePath: mainBlob.url,
           thumbnailPath: thumbBlob.url,
+          url: mainBlob.url,
         },
       },
       { status: 201 },

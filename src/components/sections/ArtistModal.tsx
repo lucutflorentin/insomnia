@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { Link } from '@/i18n/navigation';
@@ -29,7 +30,7 @@ interface ArtistModalProps {
   onBooking: (artistSlug: string) => void;
 }
 
-function ParallaxPortrait({ image: _image, name }: { image: string; name: string }) {
+function ParallaxPortrait({ image, name }: { image: string; name: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -99,11 +100,21 @@ function ParallaxPortrait({ image: _image, name }: { image: string; name: string
         transition={{ type: 'spring', stiffness: 100, damping: 30 }}
         className="relative flex h-full items-end justify-center"
       >
-        {/* Placeholder portrait — replace with actual PNG cutout */}
         <div className="relative h-[85%] w-[70%] max-w-[300px]">
-          <div className="h-full w-full rounded-t-full bg-gradient-to-t from-border/30 via-bg-secondary to-bg-tertiary flex items-center justify-center">
-            <span className="font-heading text-8xl text-border/50">{name[0]}</span>
-          </div>
+          {image ? (
+            <Image
+              src={image}
+              alt={`${name} — Tattoo Artist la Insomnia Tattoo`}
+              fill
+              sizes="300px"
+              className="rounded-t-full object-cover object-top"
+              priority
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center rounded-t-full bg-gradient-to-t from-border/30 via-bg-secondary to-bg-tertiary">
+              <span className="font-heading text-8xl text-border/50">{name[0]}</span>
+            </div>
+          )}
           {/* Bottom gradient fade */}
           <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-bg-primary to-transparent" />
         </div>
@@ -248,13 +259,15 @@ export default function ArtistModal({
                   {artist.featuredWorks.map((work) => (
                     <div
                       key={work.id}
-                      className="group aspect-square overflow-hidden rounded-sm bg-bg-secondary"
+                      className="group relative aspect-square overflow-hidden rounded-sm bg-bg-secondary"
                     >
                       {work.src ? (
-                        <img
+                        <Image
                           src={work.src}
                           alt={locale === 'ro' ? (work.titleRo || '') : (work.titleEn || '')}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          fill
+                          sizes="(min-width: 640px) 25vw, 33vw"
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-bg-tertiary to-bg-secondary transition-transform duration-300 group-hover:scale-105">

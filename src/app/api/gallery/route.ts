@@ -27,23 +27,34 @@ export async function GET(request: NextRequest) {
 
     // Check if request is from admin
     const user = await getCurrentUser(request);
-    const isAdmin = user && (user.role === 'SUPER_ADMIN' || user.role === 'ARTIST');
+    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+    const isArtist = user?.role === 'ARTIST' && typeof user.artistId === 'number';
 
     const where: Record<string, unknown> = {};
 
-    // Public users only see visible items
-    if (!isAdmin) {
-      where.isVisible = true;
+    let requestedArtistId: number | undefined;
+    if (artistId) {
+      requestedArtistId = parseInt(artistId);
+    } else if (artistSlug) {
+      const artist = await prisma.artist.findUnique({
+        where: { slug: artistSlug },
+        select: { id: true },
+      });
+      requestedArtistId = artist?.id ?? -1;
     }
 
-    // Filter by artistId (integer) or artist slug
-    if (artistId) {
-      where.artistId = parseInt(artistId);
-    } else if (artistSlug) {
-      const artist = await prisma.artist.findUnique({ where: { slug: artistSlug } });
-      if (artist) {
-        where.artistId = artist.id;
+    if (isSuperAdmin) {
+      if (requestedArtistId !== undefined) where.artistId = requestedArtistId;
+    } else if (isArtist) {
+      if (requestedArtistId === undefined || requestedArtistId === user.artistId) {
+        where.artistId = user.artistId;
+      } else {
+        where.artistId = requestedArtistId;
+        where.isVisible = true;
       }
+    } else {
+      if (requestedArtistId !== undefined) where.artistId = requestedArtistId;
+      where.isVisible = true;
     }
 
     if (style) where.style = style;
@@ -84,14 +95,34 @@ export async function GET(request: NextRequest) {
 // POST /api/gallery — Admin: create gallery item
 export async function POST(request: NextRequest) {
   try {
-    await verifyAdminRequest(request);
+    const admin = await verifyAdminRequest(request);
 
     const body = await request.json();
-    const parsed = galleryItemSchema.safeParse(body);
+    const normalized = {
+      ...body,
+      artistId: body.artistId ?? admin.artistId,
+      imagePath: body.imagePath ?? body.imageUrl,
+      thumbnailPath: body.thumbnailPath ?? body.thumbnailUrl,
+    };
+    const parsed = galleryItemSchema.safeParse(normalized);
     if (!parsed.success) {
       return NextResponse.json(
         { success: false, error: 'Validation failed', details: parsed.error.flatten() },
         { status: 400 },
+      );
+    }
+
+    if (!parsed.data.artistId) {
+      return NextResponse.json(
+        { success: false, error: 'artistId is required' },
+        { status: 400 },
+      );
+    }
+
+    if (admin.role === 'ARTIST' && admin.artistId !== parsed.data.artistId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 403 },
       );
     }
 

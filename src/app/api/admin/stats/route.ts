@@ -4,7 +4,7 @@ import { verifyRole } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    await verifyRole(request, ['SUPER_ADMIN', 'ARTIST']);
+    await verifyRole(request, ['SUPER_ADMIN']);
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);

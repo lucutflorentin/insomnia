@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
@@ -95,11 +96,13 @@ export default function ArtistProfilePage() {
       {/* Profile image preview */}
       {profile?.profileImage && (
         <div className="mb-6 flex items-center gap-4">
-          <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-accent/30">
-            <img
+          <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-accent/30">
+            <Image
               src={profile.profileImage}
               alt={profile.name}
-              className="h-full w-full object-cover"
+              fill
+              sizes="80px"
+              className="object-cover"
             />
           </div>
           <div>

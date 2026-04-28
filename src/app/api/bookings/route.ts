@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { generateReferenceCode } from '@/lib/utils';
-import { bookingSchema, quickBookingSchema, sanitizeText } from '@/lib/validations';
+import { generateReferenceCode, parseLocalDate } from '@/lib/utils';
+import { normalizeBookingRequestBody } from '@/lib/booking';
+import { sanitizeText } from '@/lib/validations';
 import { sendBookingConfirmation, sendBookingNotification } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { sendPushToUser } from '@/lib/push';
@@ -25,79 +26,31 @@ export async function POST(request: NextRequest) {
     // Check if user is authenticated (for clientId linkage)
     const currentUser = await getCurrentUser(request);
 
-    // Detect which form sent this (BookingModal vs BookingWizard)
-    const isQuickForm = 'artistSlug' in body || body.source === 'quick_form';
-
-    let artistSlug: string;
-    let clientName: string;
-    let clientPhone: string;
-    let clientEmail: string;
-    let gdprConsent: boolean;
-    let description: string | undefined;
-    let bodyArea: string | undefined;
-    let sizeCategory: string;
-    let stylePreference: string | undefined;
-    let consultationDate: string | undefined;
-    let consultationTime: string | undefined;
-    let source: string;
-    let language: string;
-
-    if (isQuickForm) {
-      const parsed = quickBookingSchema.safeParse(body);
-      if (!parsed.success) {
-        return NextResponse.json(
-          { success: false, error: 'Validation failed', details: parsed.error.flatten() },
-          { status: 400 },
-        );
-      }
-      artistSlug = parsed.data.artistSlug;
-      clientName = parsed.data.clientName;
-      clientPhone = parsed.data.clientPhone;
-      clientEmail = parsed.data.clientEmail;
-      gdprConsent = parsed.data.gdprConsent;
-      description = parsed.data.description;
-      source = parsed.data.source || 'quick_form';
-      language = parsed.data.language;
-      sizeCategory = 'medium';
-    } else {
-      const normalized = {
-        artistId: 0,
-        clientName: body.name,
-        clientPhone: body.phone,
-        clientEmail: body.email,
-        bodyArea: body.bodyArea,
-        sizeCategory: body.size,
-        stylePreference: body.style,
-        description: body.description,
-        consultationDate: body.date,
-        consultationTime: body.time,
-        gdprConsent: body.gdpr,
-        source: body.source,
-        language: body.language || 'ro',
-      };
-
-      const parsed = bookingSchema.safeParse(normalized);
-      if (!parsed.success) {
-        return NextResponse.json(
-          { success: false, error: 'Validation failed', details: parsed.error.flatten() },
-          { status: 400 },
-        );
-      }
-
-      artistSlug = body.artist;
-      clientName = parsed.data.clientName;
-      clientPhone = parsed.data.clientPhone;
-      clientEmail = parsed.data.clientEmail;
-      gdprConsent = parsed.data.gdprConsent;
-      description = parsed.data.description;
-      bodyArea = parsed.data.bodyArea;
-      sizeCategory = parsed.data.sizeCategory;
-      stylePreference = parsed.data.stylePreference;
-      consultationDate = parsed.data.consultationDate;
-      consultationTime = parsed.data.consultationTime;
-      source = parsed.data.source || 'website';
-      language = parsed.data.language;
+    const parsedBooking = normalizeBookingRequestBody(body);
+    if (!parsedBooking.success) {
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details: parsedBooking.error.flatten() },
+        { status: 400 },
+      );
     }
+
+    const {
+      artistSlug,
+      clientPhone,
+      clientEmail,
+      gdprConsent,
+      bodyArea,
+      sizeCategory,
+      consultationDate,
+      consultationTime,
+      source,
+      language,
+    } = parsedBooking.data;
+    let {
+      clientName,
+      description,
+      stylePreference,
+    } = parsedBooking.data;
 
     // Sanitize all free-text fields
     clientName = sanitizeText(clientName);
@@ -131,7 +84,7 @@ export async function POST(request: NextRequest) {
         const existingBooking = await tx.booking.findFirst({
           where: {
             artistId: artist.id,
-            consultationDate: new Date(consultationDate),
+            consultationDate: parseLocalDate(consultationDate),
             consultationTime,
             status: { notIn: ['cancelled', 'no_show'] },
           },
@@ -155,7 +108,7 @@ export async function POST(request: NextRequest) {
           stylePreference: stylePreference || null,
           description: description || null,
           consultationDate: consultationDate
-            ? new Date(consultationDate)
+            ? parseLocalDate(consultationDate)
             : new Date(),
           consultationTime: consultationTime || '00:00',
           source,

@@ -82,7 +82,11 @@ const nextConfig: NextConfig = {
 const sentryConfig = withSentryConfig(withNextIntl(nextConfig), {
   // Only upload source maps when SENTRY_AUTH_TOKEN is set
   silent: !process.env.SENTRY_AUTH_TOKEN,
-  disableLogger: true,
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
 });
 
 export default sentryConfig;

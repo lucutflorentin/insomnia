@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import {
   Star,
@@ -616,12 +617,13 @@ export default function AdminGalleryPage() {
                 </div>
 
                 {/* Image (click to open lightbox) */}
-                <div className="aspect-square cursor-pointer" onClick={() => setLightboxIndex(index)}>
-                  <img
+                <div className="relative aspect-square cursor-pointer" onClick={() => setLightboxIndex(index)}>
+                  <Image
                     src={item.thumbnailPath || item.imagePath}
                     alt={item.titleRo || ''}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
+                    fill
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
 
@@ -723,11 +725,13 @@ export default function AdminGalleryPage() {
         {editItem && (
           <div className="space-y-4">
             {/* Image preview in edit */}
-            <div className="overflow-hidden rounded-sm">
-              <img
+            <div className="relative h-40 overflow-hidden rounded-sm">
+              <Image
                 src={editItem.thumbnailPath || editItem.imagePath}
                 alt={editItem.titleRo || ''}
-                className="h-40 w-full object-cover"
+                fill
+                sizes="(min-width: 768px) 512px, 100vw"
+                className="object-cover"
               />
             </div>
 
