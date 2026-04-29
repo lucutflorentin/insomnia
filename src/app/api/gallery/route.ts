@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminRequest, getCurrentUser } from '@/lib/auth';
+import { normalizeStyleKey } from '@/lib/gallery-style';
 import { galleryItemSchema } from '@/lib/validations';
 import { checkRateLimit, getClientIp, PUBLIC_READ_LIMIT } from '@/lib/rate-limit';
 
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
       where.isVisible = true;
     }
 
-    if (style) where.style = style;
+    if (style) where.style = normalizeStyleKey(style);
     if (featured === 'true') where.isFeatured = true;
 
     const [items, total] = await Promise.all([
@@ -75,7 +76,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: items,
+      data: items.map((item) => ({
+        ...item,
+        style: normalizeStyleKey(item.style) || item.style,
+      })),
       pagination: {
         page,
         limit,
@@ -103,6 +107,7 @@ export async function POST(request: NextRequest) {
       artistId: body.artistId ?? admin.artistId,
       imagePath: body.imagePath ?? body.imageUrl,
       thumbnailPath: body.thumbnailPath ?? body.thumbnailUrl,
+      style: normalizeStyleKey(body.style) || undefined,
     };
     const parsed = galleryItemSchema.safeParse(normalized);
     if (!parsed.success) {

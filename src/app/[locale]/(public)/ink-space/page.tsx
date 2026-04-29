@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import InkSpaceContent from '@/components/features/gallery/InkSpaceContent';
 import type { ArtistSection } from '@/components/features/gallery/InkSpaceContent';
+import { normalizeStyleKey } from '@/lib/gallery-style';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -38,6 +39,9 @@ export default async function InkSpacePage({
       include: {
         gallery: {
           where: { isVisible: true },
+          include: {
+            _count: { select: { favorites: true } },
+          },
           orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
         },
       },
@@ -45,7 +49,13 @@ export default async function InkSpacePage({
     });
 
     sections = artists.map((artist) => {
-      const styles = [...new Set(artist.gallery.map((g) => g.style).filter(Boolean))] as string[];
+      const styles = [
+        ...new Set(
+          artist.gallery
+            .map((g) => normalizeStyleKey(g.style))
+            .filter(Boolean),
+        ),
+      ];
 
       return {
         slug: artist.slug,
@@ -54,12 +64,13 @@ export default async function InkSpacePage({
         filters: ['all', ...styles],
         works: artist.gallery.map((g) => ({
           id: g.id,
-          style: g.style || '',
+          style: normalizeStyleKey(g.style),
           imagePath: g.imagePath,
           thumbnailPath: g.thumbnailPath || '',
           titleRo: g.titleRo,
           titleEn: g.titleEn,
           aspectRatio: 1,
+          favoriteCount: g._count.favorites,
         })),
         profileImage: artist.profileImage,
       };

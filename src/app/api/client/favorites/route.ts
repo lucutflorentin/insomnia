@@ -2,10 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAuthRequest } from '@/lib/auth';
 
+function ensureClientRole(role: string) {
+  if (role !== 'CLIENT') {
+    throw new Error('Only registered clients can manage favorites');
+  }
+}
+
+async function getFavoriteCount(galleryItemId: number) {
+  return prisma.favorite.count({ where: { galleryItemId } });
+}
+
 // GET /api/client/favorites — Get current user's favorites
 export async function GET(request: NextRequest) {
   try {
     const payload = await verifyAuthRequest(request);
+    ensureClientRole(payload.role);
     const userId = Number(payload.sub);
 
     const favorites = await prisma.favorite.findMany({
@@ -49,10 +60,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const payload = await verifyAuthRequest(request);
+    ensureClientRole(payload.role);
     const userId = Number(payload.sub);
 
-    const body = await request.json();
-    const galleryItemId = Number(body.galleryItemId);
+    const body = await request.json().catch(() => null);
+    const galleryItemId = Number(body?.galleryItemId);
 
     if (!galleryItemId || isNaN(galleryItemId)) {
       return NextResponse.json(
@@ -78,8 +90,19 @@ export async function POST(request: NextRequest) {
       create: { userId, galleryItemId },
     });
 
-    return NextResponse.json({ success: true, data: favorite }, { status: 201 });
-  } catch {
+    const favoriteCount = await getFavoriteCount(galleryItemId);
+
+    return NextResponse.json(
+      { success: true, data: { ...favorite, favoriteCount } },
+      { status: 201 },
+    );
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Only registered clients')) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 403 },
+      );
+    }
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 401 },
@@ -91,6 +114,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const payload = await verifyAuthRequest(request);
+    ensureClientRole(payload.role);
     const userId = Number(payload.sub);
 
     const { searchParams } = new URL(request.url);
@@ -107,8 +131,16 @@ export async function DELETE(request: NextRequest) {
       where: { userId, galleryItemId },
     });
 
-    return NextResponse.json({ success: true });
-  } catch {
+    const favoriteCount = await getFavoriteCount(galleryItemId);
+
+    return NextResponse.json({ success: true, data: { galleryItemId, favoriteCount } });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Only registered clients')) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 403 },
+      );
+    }
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 401 },

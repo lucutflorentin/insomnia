@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminRequest } from '@/lib/auth';
+import { normalizeStyleKey } from '@/lib/gallery-style';
 import { del } from '@vercel/blob';
 
 interface RouteParams {
@@ -45,7 +46,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       data: {
         titleRo: body.titleRo,
         titleEn: body.titleEn,
-        style: body.style,
+        style: normalizeStyleKey(body.style) || null,
         bodyArea: body.bodyArea,
         isFeatured: body.isFeatured,
         isVisible: body.isVisible,

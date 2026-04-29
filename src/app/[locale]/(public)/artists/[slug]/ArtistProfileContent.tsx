@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import SlideUp from '@/components/animations/SlideUp';
 import StaggerChildren, { StaggerItem } from '@/components/animations/StaggerChildren';
+import { formatStyleLabel, normalizeStyleKey } from '@/lib/gallery-style';
 
 interface Artist {
   id: number;
@@ -90,6 +91,16 @@ export default function ArtistProfileContent({
       })),
     [artist.name, gallery],
   );
+  const getStyleLabel = (style: string) => {
+    const key = normalizeStyleKey(style);
+    if (!key) return formatStyleLabel(style);
+
+    try {
+      return tStyles(key);
+    } catch {
+      return formatStyleLabel(style);
+    }
+  };
 
   return (
     <div className="pt-24 pb-16">
@@ -143,7 +154,7 @@ export default function ArtistProfileContent({
                 <div className="mt-4 flex flex-wrap justify-center gap-2 md:justify-start">
                   {artist.specialties.map((style) => (
                     <Badge key={style} variant="outline">
-                      {tStyles(style)}
+                      {getStyleLabel(style)}
                     </Badge>
                   ))}
                 </div>
@@ -235,7 +246,7 @@ export default function ArtistProfileContent({
                         {work.title && <p className="text-xs text-text-primary">{work.title}</p>}
                         {work.style && (
                           <Badge variant="accent" className="mt-1 text-[10px]">
-                            {tStyles(work.style)}
+                            {getStyleLabel(work.style)}
                           </Badge>
                         )}
                       </div>

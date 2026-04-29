@@ -86,6 +86,7 @@ export default function GalleryHighlight({ items = [] }: GalleryHighlightProps) 
 
         {filteredItems.length > 0 ? (
           <StaggerChildren
+            key={activeArtist}
             staggerDelay={0.06}
             className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
           >

@@ -24,6 +24,7 @@ import Modal from '@/components/ui/Modal';
 import Select from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { BODY_AREAS, GALLERY_UPLOAD_CONFIG, TATTOO_STYLES } from '@/lib/constants';
+import { normalizeStyleKey } from '@/lib/gallery-style';
 
 interface GalleryItem {
   id: number;
@@ -126,7 +127,7 @@ export default function ArtistGalleryPage() {
       ) {
         return false;
       }
-      if (styleFilter && item.style !== styleFilter) return false;
+      if (styleFilter && normalizeStyleKey(item.style) !== styleFilter) return false;
       if (!normalizedSearch) return true;
 
       return [item.titleRo, item.titleEn, item.style, item.bodyArea]

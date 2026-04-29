@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { connection } from 'next/server';
 import HomePageClient from '@/components/sections/HomePageClient';
 import JsonLd, { getAggregateRatingSchema } from '@/components/seo/JsonLd';
+import { normalizeStyleKey } from '@/lib/gallery-style';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -60,7 +61,7 @@ export default async function HomePage() {
     .filter((item) => item.artist.isActive)
     .map((item) => ({
       id: item.id,
-      style: item.style || 'tattoo',
+      style: normalizeStyleKey(item.style) || 'tattoo',
       titleRo: item.titleRo,
       titleEn: item.titleEn,
       imagePath: item.imagePath,

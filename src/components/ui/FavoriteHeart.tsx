@@ -1,17 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocale } from 'next-intl';
 import { Heart } from 'lucide-react';
 
 interface FavoriteHeartProps {
   galleryItemId: number;
   isFavorited: boolean;
+  favoriteCount?: number;
   onToggle?: (galleryItemId: number, isFavorited: boolean) => void;
 }
 
-export default function FavoriteHeart({ galleryItemId, isFavorited, onToggle }: FavoriteHeartProps) {
+export default function FavoriteHeart({
+  galleryItemId,
+  isFavorited,
+  favoriteCount = 0,
+  onToggle,
+}: FavoriteHeartProps) {
+  const locale = useLocale();
   const [favorited, setFavorited] = useState(isFavorited);
   const [isLoading, setIsLoading] = useState(false);
+  const [count, setCount] = useState(favoriteCount);
+
+  useEffect(() => {
+    setFavorited(isFavorited);
+  }, [isFavorited]);
+
+  useEffect(() => {
+    setCount(favoriteCount);
+  }, [favoriteCount]);
+
+  const redirectToLogin = () => {
+    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const loginPath = locale === 'en' ? '/en/auth/login' : '/autentificare';
+    window.location.href = `${loginPath}?redirect=${encodeURIComponent(currentPath)}`;
+  };
 
   const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -24,7 +47,11 @@ export default function FavoriteHeart({ galleryItemId, isFavorited, onToggle }: 
         });
         if (res.ok) {
           setFavorited(false);
+          setCount((current) => Math.max(0, current - 1));
           onToggle?.(galleryItemId, false);
+        } else if (res.status === 401 || res.status === 403) {
+          redirectToLogin();
+          return;
         }
       } else {
         const res = await fetch('/api/client/favorites', {
@@ -34,10 +61,10 @@ export default function FavoriteHeart({ galleryItemId, isFavorited, onToggle }: 
         });
         if (res.ok) {
           setFavorited(true);
+          setCount((current) => current + 1);
           onToggle?.(galleryItemId, true);
-        } else if (res.status === 401) {
-          // Not logged in — redirect to login
-          window.location.href = '/auth/login';
+        } else if (res.status === 401 || res.status === 403) {
+          redirectToLogin();
           return;
         }
       }
@@ -50,9 +77,10 @@ export default function FavoriteHeart({ galleryItemId, isFavorited, onToggle }: 
 
   return (
     <button
+      type="button"
       onClick={handleClick}
       disabled={isLoading}
-      className="rounded-full bg-bg-primary/70 p-1.5 transition-all hover:bg-bg-primary disabled:opacity-50"
+      className="inline-flex items-center gap-1 rounded-full bg-bg-primary/75 px-2 py-1.5 text-xs font-medium text-text-secondary transition-all hover:bg-bg-primary hover:text-text-primary disabled:opacity-50"
       aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
     >
       <Heart
@@ -62,6 +90,7 @@ export default function FavoriteHeart({ galleryItemId, isFavorited, onToggle }: 
             : 'text-text-muted hover:text-red-400'
         }`}
       />
+      <span>{count}</span>
     </button>
   );
 }

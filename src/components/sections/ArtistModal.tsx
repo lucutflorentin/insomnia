@@ -7,6 +7,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-mo
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import { formatStyleLabel, normalizeStyleKey } from '@/lib/gallery-style';
 
 interface ArtistData {
   slug: string;
@@ -136,6 +137,16 @@ export default function ArtistModal({
   const t = useTranslations('artistModal');
   const tStyles = useTranslations('artists.styles');
   const locale = typeof window !== 'undefined' ? document.documentElement.lang || 'ro' : 'ro';
+  const getStyleLabel = (style: string) => {
+    const key = normalizeStyleKey(style);
+    if (!key) return formatStyleLabel(style);
+
+    try {
+      return tStyles(key);
+    } catch {
+      return formatStyleLabel(style);
+    }
+  };
 
   // Lock body scroll
   useEffect(() => {
@@ -239,7 +250,7 @@ export default function ArtistModal({
                 <div className="flex flex-wrap gap-2">
                   {artist.specialties.map((style) => (
                     <Badge key={style} variant="accent">
-                      {tStyles(style)}
+                      {getStyleLabel(style)}
                     </Badge>
                   ))}
                 </div>

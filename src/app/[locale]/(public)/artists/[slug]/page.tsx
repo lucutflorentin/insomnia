@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { normalizeStyleKey } from '@/lib/gallery-style';
 import JsonLd from '@/components/seo/JsonLd';
 import { SITE_CONFIG } from '@/lib/constants';
 import ArtistProfileContent from './ArtistProfileContent';
@@ -151,7 +152,7 @@ export default async function ArtistPage({ params }: Props) {
     imagePath: g.imagePath,
     thumbnailPath: g.thumbnailPath,
     title: (locale === 'ro' ? g.titleRo : g.titleEn) || g.titleRo || g.titleEn || '',
-    style: g.style || '',
+    style: normalizeStyleKey(g.style),
   }));
 
   const personSchema = getPersonSchema(artistData, avgRating, reviews.length);
