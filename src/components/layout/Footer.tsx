@@ -1,10 +1,12 @@
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { SOCIAL_LINKS, SITE_CONFIG } from '@/lib/constants';
+import { SOCIAL_LINKS, SITE_CONFIG, STUDIO_HOURS } from '@/lib/constants';
 
 export default function Footer() {
   const t = useTranslations('common');
+  const locale = useLocale();
   const currentYear = new Date().getFullYear();
+  const hours = locale === 'en' ? STUDIO_HOURS.en : STUDIO_HOURS.ro;
 
   return (
     <footer className="border-t border-border bg-bg-secondary">
@@ -23,7 +25,7 @@ export default function Footer() {
             <p className="mt-3 text-sm leading-relaxed text-text-muted">
               Premium Tattoo Studio
               <br />
-              Mamaia Nord, Constanta
+              {SITE_CONFIG.address}
             </p>
           </div>
 
@@ -94,8 +96,8 @@ export default function Footer() {
                 </li>
               )}
               <li className="pt-2">
-                <p className="text-text-secondary text-xs">L-V: 10:00 - 18:00</p>
-                <p className="text-text-secondary text-xs">S: 10:00 - 16:00</p>
+                <p className="text-text-secondary text-xs">{hours.main}</p>
+                <p className="text-text-secondary text-xs">{hours.note}</p>
               </li>
             </ul>
           </div>

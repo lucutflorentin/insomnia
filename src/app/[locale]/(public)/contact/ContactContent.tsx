@@ -307,9 +307,8 @@ const ro: ContactData = {
   mapLabel: 'Unde ne gasesti',
   mapPlaceholder: 'Harta va fi disponibila in curand.',
   hours: [
-    { days: 'Luni - Vineri', time: '10:00 - 18:00' },
-    { days: 'Sambata', time: '10:00 - 16:00' },
-    { days: 'Duminica', time: 'Inchis' },
+    { days: 'Luni - Duminica', time: '12:00 - 20:00' },
+    { days: 'Programari', time: 'Strict in intervalul afisat' },
   ],
   cta: {
     title: 'Vrei sa te programezi?',
@@ -330,9 +329,8 @@ const en: ContactData = {
   mapLabel: 'Find Us',
   mapPlaceholder: 'Map will be available soon.',
   hours: [
-    { days: 'Monday - Friday', time: '10:00 - 18:00' },
-    { days: 'Saturday', time: '10:00 - 16:00' },
-    { days: 'Sunday', time: 'Closed' },
+    { days: 'Monday - Sunday', time: '12:00 - 20:00' },
+    { days: 'Appointments', time: 'Strictly within the displayed interval' },
   ],
   cta: {
     title: 'Want to book?',

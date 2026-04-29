@@ -69,7 +69,7 @@ export async function sendBookingConfirmation(
       <div style="background-color: #1A1A1A; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 3px solid #B0B0B0;">
         <p style="margin: 8px 0; font-size: 15px;">📅 ${isRo ? 'Data' : 'Date'}: <strong>${data.date}</strong></p>
         <p style="margin: 8px 0; font-size: 15px;">🕐 ${isRo ? 'Ora' : 'Time'}: <strong>${data.time}</strong></p>
-        <p style="margin: 8px 0; font-size: 15px;">📍 Insomnia Tattoo, Mamaia Nord</p>
+        <p style="margin: 8px 0; font-size: 15px;">📍 Insomnia Tattoo, Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta</p>
       </div>
 
       <p style="font-size: 16px; line-height: 1.6; color: #A0A0A0;">
@@ -532,7 +532,7 @@ export async function sendBookingStatusUpdateEmail(data: {
       ? `<div style="background-color: #1A1A1A; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 3px solid ${status.color};">
           <p style="margin: 8px 0; font-size: 15px;">📅 ${isRo ? 'Data' : 'Date'}: <strong>${escapeHtml(data.consultationDate)}</strong></p>
           ${data.consultationTime ? `<p style="margin: 8px 0; font-size: 15px;">🕐 ${isRo ? 'Ora' : 'Time'}: <strong>${escapeHtml(data.consultationTime)}</strong></p>` : ''}
-          <p style="margin: 8px 0; font-size: 15px;">📍 Insomnia Tattoo, Mamaia Nord</p>
+          <p style="margin: 8px 0; font-size: 15px;">📍 Insomnia Tattoo, Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta</p>
         </div>`
       : '';
 

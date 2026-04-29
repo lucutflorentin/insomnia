@@ -31,6 +31,7 @@ export default function ArtistProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -64,6 +65,39 @@ export default function ArtistProfilePage() {
       .catch(() => {})
       .finally(() => setIsLoading(false));
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (profileImagePreview) URL.revokeObjectURL(profileImagePreview);
+    };
+  }, [profileImagePreview]);
+
+  const handleProfileImageSelect = (file: File | null) => {
+    if (!file) {
+      setProfileImageFile(null);
+      setProfileImagePreview(null);
+      return;
+    }
+
+    if (!(GALLERY_UPLOAD_CONFIG.allowedFileTypes as readonly string[]).includes(file.type)) {
+      showToast(t('invalidImageType'), 'error');
+      setProfileImageFile(null);
+      setProfileImagePreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    if (file.size > GALLERY_UPLOAD_CONFIG.maxFileSize) {
+      showToast(t('imageTooLarge'), 'error');
+      setProfileImageFile(null);
+      setProfileImagePreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setProfileImageFile(file);
+    setProfileImagePreview(URL.createObjectURL(file));
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -106,6 +140,7 @@ export default function ArtistProfilePage() {
       if (data.success) {
         setProfile(data.data);
         setProfileImageFile(null);
+        setProfileImagePreview(null);
         setForm((f) => ({ ...f, profileImage: data.data.profileImage || '' }));
         showToast(t('saved'), 'success');
       } else {
@@ -133,7 +168,14 @@ export default function ArtistProfilePage() {
       <div className="mb-6 rounded-sm border border-border bg-bg-secondary p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border-2 border-accent/30 bg-bg-tertiary">
-            {form.profileImage ? (
+            {profileImagePreview ? (
+              <div
+                role="img"
+                aria-label={profile?.name || t('profileImage')}
+                className="h-full w-full bg-cover bg-center"
+                style={{ backgroundImage: `url("${profileImagePreview}")` }}
+              />
+            ) : form.profileImage ? (
               <Image
                 src={form.profileImage}
                 alt={profile?.name || t('profileImage')}
@@ -173,7 +215,7 @@ export default function ArtistProfilePage() {
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 className="hidden"
-                onChange={(e) => setProfileImageFile(e.target.files?.[0] || null)}
+                onChange={(e) => handleProfileImageSelect(e.target.files?.[0] || null)}
               />
             </div>
           </div>

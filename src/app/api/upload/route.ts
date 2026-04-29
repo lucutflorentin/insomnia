@@ -8,6 +8,8 @@ import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 const UPLOAD_LIMIT = { max: 20, windowSec: 60 };
 const MAX_IMAGE_DIMENSION = 8000;
 const MAX_UPLOAD_MB = Math.round(GALLERY_UPLOAD_CONFIG.maxFileSize / 1024 / 1024);
+const MAIN_IMAGE_MAX_WIDTH = 2400;
+const THUMBNAIL_MAX_WIDTH = 900;
 
 // Magic bytes signatures for allowed image types
 const MAGIC_BYTES: Record<string, number[][]> = {
@@ -145,16 +147,18 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 8);
 
-    // Process main image (max 1200px wide) in memory
+    // Process the display image at a high enough resolution for retina screens and zoom.
     const mainBuffer = await sharp(buffer)
-      .resize(1200, null, { withoutEnlargement: true })
-      .webp({ quality: 85 })
+      .rotate()
+      .resize({ width: MAIN_IMAGE_MAX_WIDTH, withoutEnlargement: true })
+      .webp({ quality: 92 })
       .toBuffer();
 
-    // Generate thumbnail (400px wide) in memory
+    // Generate a sharper thumbnail for masonry grids on modern phone screens.
     const thumbBuffer = await sharp(buffer)
-      .resize(400, null, { withoutEnlargement: true })
-      .webp({ quality: 75 })
+      .rotate()
+      .resize({ width: THUMBNAIL_MAX_WIDTH, withoutEnlargement: true })
+      .webp({ quality: 84 })
       .toBuffer();
 
     // Upload to Vercel Blob

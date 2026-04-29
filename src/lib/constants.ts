@@ -3,9 +3,20 @@ export const SITE_CONFIG = {
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://insomniatattoo.ro',
   email: process.env.NEXT_PUBLIC_STUDIO_EMAIL || 'contact@insomniatattoo.ro',
   phone: process.env.NEXT_PUBLIC_STUDIO_PHONE || '',
-  address: 'Mamaia Nord, Constanta, Romania',
+  address: 'Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta',
   googleMapsUrl: process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_URL || '',
 };
+
+export const STUDIO_HOURS = {
+  ro: {
+    main: 'Luni - Duminica: 12:00 - 20:00',
+    note: 'Se lucreaza strict in functie de programari in intervalul afisat.',
+  },
+  en: {
+    main: 'Monday - Sunday: 12:00 - 20:00',
+    note: 'Work is done strictly by appointment within the displayed interval.',
+  },
+} as const;
 
 export const SOCIAL_LINKS = {
   instagram: process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM || 'https://instagram.com/insomniatattoo',

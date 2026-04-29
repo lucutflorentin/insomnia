@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -69,10 +71,20 @@ function ArtistPortfolioSection({
   const tGallery = useTranslations('gallery');
   const tStyles = useTranslations('artists.styles');
   const [activeFilter, setActiveFilter] = useState('all');
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
   const filteredWorks =
     activeFilter === 'all'
       ? artist.works
       : artist.works.filter((work) => work.style === activeFilter);
+  const lightboxWorks = filteredWorks.filter((work) => Boolean(work.imagePath));
+  const lightboxSlides = lightboxWorks.map((work) => ({
+    src: work.imagePath,
+    alt: work.titleRo || work.titleEn || `Tatuaj ${work.style} de ${artist.name}`,
+  }));
+  const openLightbox = (workId: number) => {
+    const index = lightboxWorks.findIndex((work) => work.id === workId);
+    if (index >= 0) setLightboxIndex(index);
+  };
 
   return (
     <section id={artist.slug} className="scroll-mt-24">
@@ -129,14 +141,29 @@ function ArtistPortfolioSection({
         >
           {filteredWorks.map((work) => (
             <StaggerItem key={work.id} className="mb-3 break-inside-avoid">
-              <div className="group relative cursor-pointer overflow-hidden rounded-sm bg-bg-secondary">
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => openLightbox(work.id)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openLightbox(work.id);
+                  }
+                }}
+                className={cn(
+                  'group relative overflow-hidden rounded-sm bg-bg-secondary',
+                  work.imagePath && 'cursor-zoom-in',
+                )}
+                aria-label={`Open ${work.titleRo || work.titleEn || work.style} in full size`}
+              >
                 <div
                   style={{ paddingBottom: `${(work.aspectRatio || 1) * 100}%` }}
                   className="relative"
                 >
                   {work.imagePath ? (
                     <Image
-                      src={work.thumbnailPath || work.imagePath}
+                      src={work.imagePath}
                       alt={work.titleRo || work.titleEn || `Tatuaj ${work.style} de ${artist.name} - Insomnia Tattoo`}
                       fill
                       sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
@@ -155,7 +182,11 @@ function ArtistPortfolioSection({
                       {work.style ? tStyles(work.style) : artist.name}
                     </Badge>
                   </div>
-                  <div className="p-3">
+                  <div
+                    className="p-3"
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
                     <FavoriteHeart
                       galleryItemId={work.id}
                       isFavorited={favoriteIds.has(work.id)}
@@ -171,6 +202,13 @@ function ArtistPortfolioSection({
           {tGallery('noResults')}
         </div>
       )}
+
+      <Lightbox
+        open={lightboxIndex >= 0}
+        close={() => setLightboxIndex(-1)}
+        index={lightboxIndex}
+        slides={lightboxSlides}
+      />
 
       {/* CTA */}
       <SlideUp className="mt-8 text-center">

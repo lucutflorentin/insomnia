@@ -132,8 +132,8 @@ export default function AdminAvailabilityPage() {
 
   // Calendar day editor modal
   const [editingDate, setEditingDate] = useState<Date | null>(null);
-  const [editStart, setEditStart] = useState('10:00');
-  const [editEnd, setEditEnd] = useState('18:00');
+  const [editStart, setEditStart] = useState('12:00');
+  const [editEnd, setEditEnd] = useState('20:00');
   const [editAvailable, setEditAvailable] = useState(true);
 
   // Collapsible template section
@@ -368,8 +368,8 @@ export default function AdminAvailabilityPage() {
       setEditEnd(template.endTime);
       setEditAvailable(true);
     } else {
-      setEditStart('10:00');
-      setEditEnd('18:00');
+      setEditStart('12:00');
+      setEditEnd('20:00');
       setEditAvailable(true);
     }
     setEditingDate(date);
@@ -764,8 +764,8 @@ export default function AdminAvailabilityPage() {
                       onClick={() =>
                         updateTemplate(
                           day,
-                          tmpl?.startTime || '10:00',
-                          tmpl?.endTime || '18:00',
+                          tmpl?.startTime || '12:00',
+                          tmpl?.endTime || '20:00',
                           !active,
                         )
                       }
@@ -783,13 +783,13 @@ export default function AdminAvailabilityPage() {
                     {/* Time inputs */}
                     <input
                       type="time"
-                      value={tmpl?.startTime || '10:00'}
+                      value={tmpl?.startTime || '12:00'}
                       disabled={isSavingTemplate || !active}
                       onChange={(e) =>
                         updateTemplate(
                           day,
                           e.target.value,
-                          tmpl?.endTime || '18:00',
+                          tmpl?.endTime || '20:00',
                           active,
                         )
                       }
@@ -798,12 +798,12 @@ export default function AdminAvailabilityPage() {
                     <span className="text-text-muted">-</span>
                     <input
                       type="time"
-                      value={tmpl?.endTime || '18:00'}
+                      value={tmpl?.endTime || '20:00'}
                       disabled={isSavingTemplate || !active}
                       onChange={(e) =>
                         updateTemplate(
                           day,
-                          tmpl?.startTime || '10:00',
+                          tmpl?.startTime || '12:00',
                           e.target.value,
                           active,
                         )

@@ -107,7 +107,7 @@ const ro: PrivacyContent = {
     {
       heading: '1. Cine suntem',
       paragraphs: [
-        'Insomnia Tattoo este un studio de tatuaje situat in Mamaia Nord, Constanta, Romania. Protejam datele tale personale in conformitate cu Regulamentul General privind Protectia Datelor (GDPR) al Uniunii Europene.',
+        'Insomnia Tattoo este un studio de tatuaje situat pe Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta. Protejam datele tale personale in conformitate cu Regulamentul General privind Protectia Datelor (GDPR) al Uniunii Europene.',
         'Date de contact pentru solicitari GDPR: contact@insomniatattoo.ro',
       ],
     },
@@ -180,7 +180,7 @@ const ro: PrivacyContent = {
       paragraphs: [
         'Pentru orice intrebare legata de protectia datelor personale sau pentru exercitarea drepturilor tale, ne poti contacta la:',
         'Email: contact@insomniatattoo.ro',
-        'Adresa: Mamaia Nord, Constanta, Romania',
+        'Adresa: Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta',
       ],
     },
   ],
@@ -195,7 +195,7 @@ const en: PrivacyContent = {
     {
       heading: '1. Who We Are',
       paragraphs: [
-        'Insomnia Tattoo is a tattoo studio located in Mamaia Nord, Constanta, Romania. We protect your personal data in accordance with the European Union General Data Protection Regulation (GDPR).',
+        'Insomnia Tattoo is a tattoo studio located at Str. D10, No. 11 Bis, Apt. 2, Mamaia Nord, Constanta. We protect your personal data in accordance with the European Union General Data Protection Regulation (GDPR).',
         'Contact for GDPR requests: contact@insomniatattoo.ro',
       ],
     },
@@ -268,7 +268,7 @@ const en: PrivacyContent = {
       paragraphs: [
         'For any questions regarding personal data protection or to exercise your rights, you can contact us at:',
         'Email: contact@insomniatattoo.ro',
-        'Address: Mamaia Nord, Constanta, Romania',
+        'Address: Str. D10, No. 11 Bis, Apt. 2, Mamaia Nord, Constanta',
       ],
     },
   ],

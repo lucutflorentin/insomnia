@@ -112,7 +112,7 @@ export default function GalleryHighlight({ items = [] }: GalleryHighlightProps) 
                       )}
                     >
                       <Image
-                        src={item.thumbnailPath || item.imagePath}
+                        src={item.imagePath}
                         alt={`${title} - ${item.artistName}`}
                         fill
                         sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"

@@ -281,26 +281,26 @@ VALUES (
 SET @artist_madalina = (SELECT id FROM `artists` WHERE slug = 'madalina');
 SET @artist_florentin = (SELECT id FROM `artists` WHERE slug = 'florentin');
 
--- Availability Templates (Mon-Fri 10-18, Sat 10-16, Sun off)
+-- Availability Templates (Mon-Sun 12-20, appointment-only)
 -- Madalina
 INSERT INTO `availability_templates` (`artist_id`, `day_of_week`, `start_time`, `end_time`, `is_active`) VALUES
-  (@artist_madalina, 1, '10:00', '18:00', TRUE),
-  (@artist_madalina, 2, '10:00', '18:00', TRUE),
-  (@artist_madalina, 3, '10:00', '18:00', TRUE),
-  (@artist_madalina, 4, '10:00', '18:00', TRUE),
-  (@artist_madalina, 5, '10:00', '18:00', TRUE),
-  (@artist_madalina, 6, '10:00', '16:00', TRUE),
-  (@artist_madalina, 0, '10:00', '18:00', FALSE);
+  (@artist_madalina, 1, '12:00', '20:00', TRUE),
+  (@artist_madalina, 2, '12:00', '20:00', TRUE),
+  (@artist_madalina, 3, '12:00', '20:00', TRUE),
+  (@artist_madalina, 4, '12:00', '20:00', TRUE),
+  (@artist_madalina, 5, '12:00', '20:00', TRUE),
+  (@artist_madalina, 6, '12:00', '20:00', TRUE),
+  (@artist_madalina, 0, '12:00', '20:00', TRUE);
 
 -- Florentin
 INSERT INTO `availability_templates` (`artist_id`, `day_of_week`, `start_time`, `end_time`, `is_active`) VALUES
-  (@artist_florentin, 1, '10:00', '18:00', TRUE),
-  (@artist_florentin, 2, '10:00', '18:00', TRUE),
-  (@artist_florentin, 3, '10:00', '18:00', TRUE),
-  (@artist_florentin, 4, '10:00', '18:00', TRUE),
-  (@artist_florentin, 5, '10:00', '18:00', TRUE),
-  (@artist_florentin, 6, '10:00', '16:00', TRUE),
-  (@artist_florentin, 0, '10:00', '18:00', FALSE);
+  (@artist_florentin, 1, '12:00', '20:00', TRUE),
+  (@artist_florentin, 2, '12:00', '20:00', TRUE),
+  (@artist_florentin, 3, '12:00', '20:00', TRUE),
+  (@artist_florentin, 4, '12:00', '20:00', TRUE),
+  (@artist_florentin, 5, '12:00', '20:00', TRUE),
+  (@artist_florentin, 6, '12:00', '20:00', TRUE),
+  (@artist_florentin, 0, '12:00', '20:00', TRUE);
 
 -- Sample Reviews (pre-approved)
 INSERT INTO `reviews` (`client_name`, `artist_id`, `rating`, `review_text_ro`, `review_text_en`, `source`, `is_approved`, `is_visible`, `created_at`) VALUES
@@ -311,7 +311,9 @@ INSERT INTO `reviews` (`client_name`, `artist_id`, `rating`, `review_text_ro`, `
 
 -- Default Settings
 INSERT INTO `settings` (`setting_key`, `setting_value`, `updated_at`)
-VALUES ('studio_hours', '{"mon-fri":"10:00 - 18:00","sat":"10:00 - 16:00","sun":"Inchis"}', NOW(3));
+VALUES
+  ('studio_hours', '{"mon-sun":"12:00 - 20:00","note":"Se lucreaza strict in functie de programari in intervalul afisat"}', NOW(3)),
+  ('studio_address', 'Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta', NOW(3));
 
 -- ============================================
 -- DONE! Database ready.

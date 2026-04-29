@@ -39,7 +39,7 @@ export default async function HomePage() {
     reviewCount: reviews.length,
     featuredWorks: gallery.map((item) => ({
       id: item.id,
-      src: item.thumbnailPath || item.imagePath,
+      src: item.imagePath,
       titleRo: item.titleRo,
       titleEn: item.titleEn,
     })),

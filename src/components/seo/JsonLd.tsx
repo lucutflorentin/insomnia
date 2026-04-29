@@ -22,10 +22,9 @@ export function getLocalBusinessSchema() {
     email: SITE_CONFIG.email,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'Mamaia Nord',
-      addressLocality: 'Constanta',
+      streetAddress: 'Str. D10, Nr. 11 Bis, Ap. 2',
+      addressLocality: 'Mamaia Nord',
       addressRegion: 'Constanta',
-      postalCode: '905700',
       addressCountry: 'RO',
     },
     geo: {
@@ -36,15 +35,17 @@ export function getLocalBusinessSchema() {
     openingHoursSpecification: [
       {
         '@type': 'OpeningHoursSpecification',
-        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-        opens: '10:00',
-        closes: '18:00',
-      },
-      {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: 'Saturday',
-        opens: '10:00',
-        closes: '16:00',
+        dayOfWeek: [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ],
+        opens: '12:00',
+        closes: '20:00',
       },
     ],
     sameAs: [

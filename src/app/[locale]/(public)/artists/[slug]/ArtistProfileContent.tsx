@@ -1,7 +1,10 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -75,9 +78,18 @@ export default function ArtistProfileContent({
   const t = useTranslations('artists');
   const tCommon = useTranslations('common.cta');
   const tStyles = useTranslations('artists.styles');
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
 
   const specialty = (locale === 'ro' ? artist.specialtyRo : artist.specialtyEn) || artist.specialtyRo || '';
   const bio = (locale === 'ro' ? artist.bioRo : artist.bioEn) || artist.bioRo || '';
+  const lightboxSlides = useMemo(
+    () =>
+      gallery.map((work) => ({
+        src: work.imagePath,
+        alt: work.title || `Tatuaj ${work.style} de ${artist.name}`,
+      })),
+    [artist.name, gallery],
+  );
 
   return (
     <div className="pt-24 pb-16">
@@ -198,11 +210,20 @@ export default function ArtistProfileContent({
               staggerDelay={0.05}
               className="mt-8 columns-2 gap-3 sm:columns-3 lg:columns-4"
             >
-              {gallery.map((work) => (
+              {gallery.map((work, index) => (
                 <StaggerItem key={work.id} className="mb-3 break-inside-avoid">
-                  <div className="group relative overflow-hidden rounded-sm bg-bg-secondary">
+                  <button
+                    type="button"
+                    onClick={() => setLightboxIndex(index)}
+                    className="group relative block w-full cursor-zoom-in overflow-hidden rounded-sm bg-bg-secondary text-left"
+                    aria-label={
+                      locale === 'ro'
+                        ? `Deschide lucrarea ${work.title || work.style} in marime completa`
+                        : `Open ${work.title || work.style} in full size`
+                    }
+                  >
                     <Image
-                      src={work.thumbnailPath || work.imagePath}
+                      src={work.imagePath}
                       alt={work.title || `Tatuaj ${work.style} de ${artist.name} — Insomnia Tattoo`}
                       width={800}
                       height={1000}
@@ -219,10 +240,17 @@ export default function ArtistProfileContent({
                         )}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 </StaggerItem>
               ))}
             </StaggerChildren>
+
+            <Lightbox
+              open={lightboxIndex >= 0}
+              close={() => setLightboxIndex(-1)}
+              index={lightboxIndex}
+              slides={lightboxSlides}
+            />
           </section>
         )}
 

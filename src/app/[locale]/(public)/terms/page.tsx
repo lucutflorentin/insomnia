@@ -114,8 +114,8 @@ const ro: TermsContent = {
     {
       heading: '2. Varsta minima',
       paragraphs: [
-        'Trebuie sa ai cel putin 18 ani pentru a te tatua la Insomnia Tattoo.',
-        'Persoanele cu varsta intre 16 si 18 ani pot fi tatuate doar cu acordul scris al unui parinte sau tutore legal, care trebuie sa fie prezent in studio la momentul sedintei. Este necesara prezentarea actului de identitate atat pentru minor, cat si pentru parinte/tutore.',
+        'Insomnia Tattoo tatueaza doar persoane care au implinit 18 ani.',
+        'Nu acceptam clienti sub 18 ani sub nicio forma, inclusiv cu acord parental sau tutore legal. Pentru verificare, studioul poate solicita prezentarea unui act de identitate valid inainte de consultatie sau sedinta.',
       ],
     },
     {
@@ -127,7 +127,22 @@ const ro: TermsContent = {
       ],
     },
     {
-      heading: '4. Cerinte de sanatate',
+      heading: '4. Regulament de ordine interioara',
+      paragraphs: [
+        'Accesul in studio si desfasurarea sedintelor se fac strict in functie de programari confirmate, in intervalul Luni - Duminica, 12:00 - 20:00.',
+        'Pentru siguranta clientilor si a artistilor, studioul isi rezerva dreptul de a amana sau refuza o sedinta daca regulamentul nu este respectat.',
+      ],
+      list: [
+        'Prezinta-te la ora stabilita si anunta din timp orice intarziere',
+        'Nu consuma alcool sau substante recreationale inaintea programarii',
+        'Vino cu act de identitate valid atunci cand este solicitat',
+        'Respecta indicatiile artistului privind igiena, pregatirea pielii si aftercare',
+        'Insotitorii sunt acceptati doar cu acordul artistului si in limita spatiului disponibil',
+        'Fotografierea sau filmarea in studio se face doar cu acordul echipei',
+      ],
+    },
+    {
+      heading: '5. Cerinte de sanatate',
       paragraphs: [
         'Pentru siguranta ta si pentru calitatea tatuajului, te rugam sa respecti urmatoarele cerinte:',
       ],
@@ -141,21 +156,21 @@ const ro: TermsContent = {
       ],
     },
     {
-      heading: '5. Ingrijirea dupa sedinta',
+      heading: '6. Ingrijirea dupa sedinta',
       paragraphs: [
         'Dupa realizarea tatuajului, artistul iti va oferi instructiuni detaliate de ingrijire. Responsabilitatea respectarii acestor instructiuni iti apartine in totalitate.',
         'Insomnia Tattoo nu isi asuma responsabilitatea pentru infectii, decolorari sau alte probleme cauzate de nerespectarea instructiunilor de aftercare.',
       ],
     },
     {
-      heading: '6. Drepturi de imagine',
+      heading: '7. Drepturi de imagine',
       paragraphs: [
         'Studioul nostru isi rezerva dreptul de a fotografia lucrarile finalizate si de a le folosi in scopuri promotionale pe site, retele sociale si materiale de marketing.',
         'Daca nu doresti ca tatuajul tau sa fie fotografiat sau distribuit, te rugam sa informezi artistul inainte de inceperea sedintei.',
       ],
     },
     {
-      heading: '7. Preturi',
+      heading: '8. Preturi',
       paragraphs: [
         'Preturile nu sunt afisate pe site. Fiecare tatuaj este unic, iar costul depinde de complexitate, dimensiune, zona corpului si timpul estimat.',
         'Pretul va fi discutat si agreat in cadrul consultatiei, inainte de inceperea lucrului.',
@@ -163,7 +178,7 @@ const ro: TermsContent = {
       ],
     },
     {
-      heading: '8. Prelucrarea datelor',
+      heading: '9. Prelucrarea datelor',
       paragraphs: [
         'Datele personale colectate prin formularul de programare sunt prelucrate in conformitate cu GDPR. Pentru detalii complete, consulta Politica noastra de Confidentialitate.',
       ],
@@ -187,8 +202,8 @@ const en: TermsContent = {
     {
       heading: '2. Age Requirement',
       paragraphs: [
-        'You must be at least 18 years old to get tattooed at Insomnia Tattoo.',
-        'Individuals between 16 and 18 years old may be tattooed only with written consent from a parent or legal guardian, who must be present at the studio during the session. Valid identification is required for both the minor and the parent/guardian.',
+        'Insomnia Tattoo tattoos only people who are at least 18 years old.',
+        'We do not accept clients under 18 under any circumstances, including with parental or legal guardian consent. The studio may request valid identification before a consultation or session.',
       ],
     },
     {
@@ -200,7 +215,22 @@ const en: TermsContent = {
       ],
     },
     {
-      heading: '4. Health Requirements',
+      heading: '4. Studio Rules',
+      paragraphs: [
+        'Studio access and tattoo sessions are handled strictly by confirmed appointment within Monday - Sunday, 12:00 - 20:00.',
+        'For the safety of clients and artists, the studio reserves the right to postpone or refuse a session if these rules are not respected.',
+      ],
+      list: [
+        'Arrive at the agreed time and notify us in advance about any delay',
+        'Do not consume alcohol or recreational substances before the appointment',
+        'Bring valid identification when requested',
+        'Respect the artist\'s instructions regarding hygiene, skin preparation, and aftercare',
+        'Companions are accepted only with the artist\'s approval and subject to available space',
+        'Photo or video recording in the studio requires team approval',
+      ],
+    },
+    {
+      heading: '5. Health Requirements',
       paragraphs: [
         'For your safety and the quality of the tattoo, please respect the following requirements:',
       ],
@@ -214,21 +244,21 @@ const en: TermsContent = {
       ],
     },
     {
-      heading: '5. Aftercare Responsibility',
+      heading: '6. Aftercare Responsibility',
       paragraphs: [
         'After the tattoo session, the artist will provide you with detailed aftercare instructions. The responsibility for following these instructions is entirely yours.',
         'Insomnia Tattoo is not responsible for infections, fading, or other issues caused by failure to follow aftercare instructions.',
       ],
     },
     {
-      heading: '6. Image Usage Rights',
+      heading: '7. Image Usage Rights',
       paragraphs: [
         'Our studio reserves the right to photograph completed works and use them for promotional purposes on the website, social media, and marketing materials.',
         'If you do not wish your tattoo to be photographed or shared, please inform the artist before the session begins.',
       ],
     },
     {
-      heading: '7. Pricing',
+      heading: '8. Pricing',
       paragraphs: [
         'Prices are not displayed on the website. Each tattoo is unique, and the cost depends on complexity, size, body area, and estimated time.',
         'The price will be discussed and agreed upon during the consultation, before work begins.',
@@ -236,7 +266,7 @@ const en: TermsContent = {
       ],
     },
     {
-      heading: '8. Data Processing',
+      heading: '9. Data Processing',
       paragraphs: [
         'Personal data collected through the booking form is processed in accordance with GDPR. For complete details, please see our Privacy Policy.',
       ],

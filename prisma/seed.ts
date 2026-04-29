@@ -89,43 +89,27 @@ async function main() {
 
   console.log(`Artists: ${madalina.name}, ${florentin.name}`);
 
-  // --- Availability Templates (Mon-Fri 10-18, Sat 10-16, Sun off) ---
+  // --- Availability Templates (Mon-Sun 12-20, appointment-only) ---
   for (const artist of [madalina, florentin]) {
-    for (let day = 1; day <= 6; day++) {
-      const isSaturday = day === 6;
+    for (let day = 0; day <= 6; day++) {
       await prisma.availabilityTemplate.upsert({
         where: {
           unique_artist_day: { artistId: artist.id, dayOfWeek: day },
         },
         update: {
-          startTime: '10:00',
-          endTime: isSaturday ? '16:00' : '18:00',
+          startTime: '12:00',
+          endTime: '20:00',
           isActive: true,
         },
         create: {
           artistId: artist.id,
           dayOfWeek: day,
-          startTime: '10:00',
-          endTime: isSaturday ? '16:00' : '18:00',
+          startTime: '12:00',
+          endTime: '20:00',
           isActive: true,
         },
       });
     }
-
-    // Sunday - inactive
-    await prisma.availabilityTemplate.upsert({
-      where: {
-        unique_artist_day: { artistId: artist.id, dayOfWeek: 0 },
-      },
-      update: { isActive: false },
-      create: {
-        artistId: artist.id,
-        dayOfWeek: 0,
-        startTime: '10:00',
-        endTime: '18:00',
-        isActive: false,
-      },
-    });
   }
 
   console.log('Availability templates created');
@@ -183,14 +167,29 @@ async function main() {
   // --- Default Settings ---
   await prisma.setting.upsert({
     where: { settingKey: 'studio_hours' },
-    update: {},
+    update: {
+      settingValue: JSON.stringify({
+        'mon-sun': '12:00 - 20:00',
+        note: 'Se lucreaza strict in functie de programari in intervalul afisat',
+      }),
+    },
     create: {
       settingKey: 'studio_hours',
       settingValue: JSON.stringify({
-        'mon-fri': '10:00 - 18:00',
-        sat: '10:00 - 16:00',
-        sun: 'Inchis',
+        'mon-sun': '12:00 - 20:00',
+        note: 'Se lucreaza strict in functie de programari in intervalul afisat',
       }),
+    },
+  });
+
+  await prisma.setting.upsert({
+    where: { settingKey: 'studio_address' },
+    update: {
+      settingValue: 'Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta',
+    },
+    create: {
+      settingKey: 'studio_address',
+      settingValue: 'Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta',
     },
   });
 

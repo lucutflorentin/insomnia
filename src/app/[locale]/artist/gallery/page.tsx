@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
 import {
   Check,
   Eye,
@@ -65,6 +67,7 @@ export default function ArtistGalleryPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [styleFilter, setStyleFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
 
   const fetchItems = useCallback(async () => {
     setIsLoading(true);
@@ -131,6 +134,15 @@ export default function ArtistGalleryPage() {
         .some((value) => value!.toLowerCase().includes(normalizedSearch));
     });
   }, [items, searchTerm, statusFilter, styleFilter]);
+
+  const lightboxSlides = useMemo(
+    () =>
+      displayedItems.map((item) => ({
+        src: item.imagePath,
+        alt: item.titleRo || item.titleEn || t('untitled'),
+      })),
+    [displayedItems, t],
+  );
 
   const isAllSelected =
     displayedItems.length > 0 && displayedItems.every((item) => selectedIds.has(item.id));
@@ -534,15 +546,21 @@ export default function ArtistGalleryPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-          {displayedItems.map((item) => (
+          {displayedItems.map((item, index) => (
             <article
               key={item.id}
               className="overflow-hidden rounded-sm border border-border bg-bg-secondary"
             >
-              <div className="relative aspect-square">
+              <div
+                className="relative aspect-square cursor-zoom-in"
+                onClick={() => setLightboxIndex(index)}
+              >
                 <button
                   type="button"
-                  onClick={() => toggleSelect(item.id)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggleSelect(item.id);
+                  }}
                   className={`absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-sm border transition-colors ${
                     selectedIds.has(item.id)
                       ? 'border-accent bg-accent text-bg-primary'
@@ -634,6 +652,13 @@ export default function ArtistGalleryPage() {
           ))}
         </div>
       )}
+
+      <Lightbox
+        open={lightboxIndex >= 0}
+        close={() => setLightboxIndex(-1)}
+        index={lightboxIndex}
+        slides={lightboxSlides}
+      />
 
       <Modal
         isOpen={Boolean(editItem)}

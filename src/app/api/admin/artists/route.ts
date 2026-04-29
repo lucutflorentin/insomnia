@@ -88,28 +88,18 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Create default availability templates (Mon-Fri 10-18, Sat 10-16, Sun off)
-      for (let day = 1; day <= 6; day++) {
-        const isSaturday = day === 6;
+      // Create default availability templates (Mon-Sun 12-20, appointment-only)
+      for (let day = 0; day <= 6; day++) {
         await tx.availabilityTemplate.create({
           data: {
             artistId: artist.id,
             dayOfWeek: day,
-            startTime: '10:00',
-            endTime: isSaturday ? '16:00' : '18:00',
+            startTime: '12:00',
+            endTime: '20:00',
             isActive: true,
           },
         });
       }
-      await tx.availabilityTemplate.create({
-        data: {
-          artistId: artist.id,
-          dayOfWeek: 0,
-          startTime: '10:00',
-          endTime: '18:00',
-          isActive: false,
-        },
-      });
 
       return { user, artist };
     });

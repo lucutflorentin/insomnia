@@ -276,11 +276,11 @@
     },
     "location": {
       "title": "Unde ne gasesti",
-      "address": "Mamaia Nord, Constanta, Romania",
+      "address": "Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta",
       "schedule": "Program",
-      "weekdays": "Luni - Vineri: 10:00 - 18:00",
-      "saturday": "Sambata: 10:00 - 16:00",
-      "sunday": "Duminica: Inchis"
+      "weekdays": "Luni - Duminica: 12:00 - 20:00",
+      "saturday": "Se lucreaza strict in functie de programari",
+      "sunday": "in intervalul afisat"
     },
     "cta": {
       "title": "Pregatit pentru urmatorul tau tatuaj?",
@@ -598,14 +598,14 @@
     },
     "info": {
       "address": "Adresa",
-      "addressValue": "Mamaia Nord, Constanta, Romania",
+      "addressValue": "Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta",
       "phone": "Telefon",
       "email": "Email",
       "emailValue": "contact@insomniatattoo.ro",
       "schedule": "Program",
-      "weekdays": "Luni - Vineri: 10:00 - 18:00",
-      "saturday": "Sambata: 10:00 - 16:00",
-      "sunday": "Duminica: Inchis"
+      "weekdays": "Luni - Duminica: 12:00 - 20:00",
+      "saturday": "Se lucreaza strict in functie de programari",
+      "sunday": "in intervalul afisat"
     }
   },
   "artist": {

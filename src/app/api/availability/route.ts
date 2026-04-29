@@ -102,3 +102,47 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// DELETE /api/availability?id=X — Admin/Artist: remove date override
+export async function DELETE(request: NextRequest) {
+  try {
+    const admin = await verifyAdminRequest(request);
+    const { searchParams } = new URL(request.url);
+    const id = parseInt(searchParams.get('id') || '0');
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'id is required' },
+        { status: 400 },
+      );
+    }
+
+    const existing = await prisma.availability.findUnique({
+      where: { id },
+      select: { artistId: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: 'Availability override not found' },
+        { status: 404 },
+      );
+    }
+
+    if (admin.role === 'ARTIST' && admin.artistId !== existing.artistId) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 403 },
+      );
+    }
+
+    await prisma.availability.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 },
+    );
+  }
+}

@@ -232,7 +232,7 @@ export default function AdminSettingsPage() {
               label={t('address')}
               value={settings.studio_address}
               onChange={(e) => handleChange('studio_address', e.target.value)}
-              placeholder="Mamaia Nord, Constanta, Romania"
+              placeholder="Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta"
             />
             <Input
               label={t('googleMaps')}

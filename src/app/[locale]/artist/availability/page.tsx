@@ -21,17 +21,46 @@ interface DateOverride {
   customEnd: string | null;
 }
 
+interface AvailabilityApiItem {
+  id: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+}
+
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const DAY_NUMBERS = [1, 2, 3, 4, 5, 6, 0];
+const DAY_LABELS: Record<number, string> = {
+  1: 'monday',
+  2: 'tuesday',
+  3: 'wednesday',
+  4: 'thursday',
+  5: 'friday',
+  6: 'saturday',
+  0: 'sunday',
+};
 const DEFAULT_SCHEDULE: DaySchedule[] = DAYS.map((_, i) => ({
-  dayOfWeek: i + 1,
-  startTime: '10:00',
-  endTime: '18:00',
-  isActive: i < 5, // Mon-Fri active by default
+  dayOfWeek: DAY_NUMBERS[i],
+  startTime: '12:00',
+  endTime: '20:00',
+  isActive: true,
 }));
+
+function sortSchedule(days: DaySchedule[]) {
+  return [...days].sort(
+    (a, b) => DAY_NUMBERS.indexOf(a.dayOfWeek) - DAY_NUMBERS.indexOf(b.dayOfWeek),
+  );
+}
+
+function dateKey(value: string) {
+  return value.split('T')[0];
+}
 
 export default function ArtistAvailabilityPage() {
   const t = useTranslations('artist.availability');
   const { showToast } = useToast();
+  const [artistId, setArtistId] = useState<number | null>(null);
   const [schedule, setSchedule] = useState<DaySchedule[]>(DEFAULT_SCHEDULE);
   const [overrides, setOverrides] = useState<DateOverride[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,35 +71,108 @@ export default function ArtistAvailabilityPage() {
   });
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/availability/schedule').then((r) => r.json()),
-      fetch('/api/availability/overrides').then((r) => r.json()),
-    ])
-      .then(([scheduleData, overridesData]) => {
-        if (scheduleData.success && scheduleData.data?.length > 0) {
-          setSchedule(scheduleData.data);
+    let cancelled = false;
+
+    async function loadSchedule() {
+      setIsLoading(true);
+      try {
+        const profileRes = await fetch('/api/artist/profile');
+        const profileData = await profileRes.json();
+
+        if (!profileRes.ok || !profileData.success || !profileData.data?.id) {
+          showToast('Nu s-a putut incarca profilul artistului.', 'error');
+          return;
         }
-        if (overridesData.success) {
-          setOverrides(overridesData.data || []);
+
+        const nextArtistId = profileData.data.id as number;
+        if (!cancelled) setArtistId(nextArtistId);
+
+        const scheduleRes = await fetch(`/api/availability/templates?artistId=${nextArtistId}`);
+        const scheduleData = await scheduleRes.json();
+
+        if (!cancelled && scheduleRes.ok && scheduleData.success && scheduleData.data?.length > 0) {
+          setSchedule(sortSchedule(scheduleData.data));
         }
-      })
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  }, []);
+      } catch {
+        if (!cancelled) showToast('Eroare la incarcarea programului.', 'error');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadSchedule();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showToast]);
+
+  useEffect(() => {
+    if (!artistId) return;
+    let cancelled = false;
+
+    async function loadOverrides() {
+      const [year, month] = currentMonth.split('-').map(Number);
+      const startDate = `${currentMonth}-01`;
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(
+        new Date(year, month, 0).getDate(),
+      ).padStart(2, '0')}`;
+
+      try {
+        const res = await fetch(
+          `/api/availability?artistId=${artistId}&startDate=${startDate}&endDate=${endDate}`,
+        );
+        const data = await res.json();
+        if (!cancelled && res.ok && data.success) {
+          setOverrides(
+            (data.data || []).map((item: AvailabilityApiItem) => ({
+              id: item.id,
+              date: dateKey(item.date),
+              isBlocked: !item.isAvailable,
+              customStart: item.startTime,
+              customEnd: item.endTime,
+            })),
+          );
+        }
+      } catch {
+        if (!cancelled) showToast('Eroare la incarcarea zilelor blocate.', 'error');
+      }
+    }
+
+    loadOverrides();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [artistId, currentMonth, showToast]);
 
   const handleScheduleSave = async () => {
+    if (!artistId) return;
     setSaving(true);
     try {
-      const res = await fetch('/api/availability/schedule', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ schedule }),
-      });
-      if (res.ok) {
-        showToast('Saved!', 'success');
+      const results = await Promise.all(
+        schedule.map((day) =>
+          fetch('/api/availability/templates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              artistId,
+              dayOfWeek: day.dayOfWeek,
+              startTime: day.startTime,
+              endTime: day.endTime,
+              isActive: day.isActive,
+            }),
+          }),
+        ),
+      );
+
+      if (results.every((res) => res.ok)) {
+        showToast('Program salvat.', 'success');
+      } else {
+        showToast('Nu s-a putut salva programul complet.', 'error');
       }
     } catch {
-      showToast('Error saving', 'error');
+      showToast('Eroare la salvarea programului.', 'error');
     } finally {
       setSaving(false);
     }
@@ -94,29 +196,52 @@ export default function ArtistAvailabilityPage() {
 
   const toggleDateOverride = useCallback(
     async (dateStr: string) => {
+      if (!artistId) return;
       const existing = overrides.find((o) => o.date === dateStr);
       if (existing) {
         // Remove override
         try {
-          await fetch(`/api/availability/overrides/${existing.id}`, { method: 'DELETE' });
+          await fetch(`/api/availability?id=${existing.id}`, { method: 'DELETE' });
           setOverrides((prev) => prev.filter((o) => o.id !== existing.id));
-        } catch {}
+        } catch {
+          showToast('Nu s-a putut debloca ziua.', 'error');
+        }
       } else {
         // Add blocked override
         try {
-          const res = await fetch('/api/availability/overrides', {
+          const res = await fetch('/api/availability', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ date: dateStr, isBlocked: true }),
+            body: JSON.stringify({
+              artistId,
+              date: dateStr,
+              startTime: '12:00',
+              endTime: '20:00',
+              slotDurationMinutes: 60,
+              isAvailable: false,
+            }),
           });
           const data = await res.json();
-          if (data.success) {
-            setOverrides((prev) => [...prev, data.data]);
+          if (res.ok && data.success) {
+            setOverrides((prev) => [
+              ...prev,
+              {
+                id: data.data.id,
+                date: dateKey(data.data.date),
+                isBlocked: true,
+                customStart: data.data.startTime,
+                customEnd: data.data.endTime,
+              },
+            ]);
+          } else {
+            showToast('Nu s-a putut bloca ziua.', 'error');
           }
-        } catch {}
+        } catch {
+          showToast('Nu s-a putut bloca ziua.', 'error');
+        }
       }
     },
-    [overrides],
+    [artistId, overrides, showToast],
   );
 
   if (isLoading) {
@@ -148,7 +273,7 @@ export default function ArtistAvailabilityPage() {
                       : 'bg-bg-tertiary text-text-muted',
                   )}
                 >
-                  {DAYS[day.dayOfWeek - 1]?.slice(0, 3).toUpperCase()}
+                  {DAY_LABELS[day.dayOfWeek]?.slice(0, 3).toUpperCase()}
                 </button>
                 {day.isActive ? (
                   <div className="flex items-center gap-2">
