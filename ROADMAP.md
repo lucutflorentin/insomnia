@@ -1,10 +1,94 @@
 # Insomnia Tattoo — Roadmap & Strategie
 
-> Ultima actualizare: 28 Aprilie 2026
+> Ultima actualizare: 29 Aprilie 2026
 
 ---
 
 ## JURNAL TEHNIC — Ce s-a implementat
+
+### Sesiunea 18 (29 Aprilie 2026) — Audit artisti, reguli legale 18+, profil/portofoliu si push live
+
+Pornita din feedback direct de la artisti dupa testarea site-ului live. Obiectivul a fost tratarea tuturor celor 7 puncte raportate, plus audit strict pe conflictele si bugurile conexe descoperite in timpul lucrului.
+
+#### Puncte raportate de artisti si status
+
+1. Varsta minima:
+   - eliminata complet regula veche pentru 16-18 ani cu acord parental;
+   - termenii publici mentioneaza acum clar ca Insomnia Tattoo tatueaza doar persoane care au implinit 18 ani;
+   - adaugata formulare explicita ca nu se accepta clienti sub 18 ani sub nicio forma.
+2. Adresa oficiala:
+   - adresa publica actualizata la `Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta`;
+   - actualizata in constante, contact, footer, privacy, emailuri si JSON-LD.
+3. Program de lucru:
+   - programul public este acum `Luni - Duminica: 12:00 - 20:00`;
+   - adaugata mentiunea ca se lucreaza strict in functie de programari in intervalul afisat;
+   - actualizate defaults pentru artisti noi, seed, init SQL si date existente prin migration.
+4. Regulament de ordine interioara:
+   - adaugat in pagina de Termeni si Conditii ca sectiune dedicata;
+   - include punctualitate, act de identitate, alcool/substante, igiena/aftercare, insotitori si fotografiere/filmare in studio.
+5. Calitate upload si zoom portofoliu:
+   - uploadul de galerie proceseaza acum imaginea principala la rezolutie mai buna, pana la 2400px latime, WebP quality 92;
+   - thumbnailul a fost crescut la 900px, WebP quality 84;
+   - adaugat `sharp().rotate()` pentru orientarea corecta a pozelor facute cu telefonul;
+   - portofoliul public foloseste imaginile mari, nu doar thumbnailurile;
+   - adaugat lightbox/zoom in profil public artist, Ink Space si galeria artistului.
+6. Schimbare poza de profil artist:
+   - adaugat preview local imediat dupa selectarea pozei;
+   - validare client-side pentru tip si marime;
+   - upload prin pipeline-ul existent Vercel Blob + WebP;
+   - API-ul artist profile accepta corect imagini absolute sau root-relative.
+7. Salvare profil artist:
+   - API-ul `/api/artist/profile` a fost intarit cu validare structurata pentru body JSON;
+   - URL-urile sociale sunt validate ca HTTP/HTTPS;
+   - `profileImage` accepta URL HTTP/HTTPS sau path local `/...`;
+   - inputurile invalide returneaza 400 actionabil in loc de Internal Server Error.
+
+#### Audit strict suplimentar efectuat
+
+- Cautare globala pentru texte vechi:
+  - `16 si 18`, `16 and 18`, formularea veche cu minor/tutore;
+  - `10:00 - 18:00`, `10:00`, `16:00`, `18:00`;
+  - `Mamaia Nord, Constanta, Romania`;
+  - endpoint-uri inexistente `availability/schedule` si `availability/overrides`.
+- Reparat bug descoperit in audit:
+  - pagina `/artist/availability` apela rute care nu existau;
+  - a fost mutata pe rutele reale `/api/availability/templates` si `/api/availability`;
+  - adaugat `DELETE /api/availability?id=X` pentru stergerea exceptiilor de disponibilitate.
+- Date si defaults:
+  - `prisma/seed.ts` actualizat pentru program 12-20, 7 zile pe saptamana;
+  - `prisma/init.sql` actualizat cu aceleasi defaults;
+  - adaugata migrare `20260429000000_update_studio_policy` pentru bazele de date existente.
+- SEO si date structurate:
+  - `TattooParlor` JSON-LD actualizat cu adresa oficiala si program 12-20 L-D.
+
+#### Verificari trecute local
+
+- `git diff --check`
+- `npm test`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build`
+- verificare HTTP locala pe server production pentru:
+  - `/termeni`;
+  - `/contact`;
+  - `/spatiul-ink`.
+
+#### Git / live
+
+- Commit pe `main`: `6566b9d` — `Fix artist audit issues`
+- Push reusit pe `origin/main`.
+- Working tree curat dupa push.
+
+#### Note importante pentru productie
+
+- Dupa deploy, trebuie verificat in live cu un cont real de artist:
+  - schimbare poza profil;
+  - salvare profil;
+  - upload poza telefon;
+  - click/zoom pe portofoliu;
+  - verificare Termeni, Contact si Footer pe mobil.
+- Migrarea Prisma trebuie aplicata in mediul de productie ca programul si adresa sa fie actualizate si in tabela `settings` / `availability_templates`.
+- `agent-browser` nu a fost disponibil local; verificarea vizuala automata a fost inlocuita cu build complet si verificare HTTP a rutelor randate.
 
 ### Sesiunea 16 (28 Aprilie 2026) — Portofoliu artist, upload diagnostics, plan 9+
 
