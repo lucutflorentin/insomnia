@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Search, Users, Shield, Palette } from 'lucide-react';
+import { Loader2, Power, PowerOff, Search, Users, Shield, Palette } from 'lucide-react';
+import { useToast } from '@/components/ui/Toast';
 
 interface User {
   id: number;
@@ -35,11 +36,13 @@ const roleIcons: Record<string, typeof Users> = {
 
 export default function AdminUsersPage() {
   const t = useTranslations('admin.users');
+  const { showToast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [total, setTotal] = useState(0);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
@@ -57,6 +60,32 @@ export default function AdminUsersPage() {
     } catch {}
     setIsLoading(false);
   }, [search, roleFilter]);
+
+  const toggleUserStatus = async (user: User) => {
+    setUpdatingId(user.id);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !user.isActive }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(data.error || t('updateError'), 'error');
+        return;
+      }
+      setUsers((prev) =>
+        prev.map((item) =>
+          item.id === user.id ? { ...item, isActive: !user.isActive } : item,
+        ),
+      );
+      showToast(user.isActive ? t('deactivated') : t('activated'), 'success');
+    } catch {
+      showToast(t('updateError'), 'error');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   useEffect(() => {
     const timeout = setTimeout(fetchUsers, 300);
@@ -120,6 +149,7 @@ export default function AdminUsersPage() {
                 <th className="px-4 py-3 text-center font-medium text-text-muted">{t('table.reviews')}</th>
                 <th className="px-4 py-3 text-left font-medium text-text-muted">{t('table.lastLogin')}</th>
                 <th className="px-4 py-3 text-left font-medium text-text-muted">{t('table.joined')}</th>
+                <th className="px-4 py-3 text-right font-medium text-text-muted">{t('table.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -156,6 +186,29 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3 text-text-muted">
                       {new Date(user.createdAt).toLocaleDateString('ro-RO')}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {user.role !== 'SUPER_ADMIN' && (
+                        <button
+                          type="button"
+                          onClick={() => toggleUserStatus(user)}
+                          disabled={updatingId === user.id}
+                          className={`inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-60 ${
+                            user.isActive
+                              ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+                              : 'bg-success/10 text-success hover:bg-success/20'
+                          }`}
+                        >
+                          {updatingId === user.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : user.isActive ? (
+                            <PowerOff className="h-3.5 w-3.5" />
+                          ) : (
+                            <Power className="h-3.5 w-3.5" />
+                          )}
+                          {user.isActive ? t('deactivate') : t('activate')}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );

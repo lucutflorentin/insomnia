@@ -1,6 +1,43 @@
 import type { ZodError } from 'zod';
 import { bookingSchema, quickBookingSchema } from './validations';
 
+/**
+ * Validate and coerce the raw `referenceImages` JSON field from a Booking row
+ * into a tight `string[]` of `https?://` URLs.
+ */
+export function parseReferenceImages(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (entry): entry is string =>
+      typeof entry === 'string' && /^https?:\/\//.test(entry),
+  );
+}
+
+/**
+ * Replace raw Vercel Blob URLs with API-gated proxy paths so that admin /
+ * artist clients never touch the public Blob URL directly. The proxy endpoint
+ * authenticates the caller and streams the bytes from Blob storage.
+ *
+ * Indexes are stable: the proxy URL `/api/bookings/{id}/references/{index}`
+ * resolves to `referenceImages[index]` on the server.
+ */
+export function proxifyReferenceImages(
+  bookingId: number,
+  rawValue: unknown,
+): string[] {
+  const valid = parseReferenceImages(rawValue);
+  return valid.map((_, index) => `/api/bookings/${bookingId}/references/${index}`);
+}
+
+export function parseDisplayReferenceImages(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (entry): entry is string =>
+      typeof entry === 'string' &&
+      (/^https?:\/\//.test(entry) || /^\/api\/bookings\/\d+\/references\/\d+$/.test(entry)),
+  );
+}
+
 export interface NormalizedBookingRequest {
   artistSlug: string;
   clientName: string;

@@ -3,8 +3,10 @@
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
 import { Link } from '@/i18n/navigation';
-import { ArrowRight, ImageIcon } from 'lucide-react';
+import { ArrowRight, ImageIcon, Eye } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import SlideUp from '@/components/animations/SlideUp';
 import StaggerChildren, { StaggerItem } from '@/components/animations/StaggerChildren';
@@ -29,6 +31,7 @@ export default function GalleryHighlight({ items = [] }: GalleryHighlightProps) 
   const t = useTranslations('home.gallery');
   const locale = useLocale();
   const [activeArtist, setActiveArtist] = useState('all');
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
 
   const artistFilters = useMemo(() => {
     const uniqueArtists = new Map<string, string>();
@@ -36,10 +39,23 @@ export default function GalleryHighlight({ items = [] }: GalleryHighlightProps) 
     return Array.from(uniqueArtists.entries()).map(([slug, name]) => ({ slug, name }));
   }, [items]);
 
-  const filteredItems =
-    activeArtist === 'all'
-      ? items
-      : items.filter((item) => item.artistSlug === activeArtist);
+  const filteredItems = useMemo(
+    () =>
+      (activeArtist === 'all'
+        ? items
+        : items.filter((item) => item.artistSlug === activeArtist)
+      ).filter((item) => typeof item.imagePath === 'string' && item.imagePath.length > 0),
+    [activeArtist, items],
+  );
+
+  const lightboxSlides = useMemo(
+    () =>
+      filteredItems.map((item) => ({
+        src: item.imagePath,
+        alt: `${item.titleRo || item.titleEn || item.style} — ${item.artistName}`,
+      })),
+    [filteredItems],
+  );
 
   return (
     <section className="bg-bg-secondary py-24 sm:py-32">
@@ -99,44 +115,70 @@ export default function GalleryHighlight({ items = [] }: GalleryHighlightProps) 
 
               return (
                 <StaggerItem key={item.id}>
-                  <Link
-                    href={`/ink-space#${item.artistSlug}` as '/ink-space'}
+                  <div
                     className={cn(
-                      'group block overflow-hidden rounded-sm border border-border bg-bg-tertiary transition-all duration-300 hover:border-accent/40',
+                      'group relative block overflow-hidden rounded-sm border border-border bg-bg-tertiary transition-all duration-300 hover:border-accent/40',
                       index % 5 === 0 && 'sm:row-span-2',
                     )}
                   >
-                    <div
+                    <button
+                      type="button"
+                      onClick={() => setLightboxIndex(index)}
                       className={cn(
-                        'relative aspect-[4/5]',
-                        index % 5 === 0 && 'sm:aspect-[4/6]',
+                        'block w-full cursor-zoom-in text-left',
                       )}
+                      aria-label={
+                        locale === 'ro'
+                          ? `Deschide ${title} in marime completa`
+                          : `Open ${title} in full size`
+                      }
                     >
-                      <Image
-                        src={item.imagePath}
-                        alt={`${title} - ${item.artistName}`}
-                        fill
-                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/90 via-bg-primary/10 to-transparent opacity-90" />
-                      <div className="absolute inset-x-0 bottom-0 p-3">
-                        <div className="flex items-end justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-text-primary">
-                              {item.artistName}
-                            </p>
-                            <p className="truncate text-xs capitalize text-text-secondary">
-                              {title}
-                            </p>
+                      <div
+                        className={cn(
+                          'relative aspect-[4/5]',
+                          index % 5 === 0 && 'sm:aspect-[4/6]',
+                        )}
+                      >
+                        <Image
+                          src={item.imagePath}
+                          alt={`${title} - ${item.artistName}`}
+                          fill
+                          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/90 via-bg-primary/10 to-transparent opacity-90" />
+                        <div className="absolute inset-x-0 bottom-0 p-3">
+                          <div className="flex items-end justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium text-text-primary">
+                                {item.artistName}
+                              </p>
+                              <p className="truncate text-xs capitalize text-text-secondary">
+                                {title}
+                              </p>
+                            </div>
+                            <span className="rounded-full bg-accent/15 px-2 py-1 text-[10px] uppercase text-accent">
+                              {item.style}
+                            </span>
                           </div>
-                          <span className="rounded-full bg-accent/15 px-2 py-1 text-[10px] uppercase text-accent">
-                            {item.style}
-                          </span>
                         </div>
+                        <span
+                          aria-hidden="true"
+                          className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-bg-primary/70 px-2 py-1 text-[10px] uppercase tracking-wide text-text-secondary opacity-0 backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100"
+                        >
+                          <Eye className="h-3 w-3" />
+                          {locale === 'ro' ? 'Mareste' : 'Zoom'}
+                        </span>
                       </div>
-                    </div>
-                  </Link>
+                    </button>
+                    <Link
+                      href={`/ink-space#${item.artistSlug}` as '/ink-space'}
+                      className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 border-t border-border/40 bg-bg-primary/70 px-3 py-1.5 text-[11px] uppercase tracking-wide text-text-secondary opacity-0 transition-opacity duration-200 hover:bg-bg-primary/90 hover:text-accent group-hover:opacity-100"
+                    >
+                      {locale === 'ro' ? 'Vezi tot portofoliul' : 'See full portfolio'}
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </div>
                 </StaggerItem>
               );
             })}
@@ -157,6 +199,13 @@ export default function GalleryHighlight({ items = [] }: GalleryHighlightProps) 
           </Link>
         </SlideUp>
       </div>
+
+      <Lightbox
+        open={lightboxIndex >= 0}
+        close={() => setLightboxIndex(-1)}
+        index={Math.max(0, lightboxIndex)}
+        slides={lightboxSlides}
+      />
     </section>
   );
 }

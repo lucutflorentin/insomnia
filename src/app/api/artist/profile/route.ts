@@ -6,6 +6,32 @@ import { sanitizeText } from '@/lib/validations';
 const TEXT_FIELDS = ['bioRo', 'bioEn', 'specialtyRo', 'specialtyEn'] as const;
 const URL_FIELDS = ['instagramUrl', 'tiktokUrl'] as const;
 
+const MAX_SPECIALTIES = 20;
+const MAX_SPECIALTY_LENGTH = 50;
+
+/**
+ * Sanitizes an arbitrary client payload into a clean string[] of specialties.
+ * Trims whitespace, drops empties, caps each entry to 50 chars, deduplicates
+ * (case-insensitive), and limits the total list to 20 entries.
+ */
+function normalizeSpecialties(value: unknown): string[] | null {
+  if (value === null) return [];
+  if (!Array.isArray(value)) return null;
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const entry of value) {
+    if (typeof entry !== 'string') return null;
+    const cleaned = sanitizeText(entry.trim()).slice(0, MAX_SPECIALTY_LENGTH);
+    if (!cleaned) continue;
+    const key = cleaned.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(cleaned);
+    if (result.length >= MAX_SPECIALTIES) break;
+  }
+  return result;
+}
+
 function isHttpUrl(value: string): boolean {
   try {
     const url = new URL(value);
@@ -162,9 +188,23 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
+    // The "specialties" JSON column is updated separately because Prisma
+    // expects a JSON-compatible value, not a plain string.
+    const specialtiesUpdate: { specialties?: string[] } = {};
+    if ('specialties' in profilePayload) {
+      const normalized = normalizeSpecialties(profilePayload.specialties);
+      if (normalized === null) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid value for specialties' },
+          { status: 400 },
+        );
+      }
+      specialtiesUpdate.specialties = normalized;
+    }
+
     const artist = await prisma.artist.update({
       where: { id: artistId },
-      data: updateData,
+      data: { ...updateData, ...specialtiesUpdate },
       select: {
         id: true,
         name: true,

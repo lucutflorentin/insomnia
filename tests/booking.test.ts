@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { normalizeBookingRequestBody } from '../src/lib/booking';
+import {
+  normalizeBookingRequestBody,
+  parseDisplayReferenceImages,
+} from '../src/lib/booking';
 
 const fullWizardPayload = {
   artist: 'florentin',
@@ -61,4 +64,18 @@ test('normalizes quick booking payloads without requiring date or placement fiel
   assert.equal(result.data.source, 'quick_form');
   assert.equal(result.data.sizeCategory, 'medium');
   assert.equal(result.data.consultationDate, undefined);
+});
+
+test('accepts API-gated booking reference URLs for admin and artist display', () => {
+  const result = parseDisplayReferenceImages([
+    'https://example.com/reference.webp',
+    '/api/bookings/42/references/0',
+    '/api/bookings/not-a-number/references/0',
+    '/api/other/42/references/0',
+  ]);
+
+  assert.deepEqual(result, [
+    'https://example.com/reference.webp',
+    '/api/bookings/42/references/0',
+  ]);
 });

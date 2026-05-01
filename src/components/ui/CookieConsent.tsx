@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const COOKIE_KEY = 'insomnia_cookie_consent';
+const COOKIE_CONSENT_EVENT = 'insomnia-cookie-consent';
 
 export default function CookieConsent() {
   const t = useTranslations('common.cookies');
@@ -21,11 +22,13 @@ export default function CookieConsent() {
 
   const handleAccept = () => {
     localStorage.setItem(COOKIE_KEY, 'accepted');
+    window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_EVENT, { detail: 'accepted' }));
     setShow(false);
   };
 
   const handleDecline = () => {
     localStorage.setItem(COOKIE_KEY, 'declined');
+    window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_EVENT, { detail: 'declined' }));
     setShow(false);
   };
 

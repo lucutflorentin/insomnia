@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import * as Sentry from '@sentry/nextjs';
 
 export async function createNotification(params: {
   userId: number;
@@ -19,5 +20,12 @@ export async function createNotification(params: {
     });
   } catch (error) {
     console.error('Create notification failed:', error);
+    Sentry.captureException(error, {
+      tags: { lib: 'notifications', op: 'createNotification' },
+      extra: {
+        userId: params.userId,
+        type: params.type,
+      },
+    });
   }
 }

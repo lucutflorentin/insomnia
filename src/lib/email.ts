@@ -35,6 +35,8 @@ interface BookingEmailData {
   source?: string;
   clientPhone?: string;
   language: 'ro' | 'en';
+  /** Public URLs for reference images uploaded by the client (already validated upstream). */
+  referenceImages?: string[];
 }
 
 export async function sendBookingConfirmation(
@@ -257,9 +259,36 @@ export async function sendReviewRequest(data: {
 export async function sendBookingNotification(
   data: BookingEmailData,
 ): Promise<void> {
+  const referenceImages = (data.referenceImages || []).filter(
+    (url) => typeof url === 'string' && /^https?:\/\//.test(url),
+  );
+
+  const referenceBlock =
+    referenceImages.length > 0
+      ? `
+        <div style="margin: 20px 0; padding: 16px; background-color: #fafafa; border-radius: 4px; border: 1px solid #eee;">
+          <p style="margin: 0 0 12px 0; font-size: 13px; font-weight: bold; color: #444;">Imagini de referinta urcate de client (${referenceImages.length})</p>
+          <table style="border-collapse: collapse;">
+            <tr>
+              ${referenceImages
+                .map(
+                  (url) => `
+                  <td style="padding: 4px;">
+                    <a href="${url}" target="_blank" rel="noopener noreferrer">
+                      <img src="${url}" alt="Referinta" width="120" height="120" style="display: block; width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />
+                    </a>
+                  </td>`,
+                )
+                .join('')}
+            </tr>
+          </table>
+          <p style="margin: 12px 0 0 0; font-size: 12px; color: #888;">Click pe orice imagine pentru a o deschide la dimensiune completa. Tine de tine aceste linkuri private; nu le distribui in afara echipei.</p>
+        </div>`
+      : '';
+
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h2 style="color: #B0B0B0;">🖤 Booking nou — ${escapeHtml(data.clientName)}</h2>
+      <h2 style="color: #B0B0B0;">Booking nou — ${escapeHtml(data.clientName)}</h2>
 
       <p>Ai o cerere noua de consultatie!</p>
 
@@ -276,8 +305,10 @@ export async function sendBookingNotification(
 
       ${data.description ? `<p><strong>Descriere:</strong><br/>${escapeHtml(data.description)}</p>` : ''}
 
+      ${referenceBlock}
+
       <p style="color: #666;">Cod referinta: ${data.referenceCode}</p>
-      <p>→ Intra in admin panel pentru detalii complete.</p>
+      <p>&rarr; Intra in admin panel pentru detalii complete.</p>
     </div>
   `;
 
@@ -469,6 +500,130 @@ export async function sendPasswordResetEmail(data: {
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: data.email,
     subject: 'Resetare parola — Insomnia Tattoo',
+    html,
+  });
+}
+
+// ─── Welcome Email for Booking-Created Account ──────────────────────────────
+
+/**
+ * Sent right after a guest booking when the user opted in to "save my
+ * appointments to a new account". The link drops them into the password-reset
+ * page where they finish setup.
+ */
+export async function sendBookingAccountWelcomeEmail(data: {
+  email: string;
+  name: string;
+  setupUrl: string;
+  language: 'ro' | 'en';
+}): Promise<void> {
+  const isRo = data.language === 'ro';
+
+  const subject = isRo
+    ? 'Contul tau Insomnia Tattoo e gata sa-l activezi'
+    : 'Your Insomnia Tattoo account is ready to activate';
+
+  const intro = isRo
+    ? `Ai rezervat o sedinta la Insomnia Tattoo si ai ales sa-ti pastrezi programarile in cont. Ti-am creat unul si trebuie doar sa setezi o parola pentru a-l activa.`
+    : `You booked a session at Insomnia Tattoo and chose to keep your appointments in an account. We created one for you — just set a password to activate it.`;
+
+  const cta = isRo ? 'Seteaza parola' : 'Set password';
+
+  const expiry = isRo
+    ? 'Link-ul expira in 1 ora. Daca nu ai cerut acest cont, ignora emailul.'
+    : 'The link expires in 1 hour. If you didn\'t request this, just ignore this email.';
+
+  const signoff = isRo
+    ? 'Cu drag,<br /><strong>Echipa Insomnia Tattoo</strong>'
+    : 'With love,<br /><strong>The Insomnia Tattoo team</strong>';
+
+  const html = `
+    <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0A0A0A; color: #F5F5F5; padding: 40px 30px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="font-family: 'Playfair Display', Georgia, serif; color: #B0B0B0; font-size: 28px; margin: 0;">
+          Insomnia Tattoo
+        </h1>
+      </div>
+
+      <p style="font-size: 16px; line-height: 1.6;">${isRo ? 'Salut' : 'Hi'} ${escapeHtml(data.name)}!</p>
+
+      <p style="font-size: 16px; line-height: 1.6; color: #A0A0A0;">${intro}</p>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${data.setupUrl}" style="display: inline-block; padding: 14px 32px; background-color: #B0B0B0; color: #0A0A0A; text-decoration: none; font-weight: 600; font-size: 15px; border-radius: 4px;">
+          ${cta}
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #666666;">${expiry}</p>
+
+      <hr style="border: none; border-top: 1px solid #2A2A2A; margin: 30px 0;" />
+
+      <p style="font-size: 13px; color: #666666; text-align: center;">${signoff}</p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
+    to: data.email,
+    subject,
+    html,
+  });
+}
+
+// ─── Guest GDPR data erasure (email confirmation) ───────────────────────────
+
+export async function sendGuestDataErasureEmail(data: {
+  email: string;
+  confirmUrl: string;
+  language: 'ro' | 'en';
+}): Promise<void> {
+  const isRo = data.language === 'ro';
+
+  const subject = isRo
+    ? 'Confirma stergerea datelor — Insomnia Tattoo'
+    : 'Confirm data erasure — Insomnia Tattoo';
+
+  const intro = isRo
+    ? `Am primit o cerere de anonimizare a datelor personale pentru adresa ${escapeHtml(data.email)}, asociata cu programari facute fara cont pe site.`
+    : `We received a request to anonymize personal data for ${escapeHtml(data.email)} from guest bookings made without an account.`;
+
+  const expl = isRo
+    ? 'Daca tu ai facut cererea, apasa butonul de mai jos. Dupa confirmare, numele, telefonul, emailul, descrierea si imaginile de referinta din aceste programari vor fi sterse sau inlocuite cu valori anonime. Păstrăm datele strict necesare pentru evidenta interna a studioului (ex: data, artist, status).'
+    : 'If you made this request, click the button below. After confirmation, name, phone, email, description, and reference images for those guest bookings will be removed or replaced with anonymous values. We retain only what the studio needs for internal records (e.g. date, artist, status).';
+
+  const cta = isRo ? 'Confirma anonimizarea' : 'Confirm anonymization';
+
+  const expiry = isRo
+    ? 'Link-ul expira in 24 de ore. Daca nu ai cerut asta, ignora acest email.'
+    : 'This link expires in 24 hours. If you did not request this, ignore this email.';
+
+  const html = `
+    <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0A0A0A; color: #F5F5F5; padding: 40px 30px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="font-family: 'Playfair Display', Georgia, serif; color: #B0B0B0; font-size: 24px; margin: 0;">
+          Insomnia Tattoo
+        </h1>
+      </div>
+      <p style="font-size: 15px; line-height: 1.6; color: #A0A0A0;">${intro}</p>
+      <p style="font-size: 15px; line-height: 1.6; color: #A0A0A0;">${expl}</p>
+      <div style="text-align: center; margin: 28px 0;">
+        <a href="${escapeHtml(data.confirmUrl)}" style="display: inline-block; padding: 14px 28px; background-color: #B0B0B0; color: #0A0A0A; text-decoration: none; font-weight: 600; font-size: 14px; border-radius: 4px;">
+          ${cta}
+        </a>
+      </div>
+      <p style="font-size: 13px; color: #666666;">${expiry}</p>
+      <hr style="border: none; border-top: 1px solid #2A2A2A; margin: 24px 0;" />
+      <p style="font-size: 12px; color: #666666; text-align: center;">
+        <strong>Echipa Insomnia Tattoo</strong> · contact@insomniatattoo.ro
+      </p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
+    to: data.email,
+    subject,
     html,
   });
 }

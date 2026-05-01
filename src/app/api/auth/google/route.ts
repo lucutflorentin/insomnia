@@ -5,6 +5,7 @@ import {
   signToken,
   signRefreshToken,
   setAuthCookies,
+  createRefreshSession,
 } from '@/lib/auth';
 import type { JWTPayload } from '@/lib/auth';
 import { checkRateLimit, getClientIp, AUTH_LIMIT } from '@/lib/rate-limit';
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest) {
       signRefreshToken(payload),
     ]);
 
+    await createRefreshSession(user.id, refreshToken, request);
     await setAuthCookies(accessToken, refreshToken);
 
     return NextResponse.json({

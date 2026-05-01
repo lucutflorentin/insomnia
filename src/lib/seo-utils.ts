@@ -10,6 +10,7 @@ const pathMap: Record<string, { ro: string; en: string }> = {
   '/good-to-know': { ro: '/bun-de-stiut', en: '/en/good-to-know' },
   '/aftercare': { ro: '/aftercare', en: '/en/aftercare' },
   '/privacy': { ro: '/confidentialitate', en: '/en/privacy' },
+  '/guest-data': { ro: '/guest-data', en: '/en/guest-data' },
   '/terms': { ro: '/termeni', en: '/en/terms' },
   '/cookies': { ro: '/politica-cookies', en: '/en/cookies' },
   '/about': { ro: '/despre-noi', en: '/en/about' },

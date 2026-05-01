@@ -8,6 +8,8 @@ import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 interface ContactContentProps {
   locale: string;
   siteConfig: {
@@ -33,21 +35,53 @@ export default function ContactContent({
   const { showToast } = useToast();
 
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const validateContact = (): boolean => {
+    const next: Record<string, string> = {};
+    const nameT = form.name.trim();
+    const emailT = form.email.trim();
+    const msgT = form.message.trim();
+
+    if (nameT.length < 2) next.name = t('nameMin');
+    if (!emailT) {
+      next.email = t('emailRequired');
+    } else if (!EMAIL_RE.test(emailT)) {
+      next.email = t('emailInvalid');
+    }
+    if (!msgT) {
+      next.message = t('messageRequired');
+    } else if (msgT.length < 10) {
+      next.message = t('messageMin');
+    }
+
+    setFieldErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateContact()) {
+      return;
+    }
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim() || undefined,
+          message: form.message.trim(),
+        }),
       });
       if (res.ok) {
         setIsSuccess(true);
         setForm({ name: '', email: '', phone: '', message: '' });
+        setFieldErrors({});
         showToast(t('success'), 'success');
       } else {
         const data = await res.json();
@@ -205,15 +239,23 @@ export default function ContactContent({
                     <Input
                       label={t('name')}
                       value={form.name}
-                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                      onChange={(e) => {
+                        setForm((f) => ({ ...f, name: e.target.value }));
+                        setFieldErrors((e) => ({ ...e, name: '' }));
+                      }}
                       required
+                      error={fieldErrors.name}
                     />
                     <Input
                       label={t('email')}
                       type="email"
                       value={form.email}
-                      onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                      onChange={(e) => {
+                        setForm((f) => ({ ...f, email: e.target.value }));
+                        setFieldErrors((e) => ({ ...e, email: '' }));
+                      }}
                       required
+                      error={fieldErrors.email}
                     />
                     <Input
                       label={t('phone')}
@@ -225,8 +267,13 @@ export default function ContactContent({
                       label={t('message')}
                       placeholder={t('messagePlaceholder')}
                       value={form.message}
-                      onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+                      onChange={(e) => {
+                        setForm((f) => ({ ...f, message: e.target.value }));
+                        setFieldErrors((e) => ({ ...e, message: '' }));
+                      }}
                       rows={4}
+                      required
+                      error={fieldErrors.message}
                     />
                     <Button type="submit" isLoading={isSubmitting} className="w-full">
                       {isSubmitting ? t('sending') : t('send')}

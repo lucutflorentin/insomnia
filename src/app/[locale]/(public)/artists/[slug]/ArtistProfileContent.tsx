@@ -83,13 +83,20 @@ export default function ArtistProfileContent({
 
   const specialty = (locale === 'ro' ? artist.specialtyRo : artist.specialtyEn) || artist.specialtyRo || '';
   const bio = (locale === 'ro' ? artist.bioRo : artist.bioEn) || artist.bioRo || '';
+  const validGallery = useMemo(
+    () =>
+      gallery.filter(
+        (work) => typeof work.imagePath === 'string' && work.imagePath.length > 0,
+      ),
+    [gallery],
+  );
   const lightboxSlides = useMemo(
     () =>
-      gallery.map((work) => ({
+      validGallery.map((work) => ({
         src: work.imagePath,
         alt: work.title || `Tatuaj ${work.style} de ${artist.name}`,
       })),
-    [artist.name, gallery],
+    [artist.name, validGallery],
   );
   const getStyleLabel = (style: string) => {
     const key = normalizeStyleKey(style);
@@ -208,7 +215,7 @@ export default function ArtistProfileContent({
         </div>
 
         {/* Gallery */}
-        {gallery.length > 0 && (
+        {validGallery.length > 0 && (
           <section>
             <SlideUp>
               <h2 className="font-heading text-2xl font-bold sm:text-3xl">
@@ -221,7 +228,7 @@ export default function ArtistProfileContent({
               staggerDelay={0.05}
               className="mt-8 columns-2 gap-3 sm:columns-3 lg:columns-4"
             >
-              {gallery.map((work, index) => (
+              {validGallery.map((work, index) => (
                 <StaggerItem key={work.id} className="mb-3 break-inside-avoid">
                   <button
                     type="button"
@@ -259,7 +266,7 @@ export default function ArtistProfileContent({
             <Lightbox
               open={lightboxIndex >= 0}
               close={() => setLightboxIndex(-1)}
-              index={lightboxIndex}
+              index={Math.max(0, lightboxIndex)}
               slides={lightboxSlides}
             />
           </section>

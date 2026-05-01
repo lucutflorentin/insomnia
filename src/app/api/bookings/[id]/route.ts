@@ -7,6 +7,7 @@ import { logAuditEvent } from '@/lib/audit';
 import { createNotification } from '@/lib/notifications';
 import { sendPushToUser } from '@/lib/push';
 import { formatLocalDateKey } from '@/lib/utils';
+import { proxifyReferenceImages } from '@/lib/booking';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -40,7 +41,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    return NextResponse.json({ success: true, data: booking });
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...booking,
+        referenceImages: proxifyReferenceImages(booking.id, booking.referenceImages),
+      },
+    });
   } catch {
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
@@ -118,65 +125,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Aftercare email is now sent via cron job 7 days after completion (matches email content)
-    // Auto-award loyalty point when status changes to 'completed'
-    if (parsed.data.status === 'completed' && current.status !== 'completed') {
-      // Auto-award loyalty point if client is registered
-      if (current.clientId) {
-        try {
-          await prisma.loyaltyTransaction.create({
-            data: {
-              userId: current.clientId,
-              bookingId: booking.id,
-              type: 'earn',
-              points: 1,
-              valueRon: 50.00,
-              description: `Sedinta completata — ${booking.artist.name}`,
-              createdBy: Number(admin.sub),
-            },
-          });
-
-          // Notify client about earned loyalty point
-          createNotification({
-            userId: current.clientId,
-            type: 'loyalty_earned',
-            title: 'Ai primit 1 punct fidelitate!',
-            message: `Felicitari! Ai castigat 1 punct (50 RON) pentru sedinta cu ${booking.artist.name}.`,
-            link: '/account',
-          });
-
-          // Check if 10th point reached → notify admin for surprise
-          const earnCount = await prisma.loyaltyTransaction.count({
-            where: { userId: current.clientId, type: 'earn' },
-          });
-          if (earnCount > 0 && earnCount % 10 === 0) {
-            const { sendSurpriseNotification } = await import('@/lib/email');
-            sendSurpriseNotification({
-              clientName: booking.clientName,
-              clientEmail: booking.clientEmail,
-              totalPoints: earnCount,
-            }).catch(() => {});
-
-            // Notify all admins in-app about the loyalty surprise milestone
-            prisma.user.findMany({
-              where: { role: 'SUPER_ADMIN', isActive: true },
-              select: { id: true },
-            }).then((admins) => {
-              for (const a of admins) {
-                createNotification({
-                  userId: a.id,
-                  type: 'loyalty_earned',
-                  title: 'Surpriza loyalty de acordat!',
-                  message: `${booking.clientName} a atins ${earnCount} puncte. Acorda surpriza!`,
-                  link: '/admin/loyalty',
-                });
-              }
-            }).catch(() => {});
-          }
-        } catch (loyaltyError) {
-          console.error('Loyalty point award failed:', loyaltyError);
-        }
-      }
-    }
+    // Loyalty awarding is no longer automatic — the artist explicitly grants
+    // points via POST /api/artist/loyalty after marking a booking as completed.
+    // The "10-points surprise" notification still happens, but it's triggered
+    // from inside that endpoint when the artist actually awards points.
 
     // In-app notification to client about status change
     if (parsed.data.status !== current.status && current.clientId) {

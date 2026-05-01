@@ -1,4 +1,5 @@
 import webpush from 'web-push';
+import * as Sentry from '@sentry/nextjs';
 import { prisma } from '@/lib/prisma';
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
@@ -55,9 +56,20 @@ export async function sendPushToUser(userId: number, payload: PushPayload): Prom
     const expiredIds: number[] = [];
     results.forEach((result, i) => {
       if (result.status === 'rejected') {
-        const statusCode = (result.reason as { statusCode?: number })?.statusCode;
+        const reason = result.reason as { statusCode?: number; message?: string };
+        const statusCode = reason?.statusCode;
         if (statusCode === 410 || statusCode === 404) {
           expiredIds.push(subscriptions[i].id);
+        } else {
+          Sentry.captureException(result.reason, {
+            level: 'warning',
+            tags: { lib: 'web-push', op: 'sendNotification' },
+            extra: {
+              userId,
+              subscriptionId: subscriptions[i].id,
+              statusCode: statusCode ?? 'unknown',
+            },
+          });
         }
       }
     });
@@ -67,8 +79,11 @@ export async function sendPushToUser(userId: number, payload: PushPayload): Prom
         where: { id: { in: expiredIds } },
       });
     }
-  } catch {
-    // Fire-and-forget
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { lib: 'web-push', op: 'sendPushToUser' },
+      extra: { userId },
+    });
   }
 }
 
@@ -87,7 +102,10 @@ export async function sendPushToRole(role: 'SUPER_ADMIN' | 'ARTIST' | 'CLIENT', 
     await Promise.allSettled(
       users.map((u) => sendPushToUser(u.id, payload)),
     );
-  } catch {
-    // Fire-and-forget
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { lib: 'web-push', op: 'sendPushToRole' },
+      extra: { role },
+    });
   }
 }

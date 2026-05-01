@@ -30,6 +30,7 @@ export const routing = defineRouting({
       ro: '/confidentialitate',
       en: '/privacy',
     },
+    '/guest-data': '/guest-data',
     '/terms': {
       ro: '/termeni',
       en: '/terms',

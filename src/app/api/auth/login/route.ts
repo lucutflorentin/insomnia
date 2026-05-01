@@ -6,6 +6,7 @@ import {
   signToken,
   signRefreshToken,
   setAuthCookies,
+  createRefreshSession,
 } from '@/lib/auth';
 import type { JWTPayload } from '@/lib/auth';
 import { checkRateLimit, getClientIp, AUTH_LIMIT } from '@/lib/rate-limit';
@@ -92,13 +93,15 @@ export async function POST(request: NextRequest) {
       signRefreshToken(payload),
     ]);
 
-    await setAuthCookies(accessToken, refreshToken);
-
-    // Reset failed attempts and update last login
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date(), failedLoginAttempts: 0, lockedUntil: null },
+    await prisma.$transaction(async (tx) => {
+      await tx.session.deleteMany({ where: { userId: user.id, expiresAt: { lt: new Date() } } });
+      await tx.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date(), failedLoginAttempts: 0, lockedUntil: null },
+      });
     });
+    await createRefreshSession(user.id, refreshToken, request);
+    await setAuthCookies(accessToken, refreshToken);
 
     return NextResponse.json({
       success: true,

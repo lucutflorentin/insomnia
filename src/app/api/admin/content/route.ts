@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifySuperAdmin } from '@/lib/auth';
 import { logAuditEvent } from '@/lib/audit';
-
-const CONTENT_PREFIX = 'content_';
+import { CONTENT_KEYS, CONTENT_PREFIX, isContentKey } from '@/lib/content';
 
 // GET /api/admin/content — Fetch all content settings
 export async function GET(request: NextRequest) {
@@ -12,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     const settings = await prisma.setting.findMany({
       where: {
-        settingKey: { startsWith: CONTENT_PREFIX },
+        settingKey: { in: CONTENT_KEYS.map((key) => `${CONTENT_PREFIX}${key}`) },
       },
     });
 
@@ -44,11 +43,31 @@ export async function PUT(request: NextRequest) {
     }
 
     const entries = Object.entries(body) as [string, string][];
+    const invalidKeys = entries
+      .map(([key]) => key)
+      .filter((key) => !isContentKey(key));
+
+    if (invalidKeys.length > 0) {
+      return NextResponse.json(
+        { success: false, error: `Invalid content keys: ${invalidKeys.join(', ')}` },
+        { status: 400 },
+      );
+    }
+
+    for (const [key, value] of entries) {
+      if (typeof value !== 'string' || value.length > 5000) {
+        return NextResponse.json(
+          { success: false, error: `Invalid value for ${key}` },
+          { status: 400 },
+        );
+      }
+    }
+
     const ops = entries.map(([key, value]) =>
       prisma.setting.upsert({
         where: { settingKey: `${CONTENT_PREFIX}${key}` },
-        update: { settingValue: String(value) },
-        create: { settingKey: `${CONTENT_PREFIX}${key}`, settingValue: String(value) },
+        update: { settingValue: value },
+        create: { settingKey: `${CONTENT_PREFIX}${key}`, settingValue: value },
       }),
     );
 

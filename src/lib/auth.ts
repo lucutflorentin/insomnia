@@ -1,6 +1,8 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { compare, hash } from 'bcryptjs';
 import { cookies } from 'next/headers';
+import crypto from 'crypto';
+import { prisma } from '@/lib/prisma';
 import type { UserRole } from '@/types';
 
 // --- Secret validation at startup ---
@@ -19,6 +21,7 @@ if (!rawJwtRefreshSecret || rawJwtRefreshSecret.length < 32) {
 
 const JWT_SECRET = new TextEncoder().encode(rawJwtSecret);
 const JWT_REFRESH_SECRET = new TextEncoder().encode(rawJwtRefreshSecret);
+export const REFRESH_TOKEN_MAX_AGE_SEC = 7 * 24 * 60 * 60;
 
 export interface JWTPayload {
   sub: string; // User.id as string
@@ -44,6 +47,41 @@ export async function signRefreshToken(payload: JWTPayload): Promise<string> {
     .setIssuedAt()
     .setExpirationTime('7d')
     .sign(JWT_REFRESH_SECRET);
+}
+
+export function hashRefreshTokenValue(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+export function extractRefreshToken(request: Request): string | null {
+  const cookieHeader = request.headers.get('cookie');
+  if (!cookieHeader) return null;
+
+  const refreshMatch = cookieHeader.match(/insomnia_refresh=([^;]+)/);
+  return refreshMatch?.[1] || null;
+}
+
+export async function createRefreshSession(
+  userId: number,
+  refreshToken: string,
+  request: Request,
+): Promise<void> {
+  const userAgent = request.headers.get('user-agent')?.slice(0, 500) || null;
+  await prisma.session.create({
+    data: {
+      userId,
+      refreshToken: hashRefreshTokenValue(refreshToken),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_SEC * 1000),
+      userAgent,
+    },
+  });
+}
+
+export async function revokeRefreshSession(refreshToken: string | null): Promise<void> {
+  if (!refreshToken) return;
+  await prisma.session.deleteMany({
+    where: { refreshToken: hashRefreshTokenValue(refreshToken) },
+  });
 }
 
 // --- Token verification ---
@@ -92,7 +130,7 @@ export async function setAuthCookies(
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     path: '/',
-    maxAge: 7 * 24 * 60 * 60, // 7 days
+    maxAge: REFRESH_TOKEN_MAX_AGE_SEC, // 7 days
   });
 }
 
@@ -122,7 +160,39 @@ function extractToken(request: Request): string {
 export async function verifyAuthRequest(
   request: Request,
 ): Promise<JWTPayload> {
-  return verifyToken(extractToken(request));
+  const payload = await verifyToken(extractToken(request));
+  const user = await prisma.user.findUnique({
+    where: { id: Number(payload.sub) },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      isActive: true,
+      artist: {
+        select: {
+          id: true,
+          isActive: true,
+        },
+      },
+    },
+  });
+
+  if (!user || !user.isActive) {
+    throw new Error('Inactive or missing user');
+  }
+
+  if (user.role === 'ARTIST' && (!user.artist || !user.artist.isActive)) {
+    throw new Error('Inactive or missing artist profile');
+  }
+
+  return {
+    sub: user.id.toString(),
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    ...(user.artist ? { artistId: user.artist.id } : {}),
+  };
 }
 
 /** Legacy alias — verify admin (SUPER_ADMIN or ARTIST) request. */

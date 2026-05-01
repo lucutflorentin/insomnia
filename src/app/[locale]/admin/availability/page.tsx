@@ -181,7 +181,7 @@ export default function AdminAvailabilityPage() {
 
     try {
       const res = await fetch(
-        `/api/bookings?artistId=${selectedArtist}&startDate=${start}&endDate=${end}&limit=50`,
+        `/api/bookings?artistId=${selectedArtist}&startDate=${start}&endDate=${end}&limit=500`,
       );
       if (res.ok) {
         const data = await res.json();

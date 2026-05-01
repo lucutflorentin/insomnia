@@ -43,8 +43,14 @@ export async function GET(request: NextRequest) {
         where: { createdAt: { gte: startOfLastMonth, lte: endOfLastMonth } },
       }),
 
-      // Confirmed bookings
-      prisma.booking.count({ where: { status: 'confirmed' } }),
+      // Confirmed bookings in the same period as monthCount, so conversion
+      // cannot be inflated by historical confirmed bookings.
+      prisma.booking.count({
+        where: {
+          status: 'confirmed',
+          createdAt: { gte: startOfMonth, lte: endOfMonth },
+        },
+      }),
 
       // Pending reviews
       prisma.review.count({ where: { isApproved: false } }),

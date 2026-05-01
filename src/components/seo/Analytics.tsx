@@ -6,6 +6,7 @@ import Script from 'next/script';
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 const COOKIE_KEY = 'insomnia_cookie_consent';
+const COOKIE_CONSENT_EVENT = 'insomnia-cookie-consent';
 
 export default function Analytics() {
   const [consent, setConsent] = useState(false);
@@ -19,8 +20,16 @@ export default function Analytics() {
         setConsent(e.newValue === 'accepted');
       }
     };
+    const handleConsentEvent = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      setConsent(detail === 'accepted');
+    };
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener(COOKIE_CONSENT_EVENT, handleConsentEvent);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(COOKIE_CONSENT_EVENT, handleConsentEvent);
+    };
   }, []);
 
   if (!consent) return null;

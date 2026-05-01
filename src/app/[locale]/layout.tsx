@@ -30,7 +30,8 @@ const inter = Inter({
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
   variable: '--font-accent',
-  weight: ['300', '400', '500', '600', '700'],
+  /** Only weights used in UI (normal + font-semibold); fewer files = faster FCP. */
+  weight: ['400', '600'],
   display: 'swap',
 });
 

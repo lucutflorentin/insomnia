@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       b.clientEmail,
       b.clientPhone || '',
       b.artist.name,
-      new Date(b.consultationDate).toLocaleDateString('ro-RO'),
+      b.consultationDate ? new Date(b.consultationDate).toLocaleDateString('ro-RO') : 'De stabilit',
       b.consultationTime || '',
       b.bodyArea || '',
       b.sizeCategory || '',

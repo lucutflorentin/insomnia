@@ -13,16 +13,21 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 interface Artist {
   id: number;
   name: string;
-  email: string;
   slug: string;
-  bio?: string;
+  bioRo?: string | null;
   bioEn?: string;
-  specialty?: string;
+  specialtyRo?: string | null;
   specialtyEn?: string;
-  instagram?: string;
-  tiktok?: string;
-  profileImage?: string;
+  specialties?: string[];
+  instagramUrl?: string | null;
+  tiktokUrl?: string | null;
+  profileImage?: string | null;
   isActive: boolean;
+  user: {
+    id: number;
+    email: string;
+    isActive: boolean;
+  };
   _count?: { bookings: number };
 }
 
@@ -122,15 +127,15 @@ export default function AdminArtistsPage() {
   const openEditModal = (artist: Artist) => {
     setEditingArtist(artist);
     setFormName(artist.name);
-    setFormEmail(artist.email);
+    setFormEmail(artist.user.email);
     setFormPassword('');
-    setFormBioRo(artist.bio || '');
+    setFormBioRo(artist.bioRo || '');
     setFormBioEn(artist.bioEn || '');
-    setFormSpecialtyRo(artist.specialty || '');
+    setFormSpecialtyRo(artist.specialtyRo || '');
     setFormSpecialtyEn(artist.specialtyEn || '');
-    setFormSpecialties([]);
-    setFormInstagram(artist.instagram || '');
-    setFormTiktok(artist.tiktok || '');
+    setFormSpecialties(Array.isArray(artist.specialties) ? artist.specialties : []);
+    setFormInstagram(artist.instagramUrl || '');
+    setFormTiktok(artist.tiktokUrl || '');
     setFormImage(null);
     setFormError('');
     setGeneratedCredentials(null);
@@ -306,7 +311,7 @@ export default function AdminArtistsPage() {
                 )}
                 <div className="min-w-0">
                   <h3 className="truncate text-sm font-semibold text-text-primary">{artist.name}</h3>
-                  <p className="truncate text-xs text-text-muted">{artist.specialty || 'No specialty'}</p>
+                  <p className="truncate text-xs text-text-muted">{artist.specialtyRo || artist.specialtyEn || 'No specialty'}</p>
                 </div>
               </div>
 

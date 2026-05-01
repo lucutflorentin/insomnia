@@ -3,12 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { Camera, Loader2, UserCircle } from 'lucide-react';
+import { Camera, Loader2, Plus, UserCircle, X } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
-import { GALLERY_UPLOAD_CONFIG } from '@/lib/constants';
+import { GALLERY_UPLOAD_CONFIG, TATTOO_STYLES } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 interface ArtistProfile {
   id: number;
@@ -26,6 +27,7 @@ interface ArtistProfile {
 
 export default function ArtistProfilePage() {
   const t = useTranslations('artist.profile');
+  const tStyles = useTranslations('artists.styles');
   const { showToast } = useToast();
   const [profile, setProfile] = useState<ArtistProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +35,7 @@ export default function ArtistProfilePage() {
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [customStyle, setCustomStyle] = useState('');
 
   const [form, setForm] = useState({
     bioRo: '',
@@ -42,7 +45,52 @@ export default function ArtistProfilePage() {
     instagramUrl: '',
     tiktokUrl: '',
     profileImage: '',
+    specialties: [] as string[],
   });
+
+  /**
+   * Returns a human-readable label for a specialty value, falling back to
+   * the raw value when there's no translation (i.e. for custom styles).
+   */
+  const renderSpecialtyLabel = (value: string): string => {
+    try {
+      const translated = tStyles(value as 'realism');
+      // next-intl returns the key string when missing; fall back to the value.
+      return translated && translated !== value ? translated : value;
+    } catch {
+      return value;
+    }
+  };
+
+  const toggleSpecialty = (specialty: string) => {
+    setForm((prev) => {
+      const exists = prev.specialties.some(
+        (s) => s.toLowerCase() === specialty.toLowerCase(),
+      );
+      const next = exists
+        ? prev.specialties.filter(
+            (s) => s.toLowerCase() !== specialty.toLowerCase(),
+          )
+        : [...prev.specialties, specialty];
+      return { ...prev, specialties: next.slice(0, 20) };
+    });
+  };
+
+  const addCustomStyle = () => {
+    const trimmed = customStyle.trim().slice(0, 50);
+    if (!trimmed) return;
+    if (
+      form.specialties.some((s) => s.toLowerCase() === trimmed.toLowerCase())
+    ) {
+      setCustomStyle('');
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      specialties: [...prev.specialties, trimmed].slice(0, 20),
+    }));
+    setCustomStyle('');
+  };
 
   useEffect(() => {
     fetch('/api/artist/profile')
@@ -59,6 +107,7 @@ export default function ArtistProfilePage() {
             instagramUrl: p.instagramUrl || '',
             tiktokUrl: p.tiktokUrl || '',
             profileImage: p.profileImage || '',
+            specialties: Array.isArray(p.specialties) ? p.specialties : [],
           });
         }
       })
@@ -141,7 +190,13 @@ export default function ArtistProfilePage() {
         setProfile(data.data);
         setProfileImageFile(null);
         setProfileImagePreview(null);
-        setForm((f) => ({ ...f, profileImage: data.data.profileImage || '' }));
+        setForm((f) => ({
+          ...f,
+          profileImage: data.data.profileImage || '',
+          specialties: Array.isArray(data.data.specialties)
+            ? data.data.specialties
+            : [],
+        }));
         showToast(t('saved'), 'success');
       } else {
         showToast(data.error || t('error'), 'error');
@@ -223,6 +278,91 @@ export default function ArtistProfilePage() {
       </div>
 
       <div className="space-y-5 rounded-sm border border-border bg-bg-secondary p-6">
+        <div>
+          <p className="mb-1 text-sm font-medium text-text-secondary">
+            {t('stylesTitle')}
+          </p>
+          <p className="mb-3 text-xs text-text-muted">{t('stylesHint')}</p>
+
+          {form.specialties.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {form.specialties.map((style) => (
+                <span
+                  key={style}
+                  className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs text-accent"
+                >
+                  {renderSpecialtyLabel(style)}
+                  <button
+                    type="button"
+                    onClick={() => toggleSpecialty(style)}
+                    aria-label={t('stylesRemove', {
+                      style: renderSpecialtyLabel(style),
+                    })}
+                    className="ml-0.5 rounded-full p-0.5 text-accent/80 transition-colors hover:bg-accent/20 hover:text-accent"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          <p className="mb-2 text-xs text-text-muted">
+            {t('stylesPickFromList')}
+          </p>
+          <div className="mb-4 flex flex-wrap gap-2">
+            {TATTOO_STYLES.filter((s) => s !== 'other').map((style) => {
+              const isSelected = form.specialties.some(
+                (s) => s.toLowerCase() === style.toLowerCase(),
+              );
+              return (
+                <button
+                  key={style}
+                  type="button"
+                  onClick={() => toggleSpecialty(style)}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    'rounded-full border px-3 py-1 text-xs transition-all',
+                    isSelected
+                      ? 'border-accent bg-accent/15 text-accent'
+                      : 'border-border bg-bg-tertiary text-text-secondary hover:border-accent/40 hover:text-text-primary',
+                  )}
+                >
+                  {renderSpecialtyLabel(style)}
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="mb-2 text-xs text-text-muted">{t('stylesAddCustom')}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              value={customStyle}
+              onChange={(e) => setCustomStyle(e.target.value.slice(0, 50))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addCustomStyle();
+                }
+              }}
+              placeholder={t('stylesCustomPlaceholder')}
+              className="min-w-0 flex-1 rounded-sm border border-border bg-bg-tertiary px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50"
+              maxLength={50}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={addCustomStyle}
+              disabled={!customStyle.trim()}
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              {t('stylesAddBtn')}
+            </Button>
+          </div>
+        </div>
+
         <Textarea
           label={t('specialtyRo')}
           value={form.specialtyRo}

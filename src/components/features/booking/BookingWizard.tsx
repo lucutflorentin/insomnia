@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
@@ -25,8 +25,33 @@ interface DayAvailability {
 
 const TOTAL_STEPS = 5;
 
+const STEP3_WEEKDAY_FULL_KEYS = [
+  'weekdayMonFull',
+  'weekdayTueFull',
+  'weekdayWedFull',
+  'weekdayThuFull',
+  'weekdayFriFull',
+  'weekdaySatFull',
+  'weekdaySunFull',
+] as const;
+
+type FieldKey =
+  | 'artist'
+  | 'bodyArea'
+  | 'size'
+  | 'description'
+  | 'date'
+  | 'time'
+  | 'name'
+  | 'phone'
+  | 'email'
+  | 'gdpr';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function BookingWizard() {
   const t = useTranslations('booking');
+  const tValidation = useTranslations('booking.validation');
   const tAreas = useTranslations('booking.step2.bodyAreas');
   const tSizes = useTranslations('booking.step2.sizes');
   const tSources = useTranslations('booking.step4.sources');
@@ -59,11 +84,26 @@ export default function BookingWizard() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
+  const calendarLocaleTag = locale === 'en' ? 'en-GB' : 'ro-RO';
+  const weekdayShortLabels = useMemo(
+    () => [
+      t('step3.weekdayMon'),
+      t('step3.weekdayTue'),
+      t('step3.weekdayWed'),
+      t('step3.weekdayThu'),
+      t('step3.weekdayFri'),
+      t('step3.weekdaySat'),
+      t('step3.weekdaySun'),
+    ],
+    [t],
+  );
+
   const [form, setForm] = useState({
     artist: preselectedArtist || '',
     bodyArea: '',
     size: '',
     style: '',
+    styleOther: '',
     description: '',
     date: '',
     time: '',
@@ -71,15 +111,146 @@ export default function BookingWizard() {
     phone: '',
     email: '',
     gdpr: false,
+    createAccount: false,
     source: '',
     referenceImages: [] as string[],
   });
 
+  // Pick up any state stashed by BookingModal so the user doesn't have to
+  // retype name / phone / email / description when escalating to the full form.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = sessionStorage.getItem('insomnia:booking:prefill');
+      if (!raw) return;
+      sessionStorage.removeItem('insomnia:booking:prefill');
+      const parsed = JSON.parse(raw) as {
+        artist?: string;
+        description?: string;
+        name?: string;
+        phone?: string;
+        email?: string;
+        gdpr?: boolean;
+        source?: string;
+        savedAt?: number;
+      };
+      // Discard prefills older than 30 minutes — likely stale and could leak
+      // PII between sessions on a shared device.
+      if (
+        typeof parsed.savedAt === 'number' &&
+        Date.now() - parsed.savedAt > 30 * 60 * 1000
+      ) {
+        return;
+      }
+      setForm((prev) => ({
+        ...prev,
+        artist: parsed.artist || prev.artist,
+        description: parsed.description || prev.description,
+        name: parsed.name || prev.name,
+        phone: parsed.phone || prev.phone,
+        email: parsed.email || prev.email,
+        gdpr: typeof parsed.gdpr === 'boolean' ? parsed.gdpr : prev.gdpr,
+        source: parsed.source || prev.source,
+      }));
+    } catch {
+      // Ignore malformed payloads — start fresh.
+    }
+  }, []);
+
+  const [touched, setTouched] = useState<Record<FieldKey, boolean>>({
+    artist: false,
+    bodyArea: false,
+    size: false,
+    description: false,
+    date: false,
+    time: false,
+    name: false,
+    phone: false,
+    email: false,
+    gdpr: false,
+  });
+
   const updateForm = (key: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    // Clear the touched-error once the user starts editing.
+    if ((key as FieldKey) in touched) {
+      setTouched((prev) => ({ ...prev, [key as FieldKey]: false }));
+    }
   };
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+  const markTouched = (key: FieldKey) => {
+    setTouched((prev) => ({ ...prev, [key]: true }));
+  };
+
+  /**
+   * Returns a Partial<Record<FieldKey, string>> with non-empty strings only
+   * for fields that fail validation in the given step.
+   */
+  const validateStep = useCallback(
+    (currentStep: number): Partial<Record<FieldKey, string>> => {
+      const errors: Partial<Record<FieldKey, string>> = {};
+      if (currentStep === 1) {
+        if (!form.artist) errors.artist = tValidation('artistRequired');
+      } else if (currentStep === 2) {
+        if (form.artist === 'unsure') {
+          // We require a chosen artist before progressing past step 2 so the
+          // wizard can show real availability in step 3.
+          errors.artist = tValidation('artistRequired');
+        }
+        if (!form.bodyArea) errors.bodyArea = tValidation('bodyAreaRequired');
+        if (!form.size) errors.size = tValidation('sizeRequired');
+        if (form.description.trim().length < 10) {
+          errors.description = tValidation('descriptionRequired');
+        }
+      } else if (currentStep === 3) {
+        if (!form.date) errors.date = tValidation('dateRequired');
+        if (!form.time) errors.time = tValidation('timeRequired');
+      } else if (currentStep === 4) {
+        const nameTrim = form.name.trim();
+        const phoneTrim = form.phone.trim();
+        if (!nameTrim) {
+          errors.name = tValidation('nameRequired');
+        } else if (nameTrim.length < 2) {
+          errors.name = tValidation('nameMinLength');
+        }
+        if (!phoneTrim) {
+          errors.phone = tValidation('phoneRequired');
+        } else if (phoneTrim.replace(/\s/g, '').length < 6) {
+          errors.phone = tValidation('phoneMinLength');
+        }
+        if (!form.email.trim()) {
+          errors.email = tValidation('emailRequired');
+        } else if (!EMAIL_RE.test(form.email.trim())) {
+          errors.email = tValidation('emailInvalid');
+        }
+        if (!form.gdpr) errors.gdpr = tValidation('gdprRequired');
+      }
+      return errors;
+    },
+    [form, tValidation],
+  );
+
+  const stepErrors = validateStep(step);
+  const fieldError = (key: FieldKey): string | undefined =>
+    touched[key] ? stepErrors[key] : undefined;
+
+  const handleNext = () => {
+    const errors = validateStep(step);
+    if (Object.keys(errors).length > 0) {
+      // Mark all step fields as touched so errors render under each input.
+      const newTouched = { ...touched };
+      (Object.keys(errors) as FieldKey[]).forEach((key) => {
+        newTouched[key] = true;
+      });
+      setTouched(newTouched);
+      // Non-blocking hint near the button so the user knows why the form
+      // didn't advance.
+      showToast(t('navigation.fixErrors'), 'error');
+      return;
+    }
+    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+  };
+
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
   // Fetch availability when artist is selected and we're on step 3
@@ -110,10 +281,21 @@ export default function BookingWizard() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // If the client picked "Alt stil", the free-text value becomes the
+      // submitted style preference (validations.ts caps stylePreference at 100).
+      const submittedStyle =
+        form.style === 'other' && form.styleOther.trim().length > 0
+          ? form.styleOther.trim().slice(0, 100)
+          : form.style;
+
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, language: locale }),
+        body: JSON.stringify({
+          ...form,
+          style: submittedStyle,
+          language: locale,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -181,7 +363,19 @@ export default function BookingWizard() {
       {/* Step 1: Choose artist */}
       {step === 1 && (
         <SlideUp>
-          <h2 className="mb-6 text-xl font-semibold">{t('step1.title')}</h2>
+          <h2 className="mb-2 flex items-center gap-1 text-xl font-semibold">
+            <span>{t('step1.title')}</span>
+            <span aria-hidden="true" className="text-error">*</span>
+          </h2>
+          <p className="mb-6 text-xs text-text-muted">{t('navigation.requiredHint')}</p>
+          {fieldError('artist') && (
+            <p
+              role="alert"
+              className="mb-4 rounded-sm border border-error/40 bg-error/5 px-3 py-2 text-sm text-error"
+            >
+              {fieldError('artist')}
+            </p>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             {artists.map((artist) => (
               <button
@@ -189,17 +383,19 @@ export default function BookingWizard() {
                 type="button"
                 onClick={() => updateForm('artist', artist.slug)}
                 className={cn(
-                  'rounded-sm border p-6 text-left transition-all',
+                  'min-w-0 overflow-hidden rounded-sm border p-6 text-left transition-all',
                   form.artist === artist.slug
                     ? 'border-accent bg-accent/5'
                     : 'border-border bg-bg-secondary hover:border-accent/30',
                 )}
               >
-                <div className="mb-2 h-12 w-12 rounded-full bg-bg-tertiary flex items-center justify-center">
+                <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-bg-tertiary">
                   <span className="font-heading text-xl text-accent/50">{artist.name[0]}</span>
                 </div>
-                <p className="font-semibold">{artist.name}</p>
-                <p className="text-sm text-accent">{artist.specialtyRo || artist.specialtyEn}</p>
+                <p className="break-words font-semibold">{artist.name}</p>
+                <p className="line-clamp-2 break-words text-sm text-accent">
+                  {artist.specialtyRo || artist.specialtyEn}
+                </p>
               </button>
             ))}
           </div>
@@ -225,17 +421,23 @@ export default function BookingWizard() {
           <div className="space-y-5">
             <Select
               label={t('step2.bodyArea')}
+              required
+              error={fieldError('bodyArea')}
               options={BODY_AREAS.map((area) => ({ value: area, label: tAreas(area) }))}
               placeholder="—"
               value={form.bodyArea}
               onChange={(e) => updateForm('bodyArea', e.target.value)}
+              onBlur={() => markTouched('bodyArea')}
             />
             <Select
               label={t('step2.size')}
+              required
+              error={fieldError('size')}
               options={SIZE_CATEGORIES.map((size) => ({ value: size, label: tSizes(size) }))}
               placeholder="—"
               value={form.size}
               onChange={(e) => updateForm('size', e.target.value)}
+              onBlur={() => markTouched('size')}
             />
             <Select
               label={t('step2.style')}
@@ -244,6 +446,15 @@ export default function BookingWizard() {
               value={form.style}
               onChange={(e) => updateForm('style', e.target.value)}
             />
+            {form.style === 'other' && (
+              <Input
+                label={tStyles('otherLabel')}
+                placeholder={tStyles('otherPlaceholder')}
+                value={form.styleOther}
+                onChange={(e) => updateForm('styleOther', e.target.value)}
+                maxLength={100}
+              />
+            )}
 
             {/* Artist recommendation when user chose "unsure" */}
             {form.artist === 'unsure' && form.style && (() => {
@@ -268,9 +479,12 @@ export default function BookingWizard() {
 
             <Textarea
               label={t('step2.description')}
+              required
+              error={fieldError('description')}
               placeholder={t('step2.descriptionPlaceholder')}
               value={form.description}
               onChange={(e) => updateForm('description', e.target.value)}
+              onBlur={() => markTouched('description')}
             />
             <div>
               <p className="mb-2 text-sm font-medium text-text-secondary">
@@ -288,7 +502,19 @@ export default function BookingWizard() {
       {/* Step 3: Choose date */}
       {step === 3 && (
         <SlideUp>
-          <h2 className="mb-6 text-xl font-semibold">{t('step3.title')}</h2>
+          <h2 className="mb-2 flex items-center gap-1 text-xl font-semibold">
+            <span>{t('step3.title')}</span>
+            <span aria-hidden="true" className="text-error">*</span>
+          </h2>
+          <p className="mb-6 text-xs text-text-muted">{t('navigation.requiredHint')}</p>
+          {(fieldError('date') || fieldError('time')) && (
+            <p
+              role="alert"
+              className="mb-4 rounded-sm border border-error/40 bg-error/5 px-3 py-2 text-sm text-error"
+            >
+              {fieldError('date') || fieldError('time')}
+            </p>
+          )}
 
           {/* Month navigation */}
           <div className="mb-4 flex items-center justify-between">
@@ -304,7 +530,7 @@ export default function BookingWizard() {
               ←
             </button>
             <span className="text-sm font-medium">
-              {new Date(`${currentMonth}-01`).toLocaleDateString('ro-RO', {
+              {new Date(`${currentMonth}-01`).toLocaleDateString(calendarLocaleTag, {
                 month: 'long',
                 year: 'numeric',
               })}
@@ -331,8 +557,14 @@ export default function BookingWizard() {
               {/* Calendar grid */}
               <div className="rounded-sm border border-border bg-bg-secondary p-4">
                 <div className="grid grid-cols-7 gap-1 mb-2">
-                  {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
-                    <div key={i} className="text-center text-xs text-text-muted py-1">{d}</div>
+                  {weekdayShortLabels.map((d, i) => (
+                    <div
+                      key={`${d}-${i}`}
+                      className="text-center text-xs text-text-muted py-1"
+                      title={t(`step3.${STEP3_WEEKDAY_FULL_KEYS[i]}`)}
+                    >
+                      {d}
+                    </div>
                   ))}
                 </div>
                 <div className="grid grid-cols-7 gap-1">
@@ -384,7 +616,10 @@ export default function BookingWizard() {
               {/* Time slots for selected date */}
               {selectedDay && selectedDay.slots.length > 0 && (
                 <div className="mt-4">
-                  <p className="mb-2 text-sm text-text-secondary">{t('step3.selectDate')}</p>
+                  <p className="mb-2 flex items-center gap-1 text-sm text-text-secondary">
+                    <span>{t('step3.selectTime')}</span>
+                    <span aria-hidden="true" className="text-error">*</span>
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {selectedDay.slots.map((slot) => (
                       <button
@@ -416,20 +651,34 @@ export default function BookingWizard() {
           <div className="space-y-4">
             <Input
               label={t('step4.name')}
+              required
+              autoComplete="name"
               value={form.name}
               onChange={(e) => updateForm('name', e.target.value)}
+              onBlur={() => markTouched('name')}
+              error={fieldError('name')}
             />
             <Input
               label={t('step4.phone')}
               type="tel"
+              required
+              autoComplete="tel"
+              inputMode="tel"
               value={form.phone}
               onChange={(e) => updateForm('phone', e.target.value)}
+              onBlur={() => markTouched('phone')}
+              error={fieldError('phone')}
             />
             <Input
               label={t('step4.email')}
               type="email"
+              required
+              autoComplete="email"
+              inputMode="email"
               value={form.email}
               onChange={(e) => updateForm('email', e.target.value)}
+              onBlur={() => markTouched('email')}
+              error={fieldError('email')}
             />
             <Select
               label={t('step4.source')}
@@ -441,14 +690,52 @@ export default function BookingWizard() {
               value={form.source}
               onChange={(e) => updateForm('source', e.target.value)}
             />
-            <label className="flex items-start gap-3 cursor-pointer mt-4">
+            <div>
+              <label className="mt-4 flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={form.gdpr}
+                  onChange={(e) => {
+                    updateForm('gdpr', e.target.checked);
+                    markTouched('gdpr');
+                  }}
+                  aria-required="true"
+                  aria-invalid={fieldError('gdpr') ? true : undefined}
+                  className={cn(
+                    'mt-1 h-4 w-4 accent-accent',
+                    fieldError('gdpr') && 'ring-2 ring-error/60',
+                  )}
+                />
+                <span
+                  className={cn(
+                    'text-sm text-text-muted',
+                    fieldError('gdpr') && 'text-error',
+                  )}
+                >
+                  {t('step4.gdpr')}
+                  <span aria-hidden="true" className="ml-1 text-error">*</span>
+                </span>
+              </label>
+              {fieldError('gdpr') && (
+                <p role="alert" className="mt-1 text-sm text-error">
+                  {fieldError('gdpr')}
+                </p>
+              )}
+            </div>
+
+            <label className="mt-2 flex cursor-pointer items-start gap-3 rounded-sm border border-border bg-bg-tertiary/40 p-3">
               <input
                 type="checkbox"
-                checked={form.gdpr}
-                onChange={(e) => updateForm('gdpr', e.target.checked)}
+                checked={form.createAccount}
+                onChange={(e) => updateForm('createAccount', e.target.checked)}
                 className="mt-1 h-4 w-4 accent-accent"
               />
-              <span className="text-sm text-text-muted">{t('step4.gdpr')}</span>
+              <span className="text-sm text-text-muted">
+                <span className="block font-medium text-text-secondary">
+                  {t('step4.createAccount')}
+                </span>
+                {t('step4.createAccountHint')}
+              </span>
             </label>
           </div>
         </SlideUp>
@@ -458,35 +745,40 @@ export default function BookingWizard() {
       {step === 5 && (
         <SlideUp>
           <h2 className="mb-6 text-xl font-semibold">{t('step5.title')}</h2>
-          <div className="rounded-sm border border-border bg-bg-secondary p-6 space-y-3">
-            <div className="flex justify-between text-sm">
+          <div className="space-y-3 rounded-sm border border-border bg-bg-secondary p-6">
+            <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm">
               <span className="text-text-muted">{t('step5.artist')}</span>
-              <span className="font-medium capitalize">{form.artist}</span>
+              <span className="min-w-0 break-words text-right font-medium">
+                {form.artist === 'unsure'
+                  ? t('step1.notSure')
+                  : (artists.find((a) => a.slug === form.artist)?.name ??
+                     form.artist)}
+              </span>
             </div>
             {form.bodyArea && (
-              <div className="flex justify-between text-sm">
+              <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm">
                 <span className="text-text-muted">{t('step2.bodyArea')}</span>
-                <span className="font-medium">{tAreas(form.bodyArea as 'arm')}</span>
+                <span className="min-w-0 break-words text-right font-medium">{tAreas(form.bodyArea as 'arm')}</span>
               </div>
             )}
             {form.size && (
-              <div className="flex justify-between text-sm">
+              <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm">
                 <span className="text-text-muted">{t('step2.size')}</span>
-                <span className="font-medium">{tSizes(form.size as 'small')}</span>
+                <span className="min-w-0 break-words text-right font-medium">{tSizes(form.size as 'small')}</span>
               </div>
             )}
             {form.date && (
-              <div className="flex justify-between text-sm">
+              <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm">
                 <span className="text-text-muted">{t('step5.date')}</span>
-                <span className="font-medium">{form.date}</span>
+                <span className="min-w-0 break-words text-right font-medium">{form.date}</span>
               </div>
             )}
-            <div className="border-t border-border pt-3 mt-3">
-              <p className="text-sm font-medium">{form.name}</p>
-              <p className="text-sm text-text-muted">{form.phone} / {form.email}</p>
+            <div className="mt-3 border-t border-border pt-3">
+              <p className="break-words text-sm font-medium">{form.name}</p>
+              <p className="break-all text-sm text-text-muted">{form.phone} / {form.email}</p>
             </div>
             {form.description && (
-              <p className="text-sm text-text-secondary mt-2">{form.description}</p>
+              <p className="mt-2 break-words text-sm text-text-secondary">{form.description}</p>
             )}
             {form.referenceImages.length > 0 && (
               <div className="border-t border-border pt-3 mt-3">
@@ -521,25 +813,7 @@ export default function BookingWizard() {
           <div />
         )}
         {step < TOTAL_STEPS ? (
-          <Button
-            onClick={nextStep}
-            disabled={
-              (step === 1 && !form.artist) ||
-              (step === 2 &&
-                (!form.bodyArea ||
-                  !form.size ||
-                  form.description.trim().length < 10 ||
-                  form.artist === 'unsure')) ||
-              (step === 3 && (!form.date || !form.time)) ||
-              (step === 4 &&
-                (!form.name.trim() ||
-                  !form.phone.trim() ||
-                  !form.email.trim() ||
-                  !form.gdpr))
-            }
-          >
-            {t('navigation.next')}
-          </Button>
+          <Button onClick={handleNext}>{t('navigation.next')}</Button>
         ) : (
           <Button onClick={handleSubmit} isLoading={isSubmitting}>
             {t('step5.submit')}

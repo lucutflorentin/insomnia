@@ -73,11 +73,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check if the preferred date is at least 24 hours away
-    const consultationDate = new Date(booking.consultationDate);
     const now = new Date();
-    const hoursUntilBooking = (consultationDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const consultationDate = booking.consultationDate ? new Date(booking.consultationDate) : null;
+    const hoursUntilBooking = consultationDate
+      ? (consultationDate.getTime() - now.getTime()) / (1000 * 60 * 60)
+      : null;
 
-    if (hoursUntilBooking < 24) {
+    if (hoursUntilBooking !== null && hoursUntilBooking < 24) {
       return NextResponse.json(
         { success: false, error: 'Bookings can only be cancelled at least 24 hours before the scheduled date.' },
         { status: 400 },
@@ -106,11 +108,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         artistEmail: booking.artist.user?.email || '',
         clientName: booking.clientName,
         referenceCode: booking.referenceCode,
-        consultationDate: consultationDate.toLocaleDateString('ro-RO', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }),
+        consultationDate: consultationDate
+          ? consultationDate.toLocaleDateString('ro-RO', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })
+          : 'De stabilit',
       }).catch((err) => console.error('Failed to send cancellation email:', err));
     } catch {
       // Email import/send failure shouldn't block the response

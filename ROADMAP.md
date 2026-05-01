@@ -1,10 +1,144 @@
 # Insomnia Tattoo — Roadmap & Strategie
 
-> Ultima actualizare: 29 Aprilie 2026
+> Ultima actualizare: 1 Mai 2026
 
 ---
 
 ## JURNAL TEHNIC — Ce s-a implementat
+
+### Sesiunea 20 (1 Mai 2026) — Remediere audit conflicte, booking hardening, sesiuni reale si CI typecheck
+
+Pornita din auditul complet al roadmap-ului actualizat pe 1 Mai. Obiectivul a fost rezolvarea conflictelor si bugurilor care puteau afecta direct clientii, artistii sau administrarea platformei.
+
+#### Auth / GDPR / sesiuni
+
+- Reparat conflictul de inregistrare client: frontend-ul trimite acum `gdprConsent`, aliniat cu schema API.
+- Admin login sanitizeaza parametrul `redirect`, eliminand riscul de open redirect dupa autentificare.
+- Refresh token-urile sunt acum legate de tabela `sessions`:
+  - se stocheaza hash-ul refresh tokenului;
+  - refresh-ul verifica sesiunea, userul activ si profilul de artist activ;
+  - tokenul refresh se roteste la fiecare refresh;
+  - logout-ul revoca sesiunea curenta;
+  - dezactivarea artistilor/utilizatorilor sterge sesiunile active.
+- `verifyAuthRequest` reincarca userul din DB si blocheaza userii/artisti dezactivati chiar daca JWT-ul vechi este inca valid.
+
+#### Booking / disponibilitate / referinte
+
+- Adaugat `src/lib/availability.ts` pentru logica reutilizabila de disponibilitate:
+  - fereastra maxima din `BOOKING_CONFIG.advanceDays`;
+  - reguli de availability override/template;
+  - verificare slot existent;
+  - protectie impotriva double-booking in tranzactie serializabila.
+- `POST /api/bookings` valideaza server-side slotul ales, artistul activ si disponibilitatea reala.
+- Quick booking nu mai salveaza fals `new Date()` + `00:00`; programarile pot fi lead-uri neschedulate cu `consultationDate` / `consultationTime` nullable.
+- Migrare Prisma noua: `20260501150000_nullable_booking_schedule`.
+- UI-urile client/admin/artist afiseaza clar `De stabilit` / `To be scheduled` pentru lead-urile fara data.
+- Referintele proxificate prin `/api/bookings/{id}/references/{index}` sunt acceptate corect in admin si artist.
+- `GET /api/bookings` suporta `startDate` / `endDate`, iar calendarul admin availability foloseste intervalul real al lunii.
+
+#### Admin / artist / content
+
+- Admin Artists foloseste corect forma API cu `user.email`, `bioRo`, `specialtyRo`, `instagramUrl`, `tiktokUrl` si poate actualiza email/parola/profil.
+- Activarea/dezactivarea artistilor sincronizeaza `artist.isActive`, `user.isActive` si revoca sesiunile cand este cazul.
+- Admin Users are acum actiuni de activare/dezactivare, cu endpoint dedicat `PUT /api/admin/users/[id]` si revocare sesiuni.
+- Dashboard admin calculeaza conversion rate pe aceeasi perioada (confirmed din luna curenta / bookings din luna curenta).
+- Admin Content si API-ul public de content folosesc whitelist de chei (`src/lib/content.ts`) si limite de lungime.
+- Cookie consent trimite eveniment in acelasi tab, astfel incat Analytics se incarca imediat dupa acceptare.
+
+#### CI / tooling / teste
+
+- Adaugat script `npm run typecheck` (`tsc --noEmit`).
+- `prelive` ruleaza acum si typecheck.
+- Migrat lint de la `next lint` la `eslint .`, cu ignore-uri explicite pentru `.next`, `.claude`, rapoarte si artefacte generate.
+- Reparat testul E2E GDPR pentru invalid JSON folosind payload raw `Buffer`.
+- Adaugat test unit pentru URL-urile de referinte proxificate.
+
+#### Verificari trecute local
+
+- `npm run test` — 10/10 passed.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed.
+- `npm run build` — passed.
+- `npm run hygiene` — passed.
+- `npm run audit:prod` — `0 vulnerabilities`.
+- `npm run e2e` — 10/10 passed.
+- `git diff --check` — passed.
+- Verificare chei traduceri RO/EN — fara diferente.
+
+#### Note pentru deploy
+
+- In productie trebuie rulata migrarea:
+
+```bash
+npx prisma migrate deploy
+```
+
+- Dupa deploy, se recomanda smoke manual pentru: register client, booking cu referinte, quick booking neschedulat, admin login redirect, admin/artist bookings, activare/dezactivare user/artist.
+- Rate limiting-ul ramane in-memory; pentru productie multi-instance urmatorul pas recomandat este store distribuit (Redis/Upstash/Vercel KV sau echivalent).
+- GitHub Actions typecheck trebuie adaugat separat cand tokenul de push are scope `workflow`.
+
+### Sesiunea 19 (1 Mai 2026) — GDPR date oaspeti, CSP (report-to), referinte booking, E2E+CI, Lighthouse
+
+Lucrare tehnica concentrata pe conformitate GDPR pentru clientii fara cont, hardening CSP modern, imbunatatiri flux booking (referinte imagini), ergonomie artist/admin pe programari, automation CI si un pas reproductibil de audit performanta.
+
+#### GDPR — stergere date oaspete (fara cont utilizator)
+
+- Model Prisma `GuestDataErasureToken` + migrare `20260501120000_guest_data_erasure` (tabela `guest_data_erasure_tokens`: email normalizat, hash token, expirare, consum).
+- API:
+  - `POST /api/gdpr/guest-erasure/request` — cerere pe email; trimite mesaj cu link semnat (expirare controlata).
+  - `POST /api/gdpr/guest-erasure/confirm` — confirmare cu token; sterge sau anonimizeaza datele de booking asociate emailului conform politicii implementate in cod.
+- Pagini publice localizate **`/guest-data`** (RO/EN) cu formular, mesaje de stare si `Suspense` pentru `searchParams`; componenta client cu rezolvare robusta a tokenului (URL, prop SSR).
+- Privacy: CTA catre fluxul de exercitare a drepturilor; actualizari SEO (`seo-utils`, `routing`) pentru path-uri bilingve.
+- Traduceri noi in `messages/ro.json` si `messages/en.json` (`guestData`, mesaje API/errori).
+
+#### Booking — referinte imagine si notificari
+
+- Flux upload referinte: `POST /api/upload/reference` intarit (validare, limite); `DELETE /api/bookings/[id]/references/[index]` pentru eliminare controlata.
+- `src/lib/booking.ts` — utilitare/normalizari aliniate contractului wizard ↔ API.
+- `BookingWizard` / `BookingModal` / `GalleryHighlight`: suport pentru referinte, UX si i18n (inclusiv calendar locale unde s-a extins).
+- Email / `notifications` / `push`: ajustari pentru livrare fiabila in jurul evenimentelor de booking (ex. `Promise.allSettled` unde e cazul).
+- **`src/lib/whatsapp.ts`** + CTA **WhatsApp** in panourile de detaliu booking pe **`/artist/bookings`** si **`/admin/bookings`** (prefill din traduceri).
+
+#### Admin / Artist UI
+
+- **`AdminSidebar`**: navigatie/etalonare actualizata pentru sectiunile relevante.
+- **`/artist/profile`**: imbunatatiri formular si upload imagine profil (aliniat API artist profile).
+- **`/api/artist/profile`**, **`/api/artist/loyalty`**: validari si raspunsuri mai stricte/consistente.
+- Componente **`Input`**, **`Select`**, **`Textarea`**, **`ImageUpload`**: comportament si accesibilitate imbunatatite pentru formularele grele.
+
+#### Securitate — CSP
+
+- `next.config.ts`: directive CSP existente intarite (`form-action`, `frame-ancestors`, `report-uri` optional din env).
+- **`CSP_REPORT_TO`**: daca URL-ul este valid `http`/`https`, se emite antetul **`Reporting-Endpoints`** si directiva CSP **`report-to`** (grup `insomnia-csp`), in paralel cu `CSP_REPORT_URI` legacy unde e setat.
+- **`.env.example`**: placeholder sigur pentru `DATABASE_URL`; comentarii pentru `CSP_REPORT_URI` / `CSP_REPORT_TO`.
+
+#### Performanta — masurare locala
+
+- Dependenta dev **`lighthouse`**; script **`scripts/lighthouse-report.mjs`** + **`npm run perf:lighthouse`** (foloseste Chromium de la Playwright; rapoarte HTML in `reports/lighthouse/`, ignorat in git).
+- **`docs/PRELIVE_CHECKLIST.md`**: pas optional Lighthouse dupa `npm run build`.
+- Layout: **Cormorant Garamond** redus la greutatile **`400` si `600`** (mai putine fisiere font); **`poweredByHeader: false`**.
+
+#### Calitate si automatizare
+
+- **Playwright**: `playwright.config.ts`, suite in **`e2e/`** (API GDPR + smoke pagini publice inclusiv guest-data; in CI un test poate folosi `DATABASE_URL` din secret pentru ramuri care necesita DB).
+- **GitHub Actions**: workflow-ul CI a fost pregatit in plan, dar fisierul `.github/workflows/ci.yml` trebuie adaugat intr-un push separat cu token care are scope `workflow`.
+- **`npm run prelive:with-e2e`** (sau echivalent) pentru lantul complet local.
+
+#### Documentatie
+
+- **`docs/ARTIST_OPERATIONS.md`**: scurt ghid operational pentru artisti (bookings, disponibilitate, galerie, loialitate).
+
+#### Alte fisiere atinse (rezumat)
+
+- **`ArtistProfileContent`**, **`ContactContent`**, **`privacy`**: legaturi/context GDPR si continut public.
+- **`prisma/schema.prisma`**: model si mapare token erasure.
+- **`src/lib/constants.ts`**, **`src/lib/seo-utils.ts`**, **`src/i18n/routing.ts`**: rute si constante pentru noile pagini.
+
+#### Verificari recomandate dupa deploy
+
+- Aplica migrarea GDPR pe baza de productie si testeaza fluxul complet: cerere email → link → confirmare → date asteptate eliminate/anonymizate.
+- Configureaza optional endpoint-ul de raportare CSP (`CSP_REPORT_TO` sau `CSP_REPORT_URI`) in Vercel.
+- Ruleaza local: `npm run prelive` si, cu server production local, `npm run perf:lighthouse`.
 
 ### Sesiunea 18 (29 Aprilie 2026) — Audit artisti, reguli legale 18+, profil/portofoliu si push live
 

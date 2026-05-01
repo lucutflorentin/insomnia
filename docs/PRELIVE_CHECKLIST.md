@@ -29,3 +29,5 @@ npx prisma migrate resolve --applied 20260428000000_baseline
 ```
 
 6. Replace temporary placeholder artist and gallery images before treating the release as premium-ready.
+
+7. Optional — Lighthouse (after `npm run build`): start `npm run start -- -p 3010`, then `npm run perf:lighthouse`. HTML reports go under `reports/lighthouse/`. Use `LIGHTHOUSE_MIN_PERFORMANCE=0.85` to fail the script if performance drops.

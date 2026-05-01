@@ -67,8 +67,8 @@ export interface Booking {
   stylePreference: string | null;
   description: string | null;
   referenceImages: string[] | null;
-  consultationDate: string;
-  consultationTime: string;
+  consultationDate: string | null;
+  consultationTime: string | null;
   source: string;
   status: BookingStatus;
   adminNotes: string | null;

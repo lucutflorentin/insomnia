@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-const CONTENT_PREFIX = 'content_';
+import { CONTENT_PREFIX, isContentKey } from '@/lib/content';
 
 // GET /api/content?keys=hero_title_ro,hero_subtitle_ro — Public: read content settings
 export async function GET(request: NextRequest) {
@@ -18,6 +17,14 @@ export async function GET(request: NextRequest) {
 
     const keys = keysParam.split(',').map((k) => k.trim()).filter(Boolean);
     if (keys.length === 0 || keys.length > 50) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid keys' },
+        { status: 400 },
+      );
+    }
+
+    const invalidKeys = keys.filter((key) => !isContentKey(key));
+    if (invalidKeys.length > 0) {
       return NextResponse.json(
         { success: false, error: 'Invalid keys' },
         { status: 400 },

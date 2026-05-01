@@ -17,8 +17,8 @@ interface Booking {
   stylePreference: string | null;
   description: string | null;
   clientNotes: string | null;
-  consultationDate: string;
-  consultationTime: string;
+  consultationDate: string | null;
+  consultationTime: string | null;
   status: string;
   hasReview: boolean;
   createdAt: string;
@@ -55,10 +55,20 @@ export default function BookingsPage() {
 
   const canCancel = (booking: Booking): boolean => {
     if (!['new', 'contacted'].includes(booking.status)) return false;
+    if (!booking.consultationDate) return true;
     const consultDate = new Date(booking.consultationDate);
     const hoursUntil = (consultDate.getTime() - Date.now()) / (1000 * 60 * 60);
     return hoursUntil >= 24;
   };
+
+  const formatBookingDate = (date: string | null) =>
+    date
+      ? new Date(date).toLocaleDateString('ro-RO', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      : t('unscheduled');
 
   const handleCancel = async (booking: Booking) => {
     if (!confirm(t('cancelConfirm'))) return;
@@ -154,11 +164,7 @@ export default function BookingsPage() {
                       {booking.artist?.name || t('artist')}
                     </p>
                     <p className="mt-0.5 text-xs text-text-muted">
-                      {new Date(booking.consultationDate).toLocaleDateString('ro-RO', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
+                      {formatBookingDate(booking.consultationDate)}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2">
@@ -205,11 +211,7 @@ export default function BookingsPage() {
                 <div>
                   <p className="text-xs text-text-muted">{t('date')}</p>
                   <p className="text-sm text-text-primary">
-                    {new Date(selectedBooking.consultationDate).toLocaleDateString('ro-RO', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
+                    {formatBookingDate(selectedBooking.consultationDate)}
                     {selectedBooking.consultationTime &&
                       ` - ${selectedBooking.consultationTime}`}
                   </p>

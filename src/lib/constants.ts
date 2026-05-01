@@ -76,6 +76,7 @@ export const TATTOO_STYLES = [
   'blackwork',
   'color',
   'blackgrey',
+  'other',
 ] as const;
 
 export const BOOKING_STATUSES = [

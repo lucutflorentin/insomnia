@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { Link } from '@/i18n/navigation';
 import { getPageAlternates } from '@/lib/seo-utils';
 import SlideUp from '@/components/animations/SlideUp';
 
@@ -67,6 +68,16 @@ export default async function PrivacyPage({
                       ))}
                     </ul>
                   )}
+                  {section.cta && (
+                    <p className="mt-4">
+                      <Link
+                        href={section.cta.href}
+                        className="text-accent underline underline-offset-2 hover:opacity-90"
+                      >
+                        {section.cta.label}
+                      </Link>
+                    </p>
+                  )}
                 </div>
               </section>
             </SlideUp>
@@ -91,6 +102,7 @@ interface Section {
   heading: string;
   paragraphs: string[];
   list?: string[];
+  cta?: { href: '/guest-data'; label: string };
 }
 
 interface PrivacyContent {
@@ -169,14 +181,25 @@ const ro: PrivacyContent = {
       ],
     },
     {
-      heading: '8. Cookie-uri',
+      heading: '8. Programari fara cont — anonimizare',
+      paragraphs: [
+        'Daca ai facut o programare fara sa creezi cont pe site, poti solicita anonimizarea datelor personale din acele programari (nume, telefon, email, descriere, imagini de referinta).',
+        'Cererea se face online; vei primi un email cu un link de confirmare.',
+      ],
+      cta: {
+        href: '/guest-data',
+        label: 'Pagina de anonimizare pentru programari fara cont',
+      },
+    },
+    {
+      heading: '9. Cookie-uri',
       paragraphs: [
         'Folosim cookie-uri esentiale pentru functionarea site-ului (autentificare JWT, preferinta de limba) si cookie-uri analitice (Google Analytics 4, Meta Pixel) care sunt activate doar cu consimtamantul tau explicit.',
         'Pentru detalii complete, consulta Politica noastra de Cookie-uri.',
       ],
     },
     {
-      heading: '9. Contact',
+      heading: '10. Contact',
       paragraphs: [
         'Pentru orice intrebare legata de protectia datelor personale sau pentru exercitarea drepturilor tale, ne poti contacta la:',
         'Email: contact@insomniatattoo.ro',
@@ -257,14 +280,25 @@ const en: PrivacyContent = {
       ],
     },
     {
-      heading: '8. Cookies',
+      heading: '8. Guest bookings — anonymization',
+      paragraphs: [
+        'If you booked without creating an account, you can request anonymization of personal data in those bookings (name, phone, email, description, reference images).',
+        'You submit the request online; you will receive a confirmation email.',
+      ],
+      cta: {
+        href: '/guest-data',
+        label: 'Guest data anonymization page',
+      },
+    },
+    {
+      heading: '9. Cookies',
       paragraphs: [
         'We use essential cookies for website functionality (JWT authentication, language preference) and analytics cookies (Google Analytics 4, Meta Pixel) that are activated only with your explicit consent.',
         'For complete details, please see our Cookie Policy.',
       ],
     },
     {
-      heading: '9. Contact',
+      heading: '10. Contact',
       paragraphs: [
         'For any questions regarding personal data protection or to exercise your rights, you can contact us at:',
         'Email: contact@insomniatattoo.ro',

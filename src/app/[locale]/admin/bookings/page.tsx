@@ -1,16 +1,22 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
-import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageCircle, X, Loader2 } from 'lucide-react';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
 import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
+import { buildWhatsAppLink } from '@/lib/whatsapp';
+import { parseDisplayReferenceImages } from '@/lib/booking';
 
 interface Booking {
   id: number;
   referenceCode: string;
+  clientId: number | null;
   clientName: string;
   clientPhone: string;
   clientEmail: string;
@@ -18,13 +24,14 @@ interface Booking {
   sizeCategory: string;
   stylePreference: string | null;
   description: string | null;
-  consultationDate: string;
-  consultationTime: string;
+  consultationDate: string | null;
+  consultationTime: string | null;
   source: string;
   status: string;
   adminNotes: string | null;
   clientNotes: string | null;
   language: string;
+  referenceImages: string[] | null;
   createdAt: string;
   artist: { id: number; name: string; slug: string };
 }
@@ -44,8 +51,20 @@ export default function AdminBookingsPage() {
   const [clientNotes, setClientNotes] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
 
   const dateLocale = locale === 'ro' ? 'ro-RO' : 'en-US';
+
+  const selectedReferences = useMemo(
+    () => parseDisplayReferenceImages(selected?.referenceImages),
+    [selected],
+  );
+
+  const formatBookingDate = (date: string | null) =>
+    date ? new Date(date).toLocaleDateString(dateLocale) : t('details.unscheduled');
+
+  const formatBookingSchedule = (date: string | null, time: string | null) =>
+    date ? `${formatBookingDate(date)}${time ? ` — ${time}` : ''}` : t('details.unscheduled');
 
   const fetchBookings = useCallback(async () => {
     setIsLoading(true);
@@ -56,7 +75,11 @@ export default function AdminBookingsPage() {
       const res = await fetch(`/api/bookings?${params}`);
       if (res.ok) {
         const data = await res.json();
-        setBookings(data.data);
+        const normalized = (data.data || []).map((b: Booking) => ({
+          ...b,
+          referenceImages: parseDisplayReferenceImages(b.referenceImages),
+        }));
+        setBookings(normalized);
         setTotal(data.pagination.total);
       } else {
         showToast(t('loading'), 'error');
@@ -196,7 +219,7 @@ export default function AdminBookingsPage() {
                       <td className="px-4 py-3 text-text-primary">{b.clientName}</td>
                       <td className="px-4 py-3 text-text-secondary">{b.artist.name}</td>
                       <td className="px-4 py-3 text-text-secondary">
-                        {new Date(b.consultationDate).toLocaleDateString(dateLocale)}
+                        {formatBookingSchedule(b.consultationDate, b.consultationTime)}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[b.status] || ''}`}>
@@ -253,15 +276,55 @@ export default function AdminBookingsPage() {
             <div className="space-y-3 text-sm">
               <div>
                 <span className="text-text-muted">{t('details.client')}:</span>
-                <p className="text-text-primary">{selected.clientName}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-text-primary">{selected.clientName}</p>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                      selected.clientId
+                        ? 'bg-emerald-500/15 text-emerald-400'
+                        : 'bg-zinc-500/15 text-zinc-400'
+                    }`}
+                    title={
+                      selected.clientId
+                        ? t('details.clientTypeAccountTip')
+                        : t('details.clientTypeGuestTip')
+                    }
+                  >
+                    {selected.clientId
+                      ? t('details.clientTypeAccount')
+                      : t('details.clientTypeGuest')}
+                  </span>
+                </div>
               </div>
               <div>
                 <span className="text-text-muted">{t('details.phone')}:</span>
-                <p className="text-text-primary">{selected.clientPhone}</p>
+                <p className="break-all text-text-primary">{selected.clientPhone}</p>
+                {(() => {
+                  const waLink = buildWhatsAppLink(
+                    selected.clientPhone,
+                    t('details.whatsappPrefill', {
+                      name: selected.clientName,
+                      date: formatBookingDate(selected.consultationDate),
+                      time: selected.consultationTime || t('details.unscheduled'),
+                    }),
+                  );
+                  if (!waLink) return null;
+                  return (
+                    <a
+                      href={waLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-flex items-center gap-1.5 rounded-sm bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      {t('details.whatsappCta')}
+                    </a>
+                  );
+                })()}
               </div>
               <div>
                 <span className="text-text-muted">{t('details.email')}:</span>
-                <p className="text-text-primary">{selected.clientEmail}</p>
+                <p className="break-all text-text-primary">{selected.clientEmail}</p>
               </div>
               <div>
                 <span className="text-text-muted">{t('details.artist')}:</span>
@@ -286,13 +349,45 @@ export default function AdminBookingsPage() {
               <div>
                 <span className="text-text-muted">{t('details.consultationDate')}:</span>
                 <p className="text-text-primary">
-                  {new Date(selected.consultationDate).toLocaleDateString(dateLocale)} — {selected.consultationTime}
+                  {formatBookingSchedule(selected.consultationDate, selected.consultationTime)}
                 </p>
               </div>
               <div>
                 <span className="text-text-muted">{t('details.source')}:</span>
                 <p className="text-text-primary">{selected.source}</p>
               </div>
+            </div>
+
+            {/* Reference images */}
+            <div className="mt-4 border-t border-white/10 pt-4">
+              <p className="mb-2 text-xs text-text-muted">{t('references')}</p>
+              {selectedReferences.length > 0 ? (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedReferences.map((url, index) => (
+                      <button
+                        key={url}
+                        type="button"
+                        onClick={() => setLightboxIndex(index)}
+                        className="group relative h-20 w-20 overflow-hidden rounded-sm border border-white/10 bg-bg-tertiary transition-colors hover:border-accent/40"
+                        aria-label={`${t('openReference')} ${index + 1}`}
+                      >
+                        <Image
+                          src={url}
+                          alt={`Reference ${index + 1}`}
+                          fill
+                          sizes="80px"
+                          unoptimized
+                          className="object-cover transition-transform duration-200 group-hover:scale-105"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[11px] text-text-muted">{t('referencesHint')}</p>
+                </>
+              ) : (
+                <p className="text-[11px] text-text-muted">{t('referencesEmpty')}</p>
+              )}
             </div>
 
             {/* Admin notes (internal, not visible to client) */}
@@ -388,6 +483,16 @@ export default function AdminBookingsPage() {
           </div>
         )}
       </div>
+
+      <Lightbox
+        open={lightboxIndex >= 0}
+        close={() => setLightboxIndex(-1)}
+        index={Math.max(0, lightboxIndex)}
+        slides={selectedReferences.map((url, index) => ({
+          src: url,
+          alt: `Reference ${index + 1}`,
+        }))}
+      />
     </div>
   );
 }

@@ -8,6 +8,9 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/Toast';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface ArtistOption {
   slug: string;
@@ -30,6 +33,8 @@ export default function BookingModal({
   artists: artistsProp,
 }: BookingModalProps) {
   const t = useTranslations('bookingModal');
+  const tValidation = useTranslations('booking.validation');
+  const { showToast } = useToast();
   const [selectedArtist, setSelectedArtist] = useState<string | null>(
     preselectedArtist || null,
   );
@@ -72,11 +77,25 @@ export default function BookingModal({
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!selectedArtist) newErrors.artist = 'required';
-    if (!formData.name.trim()) newErrors.name = 'required';
-    if (!formData.phone.trim()) newErrors.phone = 'required';
-    if (!formData.email.trim()) newErrors.email = 'required';
-    if (!formData.gdpr) newErrors.gdpr = 'required';
+    const nameTrim = formData.name.trim();
+    const phoneTrim = formData.phone.trim();
+    if (!selectedArtist) newErrors.artist = tValidation('artistRequired');
+    if (!nameTrim) {
+      newErrors.name = tValidation('nameRequired');
+    } else if (nameTrim.length < 2) {
+      newErrors.name = tValidation('nameMinLength');
+    }
+    if (!phoneTrim) {
+      newErrors.phone = tValidation('phoneRequired');
+    } else if (phoneTrim.replace(/\s/g, '').length < 6) {
+      newErrors.phone = tValidation('phoneMinLength');
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = tValidation('emailRequired');
+    } else if (!EMAIL_RE.test(formData.email.trim())) {
+      newErrors.email = tValidation('emailInvalid');
+    }
+    if (!formData.gdpr) newErrors.gdpr = tValidation('gdprRequired');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -103,9 +122,20 @@ export default function BookingModal({
 
       if (response.ok) {
         setIsSuccess(true);
+      } else {
+        let message = t('submitError');
+        try {
+          const data = await response.json();
+          if (typeof data?.error === 'string' && data.error) {
+            message = data.error;
+          }
+        } catch {
+          // keep default
+        }
+        showToast(message, 'error');
       }
     } catch {
-      // Error handling
+      showToast(t('submitError'), 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -187,9 +217,15 @@ export default function BookingModal({
 
                   {/* Artist selection */}
                   <div className="mt-6">
-                    <p className="mb-3 text-sm font-medium text-text-secondary">
-                      {t('chooseArtist')}
+                    <p className="mb-3 flex items-center gap-1 text-sm font-medium text-text-secondary">
+                      <span>{t('chooseArtist')}</span>
+                      <span aria-hidden="true" className="text-error">*</span>
                     </p>
+                    {errors.artist && (
+                      <p role="alert" className="mb-2 text-xs text-error">
+                        {errors.artist}
+                      </p>
+                    )}
                     <div className="grid grid-cols-2 gap-3">
                       {(artistsProp || []).map((artist) => (
                         <button
@@ -200,17 +236,17 @@ export default function BookingModal({
                             setErrors((prev) => ({ ...prev, artist: '' }));
                           }}
                           className={cn(
-                            'rounded-sm border p-4 text-left transition-all duration-200',
+                            'min-w-0 overflow-hidden rounded-sm border p-4 text-left transition-all duration-200',
                             selectedArtist === artist.slug
                               ? 'border-accent bg-accent/5'
                               : 'border-border bg-bg-secondary hover:border-accent/30',
                             errors.artist && 'border-error/50',
                           )}
                         >
-                          <p className="font-medium text-text-primary">
+                          <p className="break-words font-medium text-text-primary">
                             {artist.name}
                           </p>
-                          <p className="mt-0.5 text-xs text-text-muted">
+                          <p className="mt-0.5 line-clamp-2 break-words text-xs text-text-muted">
                             {artist.specialtyRo || artist.specialtyEn}
                           </p>
                         </button>
@@ -239,56 +275,77 @@ export default function BookingModal({
                     <div className="space-y-3">
                       <Input
                         placeholder={t('name')}
+                        required
+                        autoComplete="name"
                         value={formData.name}
                         onChange={(e) => {
                           setFormData({ ...formData, name: e.target.value });
                           setErrors((prev) => ({ ...prev, name: '' }));
                         }}
-                        error={errors.name ? t('name') : undefined}
+                        error={errors.name}
                       />
                       <Input
                         placeholder={t('phone')}
                         type="tel"
+                        required
+                        autoComplete="tel"
+                        inputMode="tel"
                         value={formData.phone}
                         onChange={(e) => {
                           setFormData({ ...formData, phone: e.target.value });
                           setErrors((prev) => ({ ...prev, phone: '' }));
                         }}
-                        error={errors.phone ? t('phone') : undefined}
+                        error={errors.phone}
                       />
                       <Input
                         placeholder={t('email')}
                         type="email"
+                        required
+                        autoComplete="email"
+                        inputMode="email"
                         value={formData.email}
                         onChange={(e) => {
                           setFormData({ ...formData, email: e.target.value });
                           setErrors((prev) => ({ ...prev, email: '' }));
                         }}
-                        error={errors.email ? t('email') : undefined}
+                        error={errors.email}
                       />
                     </div>
                   </div>
 
                   {/* GDPR */}
-                  <label className="mt-4 flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.gdpr}
-                      onChange={(e) => {
-                        setFormData({ ...formData, gdpr: e.target.checked });
-                        setErrors((prev) => ({ ...prev, gdpr: '' }));
-                      }}
-                      className="mt-1 h-4 w-4 rounded border-border bg-bg-secondary accent-accent"
-                    />
-                    <span
-                      className={cn(
-                        'text-xs leading-relaxed text-text-muted',
-                        errors.gdpr && 'text-error',
-                      )}
-                    >
-                      {t('gdpr')}
-                    </span>
-                  </label>
+                  <div className="mt-4">
+                    <label className="flex cursor-pointer items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.gdpr}
+                        onChange={(e) => {
+                          setFormData({ ...formData, gdpr: e.target.checked });
+                          setErrors((prev) => ({ ...prev, gdpr: '' }));
+                        }}
+                        aria-required="true"
+                        aria-invalid={errors.gdpr ? true : undefined}
+                        className={cn(
+                          'mt-1 h-4 w-4 rounded border-border bg-bg-secondary accent-accent',
+                          errors.gdpr && 'ring-2 ring-error/60',
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          'text-xs leading-relaxed text-text-muted',
+                          errors.gdpr && 'text-error',
+                        )}
+                      >
+                        {t('gdpr')}
+                        <span aria-hidden="true" className="ml-1 text-error">*</span>
+                      </span>
+                    </label>
+                    {errors.gdpr && (
+                      <p role="alert" className="mt-1 text-xs text-error">
+                        {errors.gdpr}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Submit */}
                   <Button
@@ -304,8 +361,34 @@ export default function BookingModal({
                   <div className="mt-4 text-center">
                     <p className="text-xs text-text-muted">{t('wantMore')}</p>
                     <Link
-                      href="/booking"
-                      onClick={handleClose}
+                      href={
+                        selectedArtist
+                          ? (`/booking?artist=${selectedArtist}` as '/booking')
+                          : '/booking'
+                      }
+                      onClick={() => {
+                        // Persist what the client already typed so the full
+                        // wizard can pre-fill its fields. Cleared on first
+                        // wizard mount or when the wizard submits.
+                        try {
+                          sessionStorage.setItem(
+                            'insomnia:booking:prefill',
+                            JSON.stringify({
+                              artist: selectedArtist || '',
+                              description: formData.description,
+                              name: formData.name,
+                              phone: formData.phone,
+                              email: formData.email,
+                              gdpr: formData.gdpr,
+                              source: 'quick_form',
+                              savedAt: Date.now(),
+                            }),
+                          );
+                        } catch {
+                          // Quota exceeded or storage disabled — best effort only.
+                        }
+                        handleClose();
+                      }}
                       className="text-sm text-accent transition-colors hover:text-accent-light"
                     >
                       {t('fullForm')} →

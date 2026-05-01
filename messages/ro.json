@@ -156,6 +156,7 @@
       "reviewSubmitted": "Recenzie trimisa",
       "artist": "Artist",
       "date": "Data",
+      "unscheduled": "De stabilit",
       "details": "Detalii programare",
       "referenceCode": "Cod referinta",
       "placement": "Plasament",
@@ -307,6 +308,7 @@
     "submit": "Trimite cererea",
     "submitting": "Se trimite...",
     "success": "Cererea ta a fost trimisa! Te contactam in maxim 24h.",
+    "submitError": "Nu am putut trimite cererea. Verifica datele sau incearca din nou.",
     "wantMore": "Vrei sa alegi si data?",
     "fullForm": "Completeaza formularul extins"
   },
@@ -331,7 +333,10 @@
       "geometric": "Geometric",
       "minimalist": "Minimalist",
       "blackwork": "Blackwork",
-      "blackgrey": "Black & Grey"
+      "blackgrey": "Black & Grey",
+      "other": "Alt stil",
+      "otherPlaceholder": "Descrie pe scurt stilul (ex: dotwork, neo-traditional)",
+      "otherLabel": "Specifica stilul"
     }
   },
   "inkSpace": {
@@ -400,7 +405,10 @@
         "maxReached": "Ai atins limita de {max} imagini",
         "tooLarge": "Fisierul este prea mare (max {max}MB)",
         "invalidType": "Format invalid. Acceptam doar JPG, PNG si WebP",
-        "uploadError": "Eroare la incarcare. Incearca din nou."
+        "uploadError": "Eroare la incarcare. Incearca din nou.",
+        "previewBroken": "Nu s-a putut afisa",
+        "removeImage": "Sterge imaginea",
+        "errorCode": "Cod eroare"
       },
       "recommendation": "Recomandam pe"
     },
@@ -409,7 +417,21 @@
       "selectDate": "Selecteaza o zi disponibila",
       "selectTime": "Alege ora",
       "noSlots": "Nu sunt sloturi disponibile in aceasta zi.",
-      "loading": "Se incarca disponibilitatea..."
+      "loading": "Se incarca disponibilitatea...",
+      "weekdayMon": "Lu",
+      "weekdayTue": "Ma",
+      "weekdayWed": "Mi",
+      "weekdayThu": "Jo",
+      "weekdayFri": "Vi",
+      "weekdaySat": "Sa",
+      "weekdaySun": "Du",
+      "weekdayMonFull": "Luni",
+      "weekdayTueFull": "Marti",
+      "weekdayWedFull": "Miercuri",
+      "weekdayThuFull": "Joi",
+      "weekdayFriFull": "Vineri",
+      "weekdaySatFull": "Sambata",
+      "weekdaySunFull": "Duminica"
     },
     "step4": {
       "title": "Datele tale de contact",
@@ -417,6 +439,8 @@
       "phone": "Telefon (WhatsApp)",
       "email": "Email",
       "gdpr": "Sunt de acord cu prelucrarea datelor personale conform politicii de confidentialitate.",
+      "createAccount": "Vreau sa-mi pastrezi programarile in cont",
+      "createAccountHint": "Iti trimitem un email cu link pentru setarea unei parole, ca sa ai acces la istoric, status programare si puncte de fidelitate.",
       "source": "Cum ai auzit de noi?",
       "sources": {
         "instagram": "Instagram",
@@ -444,20 +468,24 @@
     "navigation": {
       "next": "Continua",
       "back": "Inapoi",
-      "step": "Pasul {current} din {total}"
+      "step": "Pasul {current} din {total}",
+      "fixErrors": "Verifica campurile obligatorii inainte sa continui.",
+      "requiredHint": "Camp obligatoriu"
     },
     "validation": {
       "artistRequired": "Te rugam sa alegi un artist.",
       "bodyAreaRequired": "Te rugam sa selectezi zona corpului.",
       "sizeRequired": "Te rugam sa selectezi dimensiunea.",
-      "descriptionRequired": "Te rugam sa descrii ideea ta.",
+      "descriptionRequired": "Te rugam sa descrii ideea ta in cel putin 10 caractere.",
       "dateRequired": "Te rugam sa alegi o data.",
       "timeRequired": "Te rugam sa alegi o ora.",
       "nameRequired": "Numele este obligatoriu.",
       "phoneRequired": "Numarul de telefon este obligatoriu.",
       "emailRequired": "Adresa de email este obligatorie.",
       "emailInvalid": "Adresa de email nu este valida.",
-      "gdprRequired": "Trebuie sa fii de acord cu prelucrarea datelor."
+      "gdprRequired": "Trebuie sa fii de acord cu prelucrarea datelor.",
+      "nameMinLength": "Numele trebuie sa aiba cel putin 2 caractere.",
+      "phoneMinLength": "Numarul de telefon trebuie sa aiba cel putin 6 caractere."
     }
   },
   "about": {
@@ -594,7 +622,12 @@
       "send": "Trimite mesajul",
       "sending": "Se trimite...",
       "success": "Mesajul tau a fost trimis cu succes! Te vom contacta in curand.",
-      "error": "A aparut o eroare. Te rugam sa incerci din nou."
+      "error": "A aparut o eroare. Te rugam sa incerci din nou.",
+      "nameMin": "Numele trebuie sa aiba cel putin 2 caractere.",
+      "emailRequired": "Adresa de email este obligatorie.",
+      "emailInvalid": "Adresa de email nu este valida.",
+      "messageRequired": "Mesajul este obligatoriu.",
+      "messageMin": "Mesajul trebuie sa aiba cel putin 10 caractere."
     },
     "info": {
       "address": "Adresa",
@@ -669,6 +702,33 @@
       "clientNotes": "Nota pentru client",
       "clientNotesPlaceholder": "Ex: Te asteptam cu referinte printate",
       "clientNotesHint": "Vizibila clientului in contul sau",
+      "clientNotesGuestBadge": "Doar pentru cont",
+      "clientNotesGuestWarning": "Clientul nu are cont — notita nu va ajunge la el. Foloseste WhatsApp pentru a-l contacta.",
+      "clientTypeAccount": "Cont",
+      "clientTypeAccountTip": "Clientul are cont — vede notitele in contul sau.",
+      "clientTypeGuest": "Guest",
+      "clientTypeGuestTip": "Clientul a facut booking fara cont — contacteaza-l pe WhatsApp/email.",
+      "unscheduled": "De stabilit",
+      "whatsappCta": "Trimite WhatsApp",
+      "whatsappPrefill": "Salut {name}! Te contactez de la Insomnia Tattoo despre programarea ta din {date} la ora {time}.",
+      "references": "Imagini de referinta",
+      "referencesEmpty": "Clientul nu a urcat imagini de referinta.",
+      "referencesHint": "Click pe orice imagine pentru a o deschide la dimensiune completa.",
+      "openReference": "Deschide imaginea de referinta",
+      "loyaltyAwardCta": "Acorda punct fidelitate",
+      "loyaltyDialogTitle": "Acorda punct fidelitate",
+      "loyaltyDialogDescription": "Cate puncte vrei sa-i dai lui {client} pentru sedinta finalizata? (1 punct = 50 RON cumulativ)",
+      "loyaltyPoints": "Puncte (1-3)",
+      "loyaltyDescription": "Mesaj personal (optional)",
+      "loyaltyDescriptionPlaceholder": "Ex: Mersi pentru rabdare si pentru ca ai ales Insomnia.",
+      "loyaltyDescriptionHint": "Apare in istoricul de loyalty al clientului.",
+      "loyaltyCancel": "Anuleaza",
+      "loyaltyConfirm": "Acorda {points} punct(e)",
+      "loyaltyAwarding": "Se acorda...",
+      "loyaltyAwarded": "Punct fidelitate acordat!",
+      "loyaltyAlreadyAwarded": "Loyalty a fost deja acordat pentru acest booking.",
+      "loyaltyGuestNoAccount": "Clientul nu are cont — invita-l sa-si creeze unul inainte sa primeasca puncte.",
+      "loyaltyError": "Nu s-a putut acorda punctul de fidelitate.",
       "statusLabels": {
         "new": "Nou",
         "contacted": "Contactat",
@@ -780,7 +840,14 @@
       "save": "Salveaza",
       "saving": "Se salveaza...",
       "saved": "Profil salvat!",
-      "error": "Eroare la salvare"
+      "error": "Eroare la salvare",
+      "stylesTitle": "Stilurile mele",
+      "stylesHint": "Aceste stiluri sunt afisate pe pagina ta publica si in filtrele Ink Space. Maxim 20 stiluri.",
+      "stylesPickFromList": "Alege rapid din lista:",
+      "stylesAddCustom": "Sau adauga un stil personalizat:",
+      "stylesAddBtn": "Adauga",
+      "stylesCustomPlaceholder": "ex: dotwork, neo-traditional",
+      "stylesRemove": "Sterge {style}"
     }
   },
   "admin": {
@@ -804,7 +871,10 @@
       "users": "Utilizatori",
       "content": "Continut",
       "auditLog": "Jurnal actiuni",
-      "logout": "Deconectare"
+      "logout": "Deconectare",
+      "site": "Site principal",
+      "more": "Mai mult",
+      "menu": "Meniu"
     },
     "content": {
       "title": "Gestionare continut",
@@ -853,9 +923,15 @@
         "bookings": "Programari",
         "reviews": "Recenzii",
         "lastLogin": "Ultima logare",
-        "joined": "Inregistrat"
+        "joined": "Inregistrat",
+        "actions": "Actiuni"
       },
-      "inactive": "Inactiv"
+      "inactive": "Inactiv",
+      "activate": "Activeaza",
+      "deactivate": "Dezactiveaza",
+      "activated": "Utilizator activat.",
+      "deactivated": "Utilizator dezactivat.",
+      "updateError": "Nu s-a putut actualiza utilizatorul."
     },
     "dashboard": {
       "title": "Dashboard",
@@ -945,11 +1021,22 @@
         "size": "Dimensiune",
         "description": "Descriere",
         "consultationDate": "Data consultatie",
-        "source": "Sursa"
+        "source": "Sursa",
+        "clientTypeAccount": "Cont",
+        "clientTypeAccountTip": "Clientul are cont — vede notitele in contul sau.",
+        "clientTypeGuest": "Guest",
+        "clientTypeGuestTip": "Clientul a facut booking fara cont — contacteaza-l pe WhatsApp/email.",
+        "unscheduled": "De stabilit",
+        "whatsappCta": "WhatsApp",
+        "whatsappPrefill": "Salut {name}! Te contactez de la Insomnia Tattoo despre programarea ta din {date} la ora {time}."
       },
       "adminNotes": "Note admin (interne)",
       "clientNotes": "Nota pentru client",
       "clientNotesHint": "Aceasta nota va fi vizibila clientului in contul sau.",
+      "references": "Imagini de referinta",
+      "referencesEmpty": "Clientul nu a urcat imagini de referinta.",
+      "referencesHint": "Click pe orice imagine pentru a o deschide la dimensiune completa.",
+      "openReference": "Deschide imaginea de referinta",
       "noBookings": "Nu exista programari.",
       "exportBookings": "Export programari",
       "exportClients": "Export clienti"
@@ -1200,6 +1287,21 @@
       "previewManifest": "Preview Manifest"
     }
   },
+  "guestData": {
+    "title": "Stergerea datelor pentru programari fara cont",
+    "intro": "Daca ai facut o programare ca vizitator (fara cont) si doresti sa-ti anonimizam datele personale din acele cereri, introduce adresa de email folosita la booking. Vei primi un email cu un link de confirmare. Link-ul este valabil 24 de ore.",
+    "emailLabel": "Adresa de email",
+    "emailPlaceholder": "exemplu@email.com",
+    "submit": "Trimite linkul de confirmare",
+    "hint": "Nu trimitem confirmarea daca nu gasim programari guest cu acest email — din motive de securitate nu divulgam daca adresa exista sau nu.",
+    "requestSuccess": "Daca exista date asociate acestui email, vei primi instructiuni pe mail.",
+    "requestError": "Nu am putut procesa cererea. Incearca din nou mai tarziu.",
+    "confirming": "Se confirma cererea...",
+    "confirmSuccess": "Datele tale personale din programarile fara cont au fost anonimizate.",
+    "confirmExpired": "Linkul a expirat. Incepe din nou de pe aceasta pagina.",
+    "confirmError": "Link invalid sau deja folosit.",
+    "backPrivacy": "Inapoi la politica de confidentialitate"
+  },
   "metadata": {
     "home": {
       "title": "Insomnia Tattoo | Studio Premium Tatuaje Mamaia Nord",
@@ -1244,6 +1346,10 @@
     "cookies": {
       "title": "Politica Cookies | Insomnia Tattoo",
       "description": "Politica de cookies a Insomnia Tattoo. Afla ce cookies folosim si cum iti poti gestiona preferintele."
+    },
+    "guestData": {
+      "title": "Stergere date programari guest | Insomnia Tattoo",
+      "description": "Solicita anonimizarea datelor personale din programarile facute fara cont, in conformitate cu GDPR."
     }
   }
 }

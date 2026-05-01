@@ -6,10 +6,23 @@ import { useSearchParams } from 'next/navigation';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 
+function getSafeRedirect(rawRedirect: string | null): string {
+  if (
+    rawRedirect &&
+    rawRedirect.startsWith('/') &&
+    !rawRedirect.startsWith('//') &&
+    !rawRedirect.startsWith('/\\') &&
+    !rawRedirect.includes('://')
+  ) {
+    return rawRedirect;
+  }
+  return '/admin';
+}
+
 export default function AdminLoginPage() {
   const t = useTranslations('admin.login');
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/admin';
+  const redirect = getSafeRedirect(searchParams.get('redirect'));
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -4,6 +4,50 @@ import type { NextConfig } from 'next';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+const CSP_REPORT_TO_GROUP = 'insomnia-csp';
+
+const cspDirectives = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com https://connect.facebook.net",
+  "style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com",
+  "img-src 'self' data: blob: https://*.googleusercontent.com https://lh3.googleusercontent.com https://*.public.blob.vercel-storage.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "connect-src 'self' https://oauth2.googleapis.com https://accounts.google.com https://www.google-analytics.com https://region1.google-analytics.com https://*.ingest.sentry.io",
+  "frame-src https://accounts.google.com https://www.google.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+];
+
+if (process.env.NODE_ENV === 'production') {
+  cspDirectives.push('upgrade-insecure-requests');
+}
+
+/** Legacy CSP violation reporting (widely supported). */
+const cspReportUri = process.env.CSP_REPORT_URI?.trim();
+if (cspReportUri) {
+  cspDirectives.push(`report-uri ${cspReportUri}`);
+}
+
+/** CSP Level 3: pairs with `Reporting-Endpoints` header (modern browsers). */
+const cspReportToUrl = process.env.CSP_REPORT_TO?.trim();
+let reportingEndpointsHeader: { key: string; value: string } | null = null;
+if (cspReportToUrl) {
+  try {
+    const parsed = new URL(cspReportToUrl);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      cspDirectives.push(`report-to ${CSP_REPORT_TO_GROUP}`);
+      reportingEndpointsHeader = {
+        key: 'Reporting-Endpoints',
+        value: `${CSP_REPORT_TO_GROUP}="${cspReportToUrl}"`,
+      };
+    }
+  } catch {
+    // ignore invalid URL
+  }
+}
+
 const securityHeaders = [
   {
     key: 'X-Frame-Options',
@@ -29,23 +73,15 @@ const securityHeaders = [
     key: 'X-DNS-Prefetch-Control',
     value: 'on',
   },
+  ...(reportingEndpointsHeader ? [reportingEndpointsHeader] : []),
   {
     key: 'Content-Security-Policy',
-    value: [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com https://connect.facebook.net",
-      "style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com",
-      "img-src 'self' data: blob: https://*.googleusercontent.com https://lh3.googleusercontent.com https://*.public.blob.vercel-storage.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "connect-src 'self' https://oauth2.googleapis.com https://accounts.google.com https://www.google-analytics.com https://region1.google-analytics.com https://*.ingest.sentry.io",
-      "frame-src https://accounts.google.com https://www.google.com",
-      "object-src 'none'",
-      "base-uri 'self'",
-    ].join('; '),
+    value: cspDirectives.join('; '),
   },
 ];
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       {
