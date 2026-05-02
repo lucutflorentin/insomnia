@@ -6,6 +6,21 @@
 
 ## JURNAL TEHNIC — Ce s-a implementat
 
+### Sesiunea 24 (2 Mai 2026) — Redesign UI/UX Auth Navigation & Artist Modal
+Un update vizual major pentru a asigura navigarea usoara in fluxul de autentificare si o experienta premium, mobile-first, pentru vizualizarea profilurilor artistilor.
+
+#### Navigare Pagina Login
+- `src/app/[locale]/auth/layout.tsx`: Integrat meniul principal (`Header`) direct in layout-ul de autentificare, oferind utilizatorilor optiunea de a se intoarce usor la restul site-ului. Containerul de login a fost ajustat (padding-top) pentru a nu se suprapune cu meniul fix.
+
+#### Redesign Artist Modal (UI/UX)
+- `src/components/sections/ArtistModal.tsx`:
+  - A fost complet eliminat efectul "parallax" vertical masiv care bloca accesul rapid la informatii pe mobil.
+  - S-a introdus un design minimalist pentru profil (avatar rotund premium, fundal cu gradient, organizare clara a rating-ului).
+  - Butoanele de actiune primara (**Booking** si **Portofoliu**) au fost aduse imediat sub detaliile principale. Aceasta schimbare drastica garanteaza ca utilizatorii de pe mobil pot incepe o programare instantaneu, fara sa mai dea scroll in modal.
+  - Adaugat mini-galerie interactiva cu efect de hover (`scale` si overlay subtil) pentru un "feel" premium.
+
+---
+
 ### Sesiunea 23 (2 Mai 2026) — Integrare Google Reviews & Optimizare Calitate Imagini
 Continuare pe linia dezvoltarii de brand. S-a implementat sincronizarea in timp real cu recenziile de pe Google Business Profile pentru a creste vizibil nivelul de "Social Proof" si incredere.
 
