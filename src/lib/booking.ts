@@ -74,7 +74,7 @@ export function normalizeBookingRequestBody(input: unknown): BookingParseResult 
     ? input as Record<string, unknown>
     : {};
 
-  const artistSlugRaw = body.artistSlug;
+  const artistSlugRaw = body.artistSlug ?? body.artist;
   const hasArtistSlug =
     typeof artistSlugRaw === 'string' && artistSlugRaw.trim().length > 0;
 

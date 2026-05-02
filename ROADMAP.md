@@ -1,10 +1,29 @@
 # Insomnia Tattoo — Roadmap & Strategie
 
-> Ultima actualizare: 1 Mai 2026
+> Ultima actualizare: 2 Mai 2026
 
 ---
 
 ## JURNAL TEHNIC — Ce s-a implementat
+
+### Sesiunea 22 (2 Mai 2026) — Audit tehnic, performanta GDPR si planificare brand
+Continuare pe baza planului aprobat de audit strict. S-au adus modificari la nivel de performanta a bazei de date si compatibilitate API. 
+
+#### Performanta si Baza de Date
+- `prisma/schema.prisma`: Adaugat index \`@@index([clientEmail])\` pe modelul \`Booking\` pentru a creste viteza interogarilor dupa email, utile in special pentru stergerea de date.
+- `src/app/api/gdpr/guest-erasure/confirm/route.ts`: Rescrisa interogarea de stergere GDPR. S-a inlocuit interogarea raw SQL vulnerabila la full-table-scan cu functionalitati ORM Prisma sigure (\`findMany\` si \`update\` individual) si folosind valoarea direct normalizata.
+
+#### Booking API
+- `src/lib/booking.ts`: Rezolvata problema de "fallback" in evaluarea formularelor de Quick Booking vechi. Variabila \`artistSlugRaw\` evalueaza acum si \`body.artist\` (\`body.artistSlug ?? body.artist\`), pastrand logica stabila in caz ca frontend-ul trimite cheia istorica.
+
+#### Idei de Dezvoltare Viitoare (Brand de Succes)
+In urma acestei sesiuni, au fost puse pe masa urmatoarele dezvoltari viitoare prioritare pentru platforma:
+1. **Sistem de Waitlist**: Lista de asteptare pentru artistii ocupati, notificari push automate la eliberarea unui loc.
+2. **Aftercare Journey**: Flux automatizat de urmarire dupa programare (1 zi, 7 zile, 30 zile) incheiat cu solicitare poza si review cu discount/reward.
+3. **Digital Gift Cards**: Posibilitatea generarii si expedierii de vouchere cadou.
+4. **Guest Artist Spots**: Sectiune temporara pentru artisti oaspeti in salon pentru "FOMO".
+
+---
 
 ### Sesiunea 21 (1 Mai 2026) — Faza 1 remediere audit (API booking + raspunsuri admin)
 

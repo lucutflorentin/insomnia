@@ -22,26 +22,26 @@ enum UserRole {
 // --- Auth & Identity ---
 
 model User {
-  id           Int       @id @default(autoincrement())
-  email        String    @unique @db.VarChar(255)
-  passwordHash String?   @map("password_hash") @db.VarChar(255)
-  role         UserRole  @default(CLIENT)
-  name         String    @db.VarChar(200)
-  phone        String?   @db.VarChar(50)
-  googleId     String?   @unique @map("google_id") @db.VarChar(255)
-  avatarUrl    String?   @map("avatar_url") @db.VarChar(500)
+  id                  Int       @id @default(autoincrement())
+  email               String    @unique @db.VarChar(255)
+  passwordHash        String?   @map("password_hash") @db.VarChar(255)
+  role                UserRole  @default(CLIENT)
+  name                String    @db.VarChar(200)
+  phone               String?   @db.VarChar(50)
+  googleId            String?   @unique @map("google_id") @db.VarChar(255)
+  avatarUrl           String?   @map("avatar_url") @db.VarChar(500)
   isActive            Boolean   @default(true) @map("is_active")
   emailVerifiedAt     DateTime? @map("email_verified_at")
   lastLoginAt         DateTime? @map("last_login_at")
   failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
   lockedUntil         DateTime? @map("locked_until")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
   artist              Artist?
-  bookings            Booking[]            @relation("ClientBookings")
+  bookings            Booking[]                @relation("ClientBookings")
   loyaltyTransactions LoyaltyTransaction[]
-  reviews             Review[]             @relation("ClientReviews")
+  reviews             Review[]                 @relation("ClientReviews")
   sessions            Session[]
   passwordResets      PasswordResetToken[]
   emailVerifications  EmailVerificationToken[]
@@ -163,10 +163,10 @@ model AvailabilityTemplate {
 // --- Bookings ---
 
 model Booking {
-  id            Int      @id @default(autoincrement())
-  referenceCode String   @unique @map("reference_code") @db.VarChar(20)
-  artistId      Int      @map("artist_id")
-  clientId      Int?     @map("client_id")
+  id            Int    @id @default(autoincrement())
+  referenceCode String @unique @map("reference_code") @db.VarChar(20)
+  artistId      Int    @map("artist_id")
+  clientId      Int?   @map("client_id")
 
   // Client data (snapshot — kept even if user exists for guest bookings)
   clientName  String @map("client_name") @db.VarChar(200)
@@ -185,8 +185,8 @@ model Booking {
   consultationTime String?   @map("consultation_time") @db.VarChar(5)
 
   // Tracking
-  source     String  @default("other") @db.VarChar(20)
-  status     String  @default("new") @db.VarChar(20)
+  source      String  @default("other") @db.VarChar(20)
+  status      String  @default("new") @db.VarChar(20)
   adminNotes  String? @map("admin_notes") @db.Text
   clientNotes String? @map("client_notes") @db.Text
 
@@ -195,8 +195,8 @@ model Booking {
   language    String  @default("ro") @db.VarChar(2)
 
   // Scheduled email tracking
-  aftercareSentAt      DateTime? @map("aftercare_sent_at")
-  reviewRequestSentAt  DateTime? @map("review_request_sent_at")
+  aftercareSentAt     DateTime? @map("aftercare_sent_at")
+  reviewRequestSentAt DateTime? @map("review_request_sent_at")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -210,6 +210,7 @@ model Booking {
   @@index([consultationDate])
   @@index([artistId, consultationDate])
   @@index([clientId])
+  @@index([clientEmail])
   @@index([createdAt])
   @@map("bookings")
 }
@@ -217,10 +218,10 @@ model Booking {
 // --- Gallery ---
 
 model GalleryItem {
-  id            Int      @id @default(autoincrement())
-  artistId      Int      @map("artist_id")
-  imagePath     String   @map("image_path") @db.VarChar(500)
-  thumbnailPath String?  @map("thumbnail_path") @db.VarChar(500)
+  id            Int     @id @default(autoincrement())
+  artistId      Int     @map("artist_id")
+  imagePath     String  @map("image_path") @db.VarChar(500)
+  thumbnailPath String? @map("thumbnail_path") @db.VarChar(500)
 
   // Metadata
   titleRo  String? @map("title_ro") @db.VarChar(200)
@@ -229,8 +230,8 @@ model GalleryItem {
   bodyArea String? @map("body_area") @db.VarChar(100)
 
   // Before/After comparison
-  beforeImagePath String?  @map("before_image_path") @db.VarChar(500)
-  isBeforeAfter   Boolean  @default(false) @map("is_before_after")
+  beforeImagePath String? @map("before_image_path") @db.VarChar(500)
+  isBeforeAfter   Boolean @default(false) @map("is_before_after")
 
   // Display
   isFeatured Boolean @default(false) @map("is_featured")

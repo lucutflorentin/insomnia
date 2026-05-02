@@ -67,18 +67,25 @@ export async function POST(request: NextRequest) {
     const emailNorm = record.emailNorm;
 
     await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`
-        UPDATE bookings
-        SET
-          client_name = ${'Anonimizat (GDPR)'},
-          client_email = CONCAT('erased-', id, '@invalid.local'),
-          client_phone = '',
-          description = NULL,
-          reference_images = NULL,
-          client_notes = NULL,
-          admin_notes = NULL
-        WHERE client_id IS NULL AND LOWER(TRIM(client_email)) = ${emailNorm}
-      `;
+      const bookingsToAnonymize = await tx.booking.findMany({
+        where: { clientId: null, clientEmail: emailNorm },
+        select: { id: true },
+      });
+
+      for (const booking of bookingsToAnonymize) {
+        await tx.booking.update({
+          where: { id: booking.id },
+          data: {
+            clientName: 'Anonimizat (GDPR)',
+            clientEmail: `erased-${booking.id}@invalid.local`,
+            clientPhone: '',
+            description: null,
+            referenceImages: null,
+            clientNotes: null,
+            adminNotes: null,
+          },
+        });
+      }
 
       await tx.guestDataErasureToken.update({
         where: { id: record.id },
