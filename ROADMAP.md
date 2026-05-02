@@ -6,6 +6,21 @@
 
 ## JURNAL TEHNIC — Ce s-a implementat
 
+### Sesiunea 23 (2 Mai 2026) — Integrare Google Reviews & Optimizare Calitate Imagini
+Continuare pe linia dezvoltarii de brand. S-a implementat sincronizarea in timp real cu recenziile de pe Google Business Profile pentru a creste vizibil nivelul de "Social Proof" si incredere.
+
+#### Google Reviews Integration
+- `src/lib/google-reviews.ts`: Creata biblioteca pentru interogarea sigura a Google Places API, folosind `unstable_cache` cu invalidare la 24 de ore pentru a evita rate-limiting-ul si a asigura incarcare instantanee (timp 0).
+- `src/components/sections/GoogleReviewsCarousel.tsx`: Creata componenta premium "Glassmorphism" pentru a afisa pana la 5 dintre cele mai recente recenzii Google (avatar, nume autor, link, timp relativ si rating stele).
+- `src/components/sections/SocialProof.tsx`: Scorul global codat manual "4.9" a fost inlocuit cu ratingul preluat dinamic din API si numarul real de recenzii. Adaugat un fallback invizibil daca API Key-urile nu sunt setate in Vercel.
+- Traduceri RO/EN actualizate pentru suportul noilor sectiuni dinamice.
+
+#### Optimizare Calitate Imagini (Fullscreen Lightbox)
+- Identificat bug-ul de performanta al Next.js care comprima a doua oara pozele din galeria full-screen la calitatea de 75%.
+- `src/components/ui/NextJsImage.tsx`: Adaugat flag-ul `unoptimized` pentru a forta Next.js sa serveasca imaginea originala (care a fost anterior urcata in Vercel Blob folosind libraria `sharp`, procesata la `2400px` latime si convertita in `WebP` la calitatea excelenta de `92%`). Tatuajele au acum detalii fine maxime cand li se da zoom.
+
+---
+
 ### Sesiunea 22 (2 Mai 2026) — Audit tehnic, performanta GDPR si planificare brand
 Continuare pe baza planului aprobat de audit strict. S-au adus modificari la nivel de performanta a bazei de date si compatibilitate API. 
 
