@@ -13,6 +13,7 @@ export default function NextJsImage({ slide, rect }: RenderSlideProps) {
         src={slide.src}
         loading="eager"
         draggable={false}
+        unoptimized // Prevents double compression by Next.js, serving the sharp 92% WebP from Vercel Blob
         style={{ objectFit: 'contain' }}
         sizes={
           typeof window !== 'undefined'
