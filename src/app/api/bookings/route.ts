@@ -299,7 +299,16 @@ export async function GET(request: NextRequest) {
 
     const where: Record<string, unknown> = {};
     if (status) where.status = status;
-    if (artistId) where.artistId = parseInt(artistId);
+    if (artistId) {
+      const id = parseInt(artistId, 10);
+      if (Number.isNaN(id)) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid artistId' },
+          { status: 400 },
+        );
+      }
+      where.artistId = id;
+    }
     if (startDate || endDate) {
       const dateFilter: Record<string, Date> = {};
       if (startDate && /^\d{4}-\d{2}-\d{2}$/.test(startDate)) {

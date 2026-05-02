@@ -6,6 +6,28 @@
 
 ## JURNAL TEHNIC — Ce s-a implementat
 
+### Sesiunea 21 (1 Mai 2026) — Faza 1 remediere audit (API booking + raspunsuri admin)
+
+Continuare dupa planul de remediere post-audit. Migrarea `20260501150000_nullable_booking_schedule` a fost aplicata pe baza de date (confirmat de echipa).
+
+#### Auth / API admin
+
+- `src/lib/auth.ts`: functie `getAuthFailureHttpStatus` — mesaje cunoscute de la `verifyAuthRequest` / `verifyRole` plus erori `jose` (`JOSEError`) returneaza **401**, nu **500**.
+- `PUT /api/admin/users/[id]`, `PUT` + `DELETE /api/admin/artists/[id]`, `POST /api/admin/artists`: `catch` diferențiat — neautorizat vs eroare server.
+
+#### Booking / listari
+
+- `GET /api/bookings`: parametrul `artistId` invalid (ex. non-numeric) → **400** `Invalid artistId`, evitand `NaN` in query Prisma.
+- `normalizeBookingRequestBody` (`src/lib/booking.ts`):
+  - cale **quick** doar daca `source === 'quick_form'` sau exista `artistSlug` valid si **lipseste** perechea completa de programare wizard (`date` + `time` in format valid);
+  - payload cu `artistSlug` + programare completa trece prin `bookingSchema` (nu mai ocoleste validarea slotului);
+  - pe calea wizard: `artistSlug` coalescent din `body.artist ?? body.artistSlug`.
+- `tests/booking.test.ts`: teste pentru payload mixt (artistSlug + schedule) si pentru `quick_form` cu chei `date`/`time` prezente (ramane quick).
+
+#### Verificari locale
+
+- `npm run test`, `npm run lint`, `npm run typecheck` — passed.
+
 ### Sesiunea 20 (1 Mai 2026) — Remediere audit conflicte, booking hardening, sesiuni reale si CI typecheck
 
 Pornita din auditul complet al roadmap-ului actualizat pe 1 Mai. Obiectivul a fost rezolvarea conflictelor si bugurilor care puteau afecta direct clientii, artistii sau administrarea platformei.

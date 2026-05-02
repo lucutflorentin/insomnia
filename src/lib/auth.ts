@@ -1,4 +1,4 @@
-import { SignJWT, jwtVerify } from 'jose';
+import { SignJWT, jwtVerify, errors as joseErrors } from 'jose';
 import { compare, hash } from 'bcryptjs';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
@@ -223,6 +223,24 @@ export async function verifySuperAdmin(
   request: Request,
 ): Promise<JWTPayload> {
   return verifyRole(request, ['SUPER_ADMIN']);
+}
+
+const KNOWN_AUTH_FAILURE_MESSAGES = new Set([
+  'Insufficient permissions',
+  'No authentication cookie',
+  'No access token',
+  'Inactive or missing user',
+  'Inactive or missing artist profile',
+  'Cannot access another artist\'s resource',
+  'Cannot access another user\'s resource',
+]);
+
+/** Maps errors thrown by verifyAuthRequest / verifyRole / jwtVerify to HTTP 401. */
+export function getAuthFailureHttpStatus(error: unknown): 401 | null {
+  if (!(error instanceof Error)) return null;
+  if (KNOWN_AUTH_FAILURE_MESSAGES.has(error.message)) return 401;
+  if (error instanceof joseErrors.JOSEError) return 401;
+  return null;
 }
 
 /** For ARTIST role: ensures the JWT's artistId matches the requested resource.

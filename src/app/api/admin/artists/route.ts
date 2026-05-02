@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifySuperAdmin, hashPassword } from '@/lib/auth';
+import { verifySuperAdmin, hashPassword, getAuthFailureHttpStatus } from '@/lib/auth';
 import { slugify } from '@/lib/utils';
 
 // GET /api/admin/artists — Super Admin: list all artists (including inactive)
@@ -116,6 +116,13 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     console.error('Create artist error:', error);
+    const authStatus = getAuthFailureHttpStatus(error);
+    if (authStatus) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: authStatus },
+      );
+    }
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 },

@@ -58,12 +58,29 @@ export type BookingParseResult =
   | { success: true; data: NormalizedBookingRequest; isQuickForm: boolean }
   | { success: false; error: ZodError; isQuickForm: boolean };
 
+function bodyHasWizardSchedule(body: Record<string, unknown>): boolean {
+  const date = body.date;
+  const time = body.time;
+  return (
+    typeof date === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+    typeof time === 'string' &&
+    /^\d{2}:\d{2}$/.test(time)
+  );
+}
+
 export function normalizeBookingRequestBody(input: unknown): BookingParseResult {
   const body = input && typeof input === 'object'
     ? input as Record<string, unknown>
     : {};
 
-  const isQuickForm = 'artistSlug' in body || body.source === 'quick_form';
+  const artistSlugRaw = body.artistSlug;
+  const hasArtistSlug =
+    typeof artistSlugRaw === 'string' && artistSlugRaw.trim().length > 0;
+
+  const isQuickForm =
+    body.source === 'quick_form' ||
+    (hasArtistSlug && !bodyHasWizardSchedule(body));
 
   if (isQuickForm) {
     const parsed = quickBookingSchema.safeParse(body);
@@ -89,7 +106,7 @@ export function normalizeBookingRequestBody(input: unknown): BookingParseResult 
   }
 
   const normalized = {
-    artistSlug: body.artist,
+    artistSlug: body.artist ?? body.artistSlug,
     clientName: body.name,
     clientPhone: body.phone,
     clientEmail: body.email,

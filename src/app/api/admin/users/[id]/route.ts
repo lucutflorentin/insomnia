@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifySuperAdmin } from '@/lib/auth';
+import { verifySuperAdmin, getAuthFailureHttpStatus } from '@/lib/auth';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -78,6 +78,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error('Admin user update error:', error);
+    const authStatus = getAuthFailureHttpStatus(error);
+    if (authStatus) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: authStatus },
+      );
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to update user' },
       { status: 500 },
