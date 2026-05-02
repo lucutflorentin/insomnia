@@ -4,9 +4,11 @@ import * as Sentry from '@sentry/nextjs';
 import sharp from 'sharp';
 import { BOOKING_CONFIG } from '@/lib/constants';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { inspectRequestForAttack } from '@/lib/security-events';
 
 const REFERENCE_UPLOAD_LIMIT = { max: 10, windowSec: 60 }; // 10/min (stricter than admin)
 const MAX_IMAGE_DIMENSION = 8000;
+const REFERENCE_IMAGE_MAX_WIDTH = 1600;
 
 const MAGIC_BYTES: Record<string, number[][]> = {
   'image/jpeg': [[0xFF, 0xD8, 0xFF]],
@@ -53,8 +55,13 @@ function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
 // POST /api/upload/reference — Public: upload reference image for booking
 export async function POST(request: NextRequest) {
   try {
+    await inspectRequestForAttack(request, 'api/upload/reference');
     const ip = getClientIp(request);
-    const rl = checkRateLimit(`ref-upload:${ip}`, REFERENCE_UPLOAD_LIMIT);
+    const rl = await checkRateLimit(
+      `ref-upload:${ip}`,
+      REFERENCE_UPLOAD_LIMIT,
+      { request, source: 'api/upload/reference' },
+    );
     if (!rl.allowed) {
       return errorResponse(
         'RATE_LIMITED',
@@ -129,8 +136,9 @@ export async function POST(request: NextRequest) {
     let processed: Buffer;
     try {
       processed = await sharp(buffer)
-        .resize(800, null, { withoutEnlargement: true })
-        .webp({ quality: 80 })
+        .rotate()
+        .resize({ width: REFERENCE_IMAGE_MAX_WIDTH, withoutEnlargement: true })
+        .webp({ quality: 88 })
         .toBuffer();
     } catch (processErr) {
       Sentry.captureException(processErr, {

@@ -6,7 +6,11 @@ import { checkRateLimit, getClientIp, PUBLIC_READ_LIMIT } from '@/lib/rate-limit
 export async function GET(request: NextRequest) {
   try {
     const ip = getClientIp(request);
-    const rl = checkRateLimit(`artists-read:${ip}`, PUBLIC_READ_LIMIT);
+    const rl = await checkRateLimit(
+      `artists-read:${ip}`,
+      PUBLIC_READ_LIMIT,
+      { request, source: 'api/artists:list' },
+    );
     if (!rl.allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many requests. Please wait.' },

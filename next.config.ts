@@ -5,10 +5,20 @@ import type { NextConfig } from 'next';
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const CSP_REPORT_TO_GROUP = 'insomnia-csp';
+const isProduction = process.env.NODE_ENV === 'production';
+
+const scriptSrc = [
+  "'self'",
+  "'unsafe-inline'",
+  ...(isProduction ? [] : ["'unsafe-eval'"]),
+  'https://accounts.google.com',
+  'https://www.googletagmanager.com',
+  'https://connect.facebook.net',
+];
 
 const cspDirectives = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com https://connect.facebook.net",
+  `script-src ${scriptSrc.join(' ')}`,
   "style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com",
   "img-src 'self' data: blob: https://*.googleusercontent.com https://lh3.googleusercontent.com https://*.public.blob.vercel-storage.com",
   "font-src 'self' https://fonts.gstatic.com",
@@ -20,7 +30,7 @@ const cspDirectives = [
   "frame-ancestors 'none'",
 ];
 
-if (process.env.NODE_ENV === 'production') {
+if (isProduction) {
   cspDirectives.push('upgrade-insecure-requests');
 }
 
@@ -80,6 +90,13 @@ const securityHeaders = [
   },
 ];
 
+const noIndexHeaders = [
+  {
+    key: 'X-Robots-Tag',
+    value: 'noindex, nofollow, noarchive',
+  },
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
@@ -110,6 +127,14 @@ const nextConfig: NextConfig = {
       {
         source: '/(.*)',
         headers: securityHeaders,
+      },
+      {
+        source: '/:section(admin|artist|account|auth)/:path*',
+        headers: noIndexHeaders,
+      },
+      {
+        source: '/:locale(ro|en)/:section(admin|artist|account|auth)/:path*',
+        headers: noIndexHeaders,
       },
     ];
   },

@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { inspectRequestForAttack } from '@/lib/security-events';
 
 const VERIFY_LIMIT = { max: 10, windowSec: 60 };
 
 // GET /api/auth/verify-email?token=xxx — Verify email address
 export async function GET(request: NextRequest) {
+  await inspectRequestForAttack(request, 'api/auth/verify-email:get');
   const ip = getClientIp(request);
-  const rl = checkRateLimit(`verify-email:${ip}`, VERIFY_LIMIT);
+  const rl = await checkRateLimit(
+    `verify-email:${ip}`,
+    VERIFY_LIMIT,
+    { request, source: 'api/auth/verify-email:get' },
+  );
   if (!rl.allowed) {
     return NextResponse.json(
       { success: false, error: 'Too many requests.' },
@@ -80,8 +86,13 @@ export async function GET(request: NextRequest) {
 
 // POST /api/auth/verify-email — Resend verification email
 export async function POST(request: NextRequest) {
+  await inspectRequestForAttack(request, 'api/auth/verify-email:resend');
   const ip = getClientIp(request);
-  const rl = checkRateLimit(`resend-verify:${ip}`, { max: 3, windowSec: 15 * 60 });
+  const rl = await checkRateLimit(
+    `resend-verify:${ip}`,
+    { max: 3, windowSec: 15 * 60 },
+    { request, source: 'api/auth/verify-email:resend' },
+  );
   if (!rl.allowed) {
     return NextResponse.json(
       { success: false, error: 'Too many requests. Please wait.' },

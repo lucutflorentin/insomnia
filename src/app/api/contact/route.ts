@@ -2,13 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { contactSchema } from '@/lib/validations';
 import { sendContactFormEmail } from '@/lib/email';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { inspectRequestForAttack } from '@/lib/security-events';
 
 const CONTACT_LIMIT = { max: 5, windowSec: 15 * 60 }; // 5 messages / 15 min
 
 export async function POST(request: NextRequest) {
   try {
+    await inspectRequestForAttack(request, 'api/contact');
     const ip = getClientIp(request);
-    const rl = checkRateLimit(`contact:${ip}`, CONTACT_LIMIT);
+    const rl = await checkRateLimit(
+      `contact:${ip}`,
+      CONTACT_LIMIT,
+      { request, source: 'api/contact' },
+    );
     if (!rl.allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many requests. Please wait.' },

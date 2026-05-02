@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import BookingWizard from '@/components/features/booking/BookingWizard';
+import { getPageAlternates } from '@/lib/seo-utils';
 
 export async function generateMetadata({
   params,
@@ -12,6 +13,7 @@ export async function generateMetadata({
   return {
     title: t('title'),
     description: t('description'),
+    alternates: getPageAlternates('/booking', locale),
   };
 }
 

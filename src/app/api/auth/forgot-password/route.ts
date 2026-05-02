@@ -2,13 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendPasswordResetEmail } from '@/lib/email';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { inspectRequestForAttack } from '@/lib/security-events';
 import crypto from 'crypto';
 
 const FORGOT_PASSWORD_LIMIT = { max: 5, windowSec: 15 * 60 };
 
 export async function POST(request: NextRequest) {
+  await inspectRequestForAttack(request, 'api/auth/forgot-password');
   const ip = getClientIp(request);
-  const rateLimitResult = checkRateLimit(`forgot-password:${ip}`, FORGOT_PASSWORD_LIMIT);
+  const rateLimitResult = await checkRateLimit(
+    `forgot-password:${ip}`,
+    FORGOT_PASSWORD_LIMIT,
+    { request, source: 'api/auth/forgot-password' },
+  );
   if (!rateLimitResult.allowed) {
     return NextResponse.json(
       { success: false, error: 'Too many requests. Please try again later.' },

@@ -10,11 +10,17 @@ import {
 } from '@/lib/auth';
 import type { JWTPayload } from '@/lib/auth';
 import { checkRateLimit, getClientIp, AUTH_LIMIT } from '@/lib/rate-limit';
+import { inspectRequestForAttack, recordSecurityEvent } from '@/lib/security-events';
 
 export async function POST(request: NextRequest) {
   try {
+    await inspectRequestForAttack(request, 'api/auth/login');
     const ip = getClientIp(request);
-    const { allowed, retryAfterSec } = checkRateLimit(`login:${ip}`, AUTH_LIMIT);
+    const { allowed, retryAfterSec } = await checkRateLimit(
+      `login:${ip}`,
+      AUTH_LIMIT,
+      { request, source: 'api/auth/login' },
+    );
     if (!allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many login attempts. Try again later.' },
@@ -39,6 +45,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user || !user.passwordHash || !user.isActive) {
+      await recordSecurityEvent({
+        eventType: 'auth_failed',
+        severity: 'warning',
+        source: 'api/auth/login',
+        request,
+        details: { reason: 'invalid_user_or_inactive' },
+      });
       return NextResponse.json(
         { success: false, error: 'Invalid credentials' },
         { status: 401 },
@@ -48,6 +61,14 @@ export async function POST(request: NextRequest) {
     // Account lockout check
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const minutesLeft = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+      await recordSecurityEvent({
+        eventType: 'auth_failed',
+        severity: 'warning',
+        source: 'api/auth/login',
+        request,
+        userId: user.id,
+        details: { reason: 'account_locked', minutesLeft },
+      });
       return NextResponse.json(
         { success: false, error: `Account locked. Try again in ${minutesLeft} minutes.` },
         { status: 423 },
@@ -72,6 +93,15 @@ export async function POST(request: NextRequest) {
             ? { lockedUntil: new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000) }
             : {}),
         },
+      });
+
+      await recordSecurityEvent({
+        eventType: attempts >= MAX_ATTEMPTS ? 'auth_lockout' : 'auth_failed',
+        severity: attempts >= MAX_ATTEMPTS ? 'critical' : 'warning',
+        source: 'api/auth/login',
+        request,
+        userId: user.id,
+        details: { reason: 'invalid_password', attempts },
       });
 
       return NextResponse.json(

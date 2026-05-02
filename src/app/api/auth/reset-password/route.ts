@@ -2,13 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { inspectRequestForAttack, recordSecurityEvent } from '@/lib/security-events';
 import crypto from 'crypto';
 
 const RESET_PASSWORD_LIMIT = { max: 5, windowSec: 15 * 60 };
 
 export async function POST(request: NextRequest) {
+  await inspectRequestForAttack(request, 'api/auth/reset-password');
   const ip = getClientIp(request);
-  const rateLimitResult = checkRateLimit(`reset-password:${ip}`, RESET_PASSWORD_LIMIT);
+  const rateLimitResult = await checkRateLimit(
+    `reset-password:${ip}`,
+    RESET_PASSWORD_LIMIT,
+    { request, source: 'api/auth/reset-password' },
+  );
   if (!rateLimitResult.allowed) {
     return NextResponse.json(
       { success: false, error: 'Too many requests.' },
@@ -50,6 +56,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!resetToken) {
+      await recordSecurityEvent({
+        eventType: 'password_reset_invalid_token',
+        severity: 'warning',
+        source: 'api/auth/reset-password',
+        request,
+      });
       return NextResponse.json(
         { success: false, error: 'Invalid or expired reset link' },
         { status: 400 },

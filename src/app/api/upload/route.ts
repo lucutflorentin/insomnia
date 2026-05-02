@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import { GALLERY_UPLOAD_CONFIG } from '@/lib/constants';
 import { verifyRole } from '@/lib/auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { inspectRequestForAttack } from '@/lib/security-events';
 
 const UPLOAD_LIMIT = { max: 20, windowSec: 60 };
 const MAX_IMAGE_DIMENSION = 8000;
@@ -73,6 +74,7 @@ function uploadErrorResponse(error: unknown) {
 // POST /api/upload — Upload image with processing (SUPER_ADMIN or ARTIST only)
 export async function POST(request: NextRequest) {
   try {
+    await inspectRequestForAttack(request, 'api/upload');
     await verifyRole(request, ['SUPER_ADMIN', 'ARTIST']);
 
     if (!process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN.trim() === '') {
@@ -81,7 +83,11 @@ export async function POST(request: NextRequest) {
 
     // Rate limit
     const ip = getClientIp(request);
-    const rl = checkRateLimit(`upload:${ip}`, UPLOAD_LIMIT);
+    const rl = await checkRateLimit(
+      `upload:${ip}`,
+      UPLOAD_LIMIT,
+      { request, source: 'api/upload' },
+    );
     if (!rl.allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many uploads. Please wait.' },

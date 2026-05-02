@@ -9,11 +9,17 @@ import {
 } from '@/lib/auth';
 import type { JWTPayload } from '@/lib/auth';
 import { checkRateLimit, getClientIp, AUTH_LIMIT } from '@/lib/rate-limit';
+import { inspectRequestForAttack } from '@/lib/security-events';
 
 export async function POST(request: NextRequest) {
   try {
+    await inspectRequestForAttack(request, 'api/auth/google');
     const ip = getClientIp(request);
-    const { allowed, retryAfterSec } = checkRateLimit(`google:${ip}`, AUTH_LIMIT);
+    const { allowed, retryAfterSec } = await checkRateLimit(
+      `google:${ip}`,
+      AUTH_LIMIT,
+      { request, source: 'api/auth/google' },
+    );
     if (!allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many attempts. Try again later.' },

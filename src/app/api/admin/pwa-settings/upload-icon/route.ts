@@ -27,7 +27,11 @@ export async function POST(request: NextRequest) {
     await verifyRole(request, ['SUPER_ADMIN']);
 
     const ip = getClientIp(request);
-    const rl = checkRateLimit(`pwa-icon-upload:${ip}`, UPLOAD_LIMIT);
+    const rl = await checkRateLimit(
+      `pwa-icon-upload:${ip}`,
+      UPLOAD_LIMIT,
+      { request, source: 'api/admin/pwa-settings/upload-icon' },
+    );
     if (!rl.allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many uploads. Please wait.' },

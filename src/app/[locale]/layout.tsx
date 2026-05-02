@@ -46,6 +46,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'metadata.home' });
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://insomniatattoo.ro';
+  const canonical = locale === 'ro' ? '/' : '/en';
 
   return {
     title: {
@@ -53,14 +55,13 @@ export async function generateMetadata({
       template: '%s | Insomnia Tattoo',
     },
     description: t('description'),
-    metadataBase: new URL(
-      process.env.NEXT_PUBLIC_SITE_URL || 'https://insomniatattoo.ro',
-    ),
+    metadataBase: new URL(baseUrl),
     alternates: {
-      canonical: '/',
+      canonical,
       languages: {
         'ro-RO': '/',
         'en-US': '/en',
+        'x-default': '/',
       },
     },
     openGraph: {
@@ -69,6 +70,7 @@ export async function generateMetadata({
       title: t('title'),
       description: t('description'),
       locale: locale === 'ro' ? 'ro_RO' : 'en_US',
+      url: `${baseUrl}${canonical}`,
     },
     twitter: {
       card: 'summary_large_image',

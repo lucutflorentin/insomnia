@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Build artifacts
+build/
+dist/
+*.tar.gz
+
+# Database backups
+backup-*.sql
+*.dump
+
+# Claude worktrees (CRITIC - poate fi 2-5 GB!)
+.claude/
+
+# Git history
+.git/
+
+# Package lock files
+package-lock.json
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# IDE & misc
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Coverage & test reports
+coverage/
+reports/
+playwright-report/
+test-results/
+blob-report/
+
+# Vercel
+.vercel/
+.turbo/
+.cache/
+
+# Uploads
+public/uploads/
+
+# Debug logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.trace

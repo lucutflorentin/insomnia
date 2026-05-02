@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -15,12 +15,44 @@ interface Notification {
   createdAt: string;
 }
 
+const POPOVER_WIDTH = 360;
+const VIEWPORT_MARGIN = 16;
+const POPOVER_GAP = 8;
+
 export default function NotificationBell() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const updatePopoverPosition = useCallback(() => {
+    if (!buttonRef.current || typeof window === 'undefined') return;
+
+    const rect = buttonRef.current.getBoundingClientRect();
+    const width = Math.min(POPOVER_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2);
+    const left = Math.min(
+      Math.max(VIEWPORT_MARGIN, rect.right - width),
+      window.innerWidth - width - VIEWPORT_MARGIN,
+    );
+    const top = Math.min(
+      rect.bottom + POPOVER_GAP,
+      Math.max(VIEWPORT_MARGIN, window.innerHeight - 240),
+    );
+    const maxHeight = Math.max(
+      220,
+      Math.min(420, window.innerHeight - top - VIEWPORT_MARGIN),
+    );
+
+    setPopoverStyle({
+      left,
+      top,
+      width,
+      maxHeight,
+    });
+  }, []);
 
   // Close on outside click
   useEffect(() => {
@@ -33,15 +65,30 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    updatePopoverPosition();
+    window.addEventListener('resize', updatePopoverPosition);
+    window.addEventListener('scroll', updatePopoverPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updatePopoverPosition);
+      window.removeEventListener('scroll', updatePopoverPosition, true);
+    };
+  }, [isOpen, updatePopoverPosition]);
+
   // Fetch notifications
   useEffect(() => {
     if (!user) return;
 
+    const controller = new AbortController();
+
     const fetchNotifications = () => {
-      fetch('/api/notifications?limit=10')
-        .then((res) => res.json())
+      fetch('/api/notifications?limit=10', { signal: controller.signal })
+        .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
-          if (data.success) {
+          if (data?.success) {
             setNotifications(data.data || []);
             setUnreadCount(data.unreadCount || 0);
           }
@@ -51,7 +98,10 @@ export default function NotificationBell() {
 
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 60000); // Poll every 60s
-    return () => clearInterval(interval);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [user]);
 
   const handleMarkAllRead = async () => {
@@ -79,7 +129,10 @@ export default function NotificationBell() {
   return (
     <div ref={ref} className="relative">
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Notificari"
+        aria-expanded={isOpen}
         className="relative rounded-lg p-2 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
       >
         <Bell className="h-5 w-5" />
@@ -91,7 +144,11 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-sm border border-border bg-bg-secondary shadow-lg">
+        <div
+          data-notification-popover
+          className="fixed z-[70] rounded-sm border border-border bg-bg-secondary shadow-2xl shadow-black/40"
+          style={popoverStyle ?? undefined}
+        >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <span className="text-sm font-medium text-text-primary">Notificari</span>
             {unreadCount > 0 && (
@@ -103,7 +160,7 @@ export default function NotificationBell() {
               </button>
             )}
           </div>
-          <div className="max-h-80 overflow-y-auto">
+          <div className="overflow-y-auto" style={{ maxHeight: popoverStyle?.maxHeight }}>
             {notifications.length === 0 ? (
               <div className="p-6 text-center text-sm text-text-muted">
                 Nicio notificare

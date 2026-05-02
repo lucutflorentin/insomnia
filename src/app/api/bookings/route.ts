@@ -15,12 +15,18 @@ import { createNotification } from '@/lib/notifications';
 import { sendPushToUser } from '@/lib/push';
 import { verifyAdminRequest, getCurrentUser } from '@/lib/auth';
 import { checkRateLimit, getClientIp, BOOKING_LIMIT } from '@/lib/rate-limit';
+import { inspectRequestForAttack } from '@/lib/security-events';
 
 // POST /api/bookings — Public: create a new booking
 export async function POST(request: NextRequest) {
   try {
+    await inspectRequestForAttack(request, 'api/bookings:create');
     const ip = getClientIp(request);
-    const { allowed, retryAfterSec } = checkRateLimit(`booking:${ip}`, BOOKING_LIMIT);
+    const { allowed, retryAfterSec } = await checkRateLimit(
+      `booking:${ip}`,
+      BOOKING_LIMIT,
+      { request, source: 'api/bookings:create' },
+    );
     if (!allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many booking requests. Try again later.' },

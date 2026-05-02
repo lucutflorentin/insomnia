@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { verifyAuthRequest, comparePassword, hashPassword } from '@/lib/auth';
 import { checkRateLimit, getClientIp, PASSWORD_CHANGE_LIMIT } from '@/lib/rate-limit';
 import { sanitizeText } from '@/lib/validations';
+import { recordSecurityEvent } from '@/lib/security-events';
 
 // GET /api/client/profile — Authenticated: get own profile
 export async function GET(request: NextRequest) {
@@ -55,9 +56,10 @@ export async function PUT(request: NextRequest) {
     // --- Password change flow ---
     if (body.currentPassword && body.newPassword) {
       const ip = getClientIp(request);
-      const { allowed, retryAfterSec } = checkRateLimit(
+      const { allowed, retryAfterSec } = await checkRateLimit(
         `password-change:${userId}:${ip}`,
         PASSWORD_CHANGE_LIMIT,
+        { request, source: 'api/client/profile:password-change' },
       );
       if (!allowed) {
         return NextResponse.json(
@@ -87,6 +89,14 @@ export async function PUT(request: NextRequest) {
 
       const validCurrent = await comparePassword(body.currentPassword, user.passwordHash);
       if (!validCurrent) {
+        await recordSecurityEvent({
+          eventType: 'password_change_failed',
+          severity: 'warning',
+          source: 'api/client/profile',
+          request,
+          userId,
+          details: { reason: 'invalid_current_password' },
+        });
         return NextResponse.json(
           { success: false, error: 'Current password is incorrect' },
           { status: 401 },

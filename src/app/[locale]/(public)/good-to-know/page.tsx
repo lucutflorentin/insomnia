@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import GoodToKnowContent from '@/components/features/faq/GoodToKnowContent';
 import JsonLd, { getFaqSchema } from '@/components/seo/JsonLd';
+import { getPageAlternates } from '@/lib/seo-utils';
 
 export async function generateMetadata({
   params,
@@ -13,6 +14,7 @@ export async function generateMetadata({
   return {
     title: t('title'),
     description: t('description'),
+    alternates: getPageAlternates('/good-to-know', locale),
   };
 }
 

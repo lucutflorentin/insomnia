@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
 const strict = process.env.REPO_HYGIENE_STRICT === '1';
@@ -49,6 +49,30 @@ if (!existsSync('docs/PRELIVE_CHECKLIST.md')) {
 
 if (!existsSync('scripts/smoke-local.mjs')) {
   failures.push('Missing local smoke script.');
+}
+
+if (existsSync('.antigravityignore')) {
+  const antigravityIgnore = readFileSync('.antigravityignore', 'utf8');
+  const requiredAntigravityPatterns = [
+    '.claude/',
+    '.git/',
+    'node_modules/',
+    '.next/',
+    'package-lock.json',
+    '*.tsbuildinfo',
+  ];
+
+  const missingPatterns = requiredAntigravityPatterns.filter(
+    (pattern) => !antigravityIgnore.includes(pattern),
+  );
+
+  if (missingPatterns.length > 0) {
+    recordWarning(
+      `.antigravityignore is missing heavy workspace exclusions: ${missingPatterns.join(', ')}`,
+    );
+  }
+} else {
+  recordWarning('Missing .antigravityignore for AI workspace indexing hygiene.');
 }
 
 for (const warning of warnings) {

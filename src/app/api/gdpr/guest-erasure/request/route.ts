@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/nextjs';
 import { prisma } from '@/lib/prisma';
 import { sendGuestDataErasureEmail } from '@/lib/email';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { inspectRequestForAttack } from '@/lib/security-events';
 
 const GUEST_ERASURE_REQUEST_LIMIT = { max: 5, windowSec: 60 * 60 };
 
@@ -12,8 +13,13 @@ function normalizeEmail(value: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  await inspectRequestForAttack(request, 'api/gdpr/guest-erasure/request');
   const ip = getClientIp(request);
-  const rl = checkRateLimit(`gdpr-guest-erasure:${ip}`, GUEST_ERASURE_REQUEST_LIMIT);
+  const rl = await checkRateLimit(
+    `gdpr-guest-erasure:${ip}`,
+    GUEST_ERASURE_REQUEST_LIMIT,
+    { request, source: 'api/gdpr/guest-erasure/request' },
+  );
   if (!rl.allowed) {
     return NextResponse.json(
       { success: false, error: 'Too many requests' },

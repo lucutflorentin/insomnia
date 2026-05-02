@@ -10,7 +10,11 @@ export async function GET(request: NextRequest) {
   try {
     // Rate limit public reads
     const ip = getClientIp(request);
-    const rl = checkRateLimit(`gallery-read:${ip}`, PUBLIC_READ_LIMIT);
+    const rl = await checkRateLimit(
+      `gallery-read:${ip}`,
+      PUBLIC_READ_LIMIT,
+      { request, source: 'api/gallery:list' },
+    );
     if (!rl.allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many requests. Please wait.' },

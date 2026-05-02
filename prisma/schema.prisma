@@ -46,6 +46,7 @@ model User {
   passwordResets      PasswordResetToken[]
   emailVerifications  EmailVerificationToken[]
   auditLogs           AuditLog[]
+  securityEvents      SecurityEvent[]
   notifications       Notification[]
   pushSubscriptions   PushSubscription[]
   favorites           Favorite[]
@@ -357,6 +358,41 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// --- Security Monitoring ---
+
+model SecurityEvent {
+  id        Int      @id @default(autoincrement())
+  eventType String   @map("event_type") @db.VarChar(100)
+  severity  String   @default("warning") @db.VarChar(20)
+  source    String?  @db.VarChar(120)
+  ipHash    String?  @map("ip_hash") @db.VarChar(64)
+  userId    Int?     @map("user_id")
+  userAgent String?  @map("user_agent") @db.VarChar(500)
+  path      String?  @db.VarChar(500)
+  method    String?  @db.VarChar(10)
+  details   Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventType, createdAt])
+  @@index([severity, createdAt])
+  @@index([ipHash, createdAt])
+  @@index([userId])
+  @@map("security_events")
+}
+
+model RateLimitBucket {
+  key       String   @id @db.VarChar(191)
+  count     Int      @default(0)
+  resetAt   DateTime @map("reset_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([resetAt])
+  @@map("rate_limit_buckets")
 }
 
 // --- Push Subscriptions ---

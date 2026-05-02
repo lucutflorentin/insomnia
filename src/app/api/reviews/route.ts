@@ -109,7 +109,11 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const ip = getClientIp(request);
-    const rl = checkRateLimit(`reviews-read:${ip}`, PUBLIC_READ_LIMIT);
+    const rl = await checkRateLimit(
+      `reviews-read:${ip}`,
+      PUBLIC_READ_LIMIT,
+      { request, source: 'api/reviews:list' },
+    );
     if (!rl.allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many requests. Please wait.' },

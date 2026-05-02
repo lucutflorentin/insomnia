@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import type { SendMailOptions } from 'nodemailer';
 
 /** Escape HTML special characters to prevent injection in email templates */
 function escapeHtml(unsafe: string): string {
@@ -10,15 +11,39 @@ function escapeHtml(unsafe: string): string {
     .replace(/'/g, '&#039;');
 }
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 465,
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+const isDryRunEmail =
+  process.env.EMAIL_DELIVERY_MODE === 'dry-run' ||
+  process.env.SKIP_EMAIL_DELIVERY === '1';
+
+let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+
+function getTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 465,
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+  }
+
+  return transporter;
+}
+
+async function sendMail(options: SendMailOptions): Promise<void> {
+  if (isDryRunEmail) {
+    console.info('[email:dry-run]', {
+      to: options.to,
+      subject: options.subject,
+    });
+    return;
+  }
+
+  await getTransporter().sendMail(options);
+}
 
 interface BookingEmailData {
   clientName: string;
@@ -95,7 +120,7 @@ export async function sendBookingConfirmation(
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: data.clientEmail,
     subject,
@@ -174,7 +199,7 @@ export async function sendAftercareReminder(data: {
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: data.clientEmail,
     subject,
@@ -248,7 +273,7 @@ export async function sendReviewRequest(data: {
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: data.clientEmail,
     subject,
@@ -312,7 +337,7 @@ export async function sendBookingNotification(
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: data.artistEmail,
     subject: `Booking nou — ${data.clientName}`,
@@ -345,7 +370,7 @@ export async function sendSurpriseNotification(data: {
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: adminEmail,
     subject: `🎁 Client eligibil surpriză: ${data.clientName} (${data.totalPoints} puncte)`,
@@ -404,7 +429,7 @@ export async function sendBookingCancellationEmail(data: {
     recipients.push(adminEmail);
   }
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: recipients.join(', '),
     subject: `Programare anulata — ${data.clientName} (${data.referenceCode})`,
@@ -450,7 +475,7 @@ export async function sendEmailVerification(data: {
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: data.email,
     subject: 'Verifica adresa de email — Insomnia Tattoo',
@@ -496,7 +521,7 @@ export async function sendPasswordResetEmail(data: {
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: data.email,
     subject: 'Resetare parola — Insomnia Tattoo',
@@ -563,7 +588,7 @@ export async function sendBookingAccountWelcomeEmail(data: {
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: data.email,
     subject,
@@ -620,7 +645,7 @@ export async function sendGuestDataErasureEmail(data: {
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: data.email,
     subject,
@@ -743,7 +768,7 @@ export async function sendBookingStatusUpdateEmail(data: {
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: data.clientEmail,
     subject,
@@ -792,7 +817,7 @@ export async function sendContactFormEmail(data: ContactFormEmailData) {
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendMail({
     from: `"Insomnia Tattoo" <${process.env.SMTP_USER}>`,
     to: process.env.ADMIN_EMAIL || process.env.SMTP_USER || 'contact@insomniatattoo.ro',
     replyTo: data.email,

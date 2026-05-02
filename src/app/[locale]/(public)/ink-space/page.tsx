@@ -4,6 +4,7 @@ import { connection } from 'next/server';
 import InkSpaceContent from '@/components/features/gallery/InkSpaceContent';
 import type { ArtistSection } from '@/components/features/gallery/InkSpaceContent';
 import { normalizeStyleKey } from '@/lib/gallery-style';
+import { getPageAlternates } from '@/lib/seo-utils';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +21,7 @@ export async function generateMetadata({
   return {
     title: t('title'),
     description: t('description'),
+    alternates: getPageAlternates('/ink-space', locale),
   };
 }
 

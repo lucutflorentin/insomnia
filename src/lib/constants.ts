@@ -1,10 +1,15 @@
+const STUDIO_ADDRESS = 'Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta';
+const DEFAULT_GOOGLE_MAPS_EMBED_URL = `https://www.google.com/maps?q=${encodeURIComponent(STUDIO_ADDRESS)}&output=embed`;
+
 export const SITE_CONFIG = {
   name: 'Insomnia Tattoo',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://insomniatattoo.ro',
   email: process.env.NEXT_PUBLIC_STUDIO_EMAIL || 'contact@insomniatattoo.ro',
   phone: process.env.NEXT_PUBLIC_STUDIO_PHONE || '',
-  address: 'Str. D10, Nr. 11 Bis, Ap. 2, Mamaia Nord, Constanta',
-  googleMapsUrl: process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_URL || '',
+  address: STUDIO_ADDRESS,
+  googleMapsUrl:
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_URL ||
+    DEFAULT_GOOGLE_MAPS_EMBED_URL,
 };
 
 export const STUDIO_HOURS = {

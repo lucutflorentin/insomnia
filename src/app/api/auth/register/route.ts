@@ -12,11 +12,17 @@ import {
 import type { JWTPayload } from '@/lib/auth';
 import { checkRateLimit, getClientIp, REGISTER_LIMIT } from '@/lib/rate-limit';
 import { sendEmailVerification } from '@/lib/email';
+import { inspectRequestForAttack, recordSecurityEvent } from '@/lib/security-events';
 
 export async function POST(request: NextRequest) {
   try {
+    await inspectRequestForAttack(request, 'api/auth/register');
     const ip = getClientIp(request);
-    const { allowed, retryAfterSec } = checkRateLimit(`register:${ip}`, REGISTER_LIMIT);
+    const { allowed, retryAfterSec } = await checkRateLimit(
+      `register:${ip}`,
+      REGISTER_LIMIT,
+      { request, source: 'api/auth/register' },
+    );
     if (!allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many registration attempts. Try again later.' },
@@ -40,6 +46,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (existing) {
+      await recordSecurityEvent({
+        eventType: 'registration_duplicate_email',
+        severity: 'info',
+        source: 'api/auth/register',
+        request,
+      });
       return NextResponse.json(
         { success: false, error: 'Email already registered' },
         { status: 409 },

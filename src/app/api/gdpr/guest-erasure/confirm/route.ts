@@ -3,12 +3,18 @@ import crypto from 'crypto';
 import * as Sentry from '@sentry/nextjs';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { inspectRequestForAttack, recordSecurityEvent } from '@/lib/security-events';
 
 const GUEST_ERASURE_CONFIRM_LIMIT = { max: 20, windowSec: 60 * 60 };
 
 export async function POST(request: NextRequest) {
+  await inspectRequestForAttack(request, 'api/gdpr/guest-erasure/confirm');
   const ip = getClientIp(request);
-  const rl = checkRateLimit(`gdpr-guest-erasure-confirm:${ip}`, GUEST_ERASURE_CONFIRM_LIMIT);
+  const rl = await checkRateLimit(
+    `gdpr-guest-erasure-confirm:${ip}`,
+    GUEST_ERASURE_CONFIRM_LIMIT,
+    { request, source: 'api/gdpr/guest-erasure/confirm' },
+  );
   if (!rl.allowed) {
     return NextResponse.json(
       { success: false, error: 'Too many requests' },
@@ -39,6 +45,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!record || record.usedAt) {
+      await recordSecurityEvent({
+        eventType: 'gdpr_erasure_invalid_token',
+        severity: 'warning',
+        source: 'api/gdpr/guest-erasure/confirm',
+        request,
+      });
       return NextResponse.json(
         { success: false, error: 'Invalid or expired link' },
         { status: 400 },

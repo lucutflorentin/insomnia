@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAuthRequest } from '@/lib/auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { recordSecurityEvent } from '@/lib/security-events';
 
 const CANCEL_LIMIT = { max: 5, windowSec: 60 };
 
@@ -17,7 +18,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Rate limit
     const ip = getClientIp(request);
-    const rl = checkRateLimit(`cancel-booking:${ip}`, CANCEL_LIMIT);
+    const rl = await checkRateLimit(
+      `cancel-booking:${ip}`,
+      CANCEL_LIMIT,
+      { request, source: 'api/client/bookings/cancel' },
+    );
     if (!rl.allowed) {
       return NextResponse.json(
         { success: false, error: 'Too many requests. Please wait.' },
@@ -58,6 +63,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Verify ownership
     if (booking.clientId !== userId) {
+      await recordSecurityEvent({
+        eventType: 'booking_cancel_unauthorized',
+        severity: 'warning',
+        source: 'api/client/bookings/cancel',
+        request,
+        userId,
+        details: { bookingId },
+      });
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 403 },
