@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, MessageCircle, X, Loader2 } from 'lucide-rea
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import Button from '@/components/ui/Button';
+import NextJsImage from '@/components/ui/NextJsImage';
 import Textarea from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
@@ -492,6 +493,7 @@ export default function AdminBookingsPage() {
           src: url,
           alt: `Reference ${index + 1}`,
         }))}
+        render={{ slide: NextJsImage }}
       />
     </div>
   );

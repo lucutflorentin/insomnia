@@ -8,6 +8,7 @@ import 'yet-another-react-lightbox/styles.css';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import NextJsImage from '@/components/ui/NextJsImage';
 import SlideUp from '@/components/animations/SlideUp';
 import StaggerChildren, { StaggerItem } from '@/components/animations/StaggerChildren';
 import { formatStyleLabel, normalizeStyleKey } from '@/lib/gallery-style';
@@ -268,6 +269,7 @@ export default function ArtistProfileContent({
               close={() => setLightboxIndex(-1)}
               index={Math.max(0, lightboxIndex)}
               slides={lightboxSlides}
+              render={{ slide: NextJsImage }}
             />
           </section>
         )}

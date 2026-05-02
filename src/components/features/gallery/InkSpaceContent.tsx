@@ -8,6 +8,7 @@ import 'yet-another-react-lightbox/styles.css';
 import { Link } from '@/i18n/navigation';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import NextJsImage from '@/components/ui/NextJsImage';
 import FavoriteHeart from '@/components/ui/FavoriteHeart';
 import SlideUp from '@/components/animations/SlideUp';
 import StaggerChildren, { StaggerItem } from '@/components/animations/StaggerChildren';
@@ -241,12 +242,14 @@ function ArtistPortfolioSection({
         close={() => setLightboxIndex(-1)}
         index={lightboxIndex}
         slides={lightboxSlides}
+        render={{ slide: NextJsImage }}
       />
 
       <Lightbox
         open={profileLightboxOpen}
         close={() => setProfileLightboxOpen(false)}
         slides={artist.profileImage ? [{ src: artist.profileImage, alt: artist.name }] : []}
+        render={{ slide: NextJsImage }}
       />
 
       {/* CTA */}

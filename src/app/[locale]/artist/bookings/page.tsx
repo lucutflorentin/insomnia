@@ -7,6 +7,7 @@ import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { MessageCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
+import NextJsImage from '@/components/ui/NextJsImage';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
 import { parseDisplayReferenceImages } from '@/lib/booking';
 
@@ -443,6 +444,7 @@ export default function ArtistBookingsPage() {
           src: url,
           alt: `Reference ${index + 1}`,
         }))}
+        render={{ slide: NextJsImage }}
       />
 
       {/* Manual loyalty award dialog */}

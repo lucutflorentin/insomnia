@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
+import NextJsImage from '@/components/ui/NextJsImage';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
@@ -714,6 +715,7 @@ export default function AdminGalleryPage() {
         close={() => setLightboxIndex(-1)}
         index={lightboxIndex}
         slides={lightboxSlides}
+        render={{ slide: NextJsImage }}
       />
 
       {/* Edit modal */}

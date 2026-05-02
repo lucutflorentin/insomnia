@@ -18,6 +18,7 @@ import {
   Upload,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import NextJsImage from '@/components/ui/NextJsImage';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
@@ -659,6 +660,7 @@ export default function ArtistGalleryPage() {
         close={() => setLightboxIndex(-1)}
         index={lightboxIndex}
         slides={lightboxSlides}
+        render={{ slide: NextJsImage }}
       />
 
       <Modal
