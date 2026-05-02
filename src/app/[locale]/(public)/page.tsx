@@ -3,6 +3,7 @@ import { connection } from 'next/server';
 import HomePageClient from '@/components/sections/HomePageClient';
 import JsonLd, { getAggregateRatingSchema } from '@/components/seo/JsonLd';
 import { normalizeStyleKey } from '@/lib/gallery-style';
+import { getGoogleReviews } from '@/lib/google-reviews';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -10,6 +11,8 @@ export const fetchCache = 'force-no-store';
 
 export default async function HomePage() {
   await connection();
+  const googleData = await getGoogleReviews('ro');
+  
   // Fetch artists with their featured works and ratings from DB
   const artistsRaw = await prisma.artist.findMany({
     where: { isActive: true },
@@ -81,7 +84,7 @@ export default async function HomePage() {
   return (
     <>
       {aggregateRatingSchema && <JsonLd data={aggregateRatingSchema} />}
-      <HomePageClient artists={artists} galleryItems={galleryItems} />
+      <HomePageClient artists={artists} galleryItems={galleryItems} googleData={googleData} />
     </>
   );
 }

@@ -10,6 +10,7 @@ import SocialProof from '@/components/sections/SocialProof';
 import CTABanner from '@/components/sections/CTABanner';
 import MapSection from '@/components/sections/MapSection';
 import BookingModal from '@/components/sections/BookingModal';
+import { GooglePlaceData } from '@/lib/google-reviews';
 
 interface FeaturedWork {
   id: number;
@@ -48,9 +49,10 @@ interface HomePageClientProps {
     artistName: string;
     artistSlug: string;
   }>;
+  googleData?: GooglePlaceData | null;
 }
 
-export default function HomePageClient({ artists, galleryItems }: HomePageClientProps) {
+export default function HomePageClient({ artists, galleryItems, googleData }: HomePageClientProps) {
   const locale = useLocale();
   const [dynamicContent, setDynamicContent] = useState<Record<string, string>>({});
   const [artistModalOpen, setArtistModalOpen] = useState(false);
@@ -101,7 +103,7 @@ export default function HomePageClient({ artists, galleryItems }: HomePageClient
       />
       <ArtistCards artists={artists} onArtistClick={handleArtistClick} />
       <GalleryHighlight items={galleryItems} />
-      <SocialProof />
+      <SocialProof googleData={googleData} />
       <CTABanner onBookingClick={handleOpenBooking} />
       <MapSection />
 

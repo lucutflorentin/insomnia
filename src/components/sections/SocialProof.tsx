@@ -5,6 +5,8 @@ import SlideUp from '@/components/animations/SlideUp';
 import StaggerChildren, {
   StaggerItem,
 } from '@/components/animations/StaggerChildren';
+import { GooglePlaceData } from '@/lib/google-reviews';
+import GoogleReviewsCarousel from '@/components/sections/GoogleReviewsCarousel';
 
 const stats = [
   { key: 'experience', icon: '✦', value: '6+' },
@@ -12,7 +14,11 @@ const stats = [
   { key: 'consultation', icon: '◇', value: '∞' },
 ] as const;
 
-export default function SocialProof() {
+interface SocialProofProps {
+  googleData?: GooglePlaceData | null;
+}
+
+export default function SocialProof({ googleData }: SocialProofProps) {
   const t = useTranslations('home.whyUs');
 
   return (
@@ -66,11 +72,24 @@ export default function SocialProof() {
                 ))}
               </div>
               <span className="text-lg font-semibold text-text-primary">
-                {t('rating')}
+                {googleData ? (
+                  <>
+                    {googleData.rating.toFixed(1)} {t('ratingDynamic', { defaultMessage: 'pe Google' })}
+                    <span className="ml-2 text-sm font-normal text-text-muted">
+                      ({googleData.user_ratings_total} {t('reviews')})
+                    </span>
+                  </>
+                ) : (
+                  t('rating')
+                )}
               </span>
             </div>
           </div>
         </SlideUp>
+
+        {googleData && googleData.reviews && (
+          <GoogleReviewsCarousel reviews={googleData.reviews} />
+        )}
       </div>
     </section>
   );
