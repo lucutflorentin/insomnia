@@ -18,6 +18,7 @@ Un update vizual major pentru a asigura navigarea usoara in fluxul de autentific
   - S-a introdus un design minimalist pentru profil (avatar rotund premium, fundal cu gradient, organizare clara a rating-ului).
   - Butoanele de actiune primara (**Booking** si **Portofoliu**) au fost aduse imediat sub detaliile principale. Aceasta schimbare drastica garanteaza ca utilizatorii de pe mobil pot incepe o programare instantaneu, fara sa mai dea scroll in modal.
   - Adaugat mini-galerie interactiva cu efect de hover (`scale` si overlay subtil) pentru un "feel" premium.
+- `src/components/ui/NextJsImage.tsx`: Reparat bug-ul de afisare in Lightbox prin calcularea explicita a dimensiunilor containerului si adaugarea prioritatii de incarcare, rezolvand problema ecranului negru la deschiderea imaginilor.
 
 ---
 

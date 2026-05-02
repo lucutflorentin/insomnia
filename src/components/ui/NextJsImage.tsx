@@ -4,22 +4,32 @@ import { RenderSlideProps, isImageSlide } from 'yet-another-react-lightbox';
 export default function NextJsImage({ slide, rect }: RenderSlideProps) {
   if (!isImageSlide(slide)) return undefined;
 
-  // Render using Next.js Image for better caching and loading handling
+  // Calculate dimensions to maintain aspect ratio within the available rect
+  const width = !slide.width || !slide.height 
+    ? rect.width 
+    : Math.min(rect.width, (rect.height / slide.height) * slide.width);
+  const height = !slide.width || !slide.height 
+    ? rect.height 
+    : Math.min(rect.height, (rect.width / slide.width) * slide.height);
+
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div 
+      style={{ 
+        position: 'relative', 
+        width: Math.round(width), 
+        height: Math.round(height),
+        margin: 'auto' 
+      }}
+    >
       <Image
         fill
         alt={slide.alt || ''}
         src={slide.src}
-        loading="eager"
+        priority
         draggable={false}
-        unoptimized // Prevents double compression by Next.js, serving the sharp 92% WebP from Vercel Blob
+        unoptimized // Prevents double compression by Next.js
         style={{ objectFit: 'contain' }}
-        sizes={
-          typeof window !== 'undefined'
-            ? `${Math.ceil((rect.width / window.innerWidth) * 100)}vw`
-            : '100vw'
-        }
+        sizes={`${Math.ceil((width / (typeof window !== 'undefined' ? window.innerWidth : 1024)) * 100)}vw`}
       />
     </div>
   );
