@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import * as Sentry from '@sentry/nextjs';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { inspectRequestForAttack, recordSecurityEvent } from '@/lib/security-events';
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
             clientEmail: `erased-${booking.id}@invalid.local`,
             clientPhone: '',
             description: null,
-            referenceImages: null,
+            referenceImages: Prisma.DbNull,
             clientNotes: null,
             adminNotes: null,
           },
