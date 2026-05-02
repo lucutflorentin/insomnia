@@ -273,7 +273,9 @@
       "consultation": "Consultatie personalizata",
       "consultationDesc": "Fiecare proiect incepe cu o consultatie gratuita pentru a crea designul perfect.",
       "rating": "4.9 pe Google",
-      "reviews": "recenzii"
+      "ratingDynamic": "pe Google",
+      "reviews": "recenzii",
+      "realReviewsTitle": "Recenzii de la clienții noștri"
     },
     "location": {
       "title": "Unde ne gasesti",

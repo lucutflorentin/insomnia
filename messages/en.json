@@ -273,7 +273,9 @@
       "consultation": "Personalized consultation",
       "consultationDesc": "Every project starts with a free consultation to create the perfect design.",
       "rating": "4.9 on Google",
-      "reviews": "reviews"
+      "ratingDynamic": "on Google",
+      "reviews": "reviews",
+      "realReviewsTitle": "Real reviews from our clients"
     },
     "location": {
       "title": "Find Us",
